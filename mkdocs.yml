@@ -1,0 +1,4 @@
+site_name: subpatch Documentation
+site_url: https://subpatch.net
+theme:
+  name: readthedocs
