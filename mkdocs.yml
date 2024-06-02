@@ -1,4 +1,11 @@
-site_name: subpatch Documentation
+site_name: subpatch
 site_url: https://subpatch.net
 theme:
-  name: readthedocs
+  name: material
+nav:
+  - Home: 'index.md'
+  - Impressum: 'impressum.md'
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/lengfeld/subpatch-website
