@@ -32,3 +32,22 @@ subpatch will be a subprojects management tool based on the following ideas:
 * Importing new versions of the subproject is possible and subpatch helps to
   rebase the local modifications.
 
+
+## subpatch main difference
+
+subpatch is based on the concept of
+[monorepos](https://en.wikipedia.org/wiki/Monorepo).
+When you use subpatch the subprojects are not git repository itself. The files
+of the subprojects are added as files to the superproject. You will only have
+to deal with a single git repository.
+
+This is in contrast to other tools, e.g.
+
+* [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+* [repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md)
+* [kas](https://kas.readthedocs.io/en/latest/)
+* [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
+
+These tools manage multi git repository management and try to combine them into
+a big superproject.  This is done on purpose. I think that only a monorepo is a
+sane and viable solution.
