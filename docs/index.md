@@ -49,5 +49,4 @@ This is in contrast to other tools, e.g.
 * [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
 
 These tools manage multi git repository management and try to combine them into
-a big superproject.  This is done on purpose. I think that only a monorepo is a
-sane and viable solution.
+a big superproject.
