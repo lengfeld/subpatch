@@ -23,9 +23,9 @@ email [me](mailto:stefan+subpatch@lengfeld.xyz).
 
 subpatch will be a subprojects management tool based on the following ideas:
 
-* The files of subprojects are added as normal files to the superproject.
-  In most cases this will be just a git repository. It's based on the idea of
-  monorepos.
+* It's based on the idea of monorepos. The files of subprojects are added as
+  normal files to the superproject.  In most cases this will be just a git
+  repository.
 * The metadata of a subproject is saved in a git-config styled configuration file.
 * Modifications of the subproject are possible and subpatch helps to maintain
   a linear patch stack of the modifications.
