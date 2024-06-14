@@ -19,6 +19,15 @@ frustrated, `subpatch`  will be mostly your solution! If you are interested,
 email [me](mailto:stefan+subpatch@lengfeld.xyz).
 
 
+## subpatch usecases
+
+subpatch is interesting for you if you want to do the following tasks:
+
+* assemble a monorepo from multiple repositories
+* integrated third party dependences into your project as source files
+* maintain a local fork (=linear patchstack) of a third party dependency
+
+
 ## subpatch's concept
 
 subpatch will be a subprojects management tool based on the following ideas:
