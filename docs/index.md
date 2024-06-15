@@ -24,7 +24,7 @@ email [me](mailto:stefan+subpatch@lengfeld.xyz).
 subpatch is interesting for you if you want to do the following tasks:
 
 * assemble a monorepo from multiple repositories
-* integrated third party dependences into your project as source files
+* integrate third party dependencies into your project as source files
 * maintain a local fork (=linear patchstack) of a third party dependency
 
 
