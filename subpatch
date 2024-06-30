@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
+
+import os
+import sys
+import shutil
+import time
+from enum import Enum
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE, DEVNULL
+from os.path import join
+import contextlib
+
+# See https://peps.python.org/pep-0440/ for details about the version format.
+# e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
+__version__ = "0.1a1"
+
+# It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-or-later.html
+__LICENSE__ = "GPL-2.0-or-later"
+
+
+# Name conventions for variables
+#    path_superproject
+#    path_config
+#
+
+# TODO refactor. copyied from helpers
+@contextlib.contextmanager
+def cwd(cwd):
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(cwd)
+        yield
+    finally:
+        os.chdir(old_cwd)
+
+
+class ErrorCode(Enum):
+    UNKNOWN = 1
+    NOT_IMPLEMENTED = 2
+    NOT_IN_A_GIT_REPO = 3
+    # Subpatch is not yet configured for superproject
+    NOT_CONFIGURED_FOR_SUPERPROJECT = 4
+
+
+class AppException(Exception):
+    def __init__(self, code):
+        self._code = code
+        super().__init__()
+
+
+def nocommand(args, parser):
+    parser.print_help(file=sys.stderr)
+    return 2  # TODO why 2?
+
+
+# :: void -> None or byte object (or raises an exception)
+def git_get_toplevel():
+    p = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=DEVNULL)
+    stdout, _ = p.communicate()
+    if p.returncode == 0:
+        return stdout.rstrip(b"\n")
+    elif p.returncode == 128:
+        # fatal: not a git repository (or any of the parent directories): .git
+        return None
+    else:
+        # TODO Create a generic git error exception
+        raise Exception("git failure")
+
+
+# NOTE This is cwd aware
+# TODO add --depth to speed up performance!
+def git_clone(remote_url, local_name):
+    p = Popen(["git", "clone", "-q", remote_url, local_name])
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+
+def git_add(args):
+    assert len(args) >= 1
+    p = Popen(["git", "add"] + args)
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+# TODO clarify naming: path, filename, url
+# TODO calrify name for remote git name and path/url
+
+
+def cmd_add(args, parser):
+    if args.url is None:
+        # TODO make error message nicer
+        raise Exception("Not the correct amount of args")
+
+    remote_git_url = args.url
+
+    # TODO check with ls-remote that remote is accessable
+
+    # TODO Make this a generic function and move to a function
+    # Use rstrip('/') to remove trailing slashes, e.g.
+    #    subpatch add ../other-git-dir/
+    remote_git_name = remote_git_url.rstrip("/").split("/")[-1]
+
+    path_superproject = git_get_toplevel()
+    if path_superproject is None:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+    # TODO check that git repo has nothing in the index!
+
+    # TODO Check if the subproject already exists in this dir!
+    if os.path.exists(remote_git_name):
+        print("Directory '%s' alreay exists. Cannot add subproject!" % (remote_git_name,),
+              file=sys.stderr)
+        # TODO explain what can be done: Either remove the dir or use another name!
+        raise AppException(ErrorCode.UNKNOWN)
+
+    # TOOD create/update ".subpatch" file
+    # TODO maybe rename to path_config. Everything is subpatch here!
+    path_config = join(path_superproject, b".subpatch")
+    if os.path.exists(path_config):
+        raise AppException(ErrorCode.NOT_IMPLEMENTED)
+
+    # TODO maybe add pid to avoid race conditions
+    # TODO "git submodule init" creates a bare repoistory in ".git/modules"
+    assert len(remote_git_name) != 0
+    local_tmp_name = remote_git_name + "-tmp"
+    git_clone(remote_git_url, local_tmp_name)
+
+    # Remove ".git" folder in this repo
+    local_repo_git_dir = join(local_tmp_name, ".git")
+    assert os.path.isdir(local_repo_git_dir)
+    shutil.rmtree(local_repo_git_dir)
+
+    # Get local path relative to top level dir
+    # TODO refactor that very ugly code !!!!
+    git_toplevel_path_realpath = os.path.realpath(path_superproject)
+    cwd_local_name_realpath = os.path.realpath(join(os.getcwd(), remote_git_name))
+    assert cwd_local_name_realpath.startswith(git_toplevel_path_realpath.decode("utf8"))
+    path = cwd_local_name_realpath[len(git_toplevel_path_realpath) + 1:]
+    with open(path_config, "w") as f:
+        f.write('[subpatch "%s"]\n' % (path,))
+        # TODO remote_git_url is the verbatim copy of the argument. It my
+        # contain a trailing slash that is not significant. Should the trainling slash be removed?
+        # Or the varbatim copy of the argument used?
+        f.write("\turl = %s\n" % (remote_git_url,))
+
+    # Move files into place
+    os.rename(local_tmp_name, remote_git_name)
+
+    # TODO in case of failure, remove download git dir!
+
+    # Add files for committing
+    git_add([remote_git_name])
+    with cwd(path_superproject):
+        git_add([".subpatch"])
+
+    # TODO prepare commit message
+
+    # NOTE: Design decision: The output is relative to the current workin dir.
+    # The content of '%s' is the remote git name or the path relative to the
+    # current working dir. It's not relative to the top level dir of the git repo.
+    print("Adding subproject '%s' was successful." % (remote_git_name,))
+    print("- To inspect the changes, use `git status` and `git diff --staged`.")
+    print("- If you want to keep the changes, commit them with `git commit`.")
+    print("- If you want to revert the changes, execute 'git reset --merge`.")
+
+    return 0
+
+
+def show_version(args):
+    print("subpatch version %s" % (__version__,))
+    return 0
+
+
+def show_info(args):
+    print("homepage:  https://subpatch.net")
+    print("git repo:  https://github.com/lengfeld/subpatch")
+    print("license:   %s" % (__LICENSE__,))
+    # TODO add GPL license text/note
+    return 0
+
+
+def cmd_status(args, parser):
+    # TODO unify search for superproject with other commands!
+    path_superproject = git_get_toplevel()
+    if path_superproject is None:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+    # Find subpatch file
+    # Design decision:
+    # Having a empty ".subpatch" config file is something different than having
+    # no config file. It means that subpach is not yet configured for the project.
+    path_config = join(path_superproject, b".subpatch")
+    if not os.path.exists(path_config):
+        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+
+    # Just dump the contents of the file for now
+    # TODO read config format  make nice output
+    # TODO add note that it's a pretty printed output for humans. Do
+    # not use in scripts.
+    # TODO add plumbing commands for scripts!
+    print("NOTE: Output format is just a hack. Not the final output format yet!")
+    with open(path_config) as f:
+        print(f.read(), end="")
+
+    return 0
+
+
+def main_wrapped():
+    # TODO maybe add 'epilog' again
+    parser = ArgumentParser(description='Adding subprojects into a git repo, the superproject.')
+    parser.add_argument("--version", "-v", dest="version",
+                        action="store_true", default=False,
+                        help="Show version of program")
+    parser.add_argument("--info", dest="info",
+                        action="store_true", default=False,
+                        help="Show more information, like homepage, repo and license")
+
+    subparsers = parser.add_subparsers()
+
+    parser_add = subparsers.add_parser("add",
+                                       help="Fetch and add a subproject")
+    parser_add.set_defaults(func=cmd_add)
+    parser_add.add_argument(dest="url", type=str,
+                            help="URL or path to git repo")
+
+    parser_status = subparsers.add_parser("status",
+                                          help="List all subprojects in the superproject")
+    parser_status.set_defaults(func=cmd_status)
+
+    args = parser.parse_args()
+
+    # Just for testing. A bit ugly to have this in the production code.
+    if os.environ.get("HANG_FOR_TEST", "0") == "1":
+        time.sleep(5)
+
+    if args.version:
+        ret = show_version(args)
+    elif args.info:
+        ret = show_info(args)
+    else:
+        # Workaround for help
+        if hasattr(args, "func"):
+            ret = args.func(args, parser)
+        else:
+            ret = nocommand(args, parser)
+
+    return ret
+
+
+def main():
+    try:
+        ret = main_wrapped()
+    except AppException as e:
+        if e._code == ErrorCode.NOT_IMPLEMENTED:
+            print("Error: Feature not implemented yet!", file=sys.stderr)
+        elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
+            print("Error: No git repo as superproject found!", file=sys.stderr)
+        elif e._code == ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT:
+            # TODO add steps to resolve the issue. e.g. touching the file
+            print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
+        else:
+            assert e._code == ErrorCode.UNKNOWN
+            # TODO find a better name for UNKNOWN
+            # Dont' print a message here. The caller has already written the
+            # message.
+            pass
+        ret = 4
+    except KeyboardInterrupt:
+        print("Interrupted!", file=sys.stderr)
+        # TODO What is the correct/best error code?
+        ret = 3
+    sys.exit(ret)
+
+
+if __name__ == '__main__':
+    main()
+    raise Exception("Never reached!")
