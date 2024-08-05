@@ -1,4 +1,4 @@
-# Impressum
+# Imprint
 
 This website is created and maintained by
 

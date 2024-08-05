@@ -4,7 +4,7 @@ theme:
   name: material
 nav:
   - Home: 'index.md'
-  - Impressum: 'impressum.md'
+  - Imprint: 'imprint.md'
 extra:
   social:
     - icon: fontawesome/brands/github
