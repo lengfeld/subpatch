@@ -1,6 +1,7 @@
-# subpatch - subprojects done right!
+# subpatch: fearless multi-repository management - stay relaxed!
 
-Welcome to the website of subpatch. The tool that does subprojects right!
+Welcome to the website of subpatch. The tool that does multi-repository
+management right. Don't worry, stay relaxed!
 
 Currently this project is just an idea. No code yet. But the general concept is
 already proven and works!
