@@ -17,6 +17,12 @@ How to deploy:
 
 The structure of the website/documentation is based on
 [The Grand Unified Theory of Documentation](https://docs.divio.com/documentation-system/).
+It structures documentation into four categories:
+
+* explanations
+* tutorials
+* how-to guides
+* reference
 
 
 # TODOs
