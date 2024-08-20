@@ -54,8 +54,13 @@ called `external`. To add the dependency execute the commands
     $ cd external
     $ subpatch add https://github.com/google/googletest
 
-The last command will take some seconds. It downloads the git repository and
-extract the files. When it's finished it will print the message
+The last command takes some seconds to execute. It downloads the git repository
+and extract the files. It uses the default branch of the git repository. In
+most cases this is the `main` or the `master` branch. If you want to download
+another branch or tag, you must use an additional argument (*NOTE:* this
+argument is not implemented yet).
+
+When the command finishes it prints the message
 
     Adding subproject 'googletest' was successful.
     - To inspect the changes, use `git status` and `git diff --staged`.
