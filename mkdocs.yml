@@ -6,6 +6,11 @@ theme:
     - navigation.sections
 nav:
   - Home: 'index.md'
+  - Explanations:
+    - Introduction: 'exp/intro.md'
+    - Design Goals: 'exp/design-goals.md'
+    - Comparison to other tools: 'exp/comparison.md'
+#   - Frequently Asked Questions : 'exp/faq.md'
   - Tutorials:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'
