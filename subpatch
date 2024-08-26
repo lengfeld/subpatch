@@ -14,7 +14,7 @@ import contextlib
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
-__version__ = "0.1a1"
+__version__ = "0.1a2"
 
 # It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-or-later.html
 __LICENSE__ = "GPL-2.0-or-later"
