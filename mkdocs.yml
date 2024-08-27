@@ -1,0 +1,25 @@
+site_name: subpatch
+site_url: https://subpatch.net
+docs_dir: website
+theme:
+  name: material
+  features:
+    - navigation.sections
+nav:
+  - Home: 'index.md'
+  - Explanations:
+    - Introduction: 'exp/intro.md'
+    - Design Goals: 'exp/design-goals.md'
+    - Comparison to other tools: 'exp/comparison.md'
+#   - Frequently Asked Questions : 'exp/faq.md'
+  - Tutorials:
+    - Installation: 'tut/installation.md'
+    - Basic usage: 'tut/basic-usage.md'
+  - Reference:
+    - Glossary: 'ref/glossary.md'
+    - Releases: 'ref/releases.md'
+  - Imprint: 'imprint.md'
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/lengfeld/subpatch-website
