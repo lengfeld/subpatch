@@ -1,0 +1,923 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://subpatch.net/tut/installation/">
+      
+      
+        <link rel="prev" href="../../exp/comparison/">
+      
+      
+        <link rel="next" href="../basic-usage/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.0">
+    
+    
+      
+        <title>Installation - subpatch</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.9f615399.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#installation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="subpatch" class="md-header__button md-logo" aria-label="subpatch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            subpatch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Installation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="subpatch" class="md-nav__button md-logo" aria-label="subpatch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    subpatch
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Explanations
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Explanations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exp/intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exp/design-goals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Design Goals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exp/comparison/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Comparison to other tools
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Tutorials
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorials
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-pipx-into-your-home-directory" class="md-nav__link">
+    With pipx into your HOME directory
+  </a>
+  
+    <nav class="md-nav" aria-label="With pipx into your HOME directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-pipx" class="md-nav__link">
+    Install pipx
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-subpatch-with-pipx" class="md-nav__link">
+    Install subpatch with pipx
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-a-standalone-script-into-the-path" class="md-nav__link">
+    As a standalone script into the PATH
+  </a>
+  
+    <nav class="md-nav" aria-label="As a standalone script into the PATH">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-bin-folder" class="md-nav__link">
+    Create a bin folder
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#download-and-install-subpatch" class="md-nav__link">
+    Download and install subpatch
+  </a>
+  
+    <nav class="md-nav" aria-label="Download and install subpatch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-download" class="md-nav__link">
+    Manual download
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-command-line" class="md-nav__link">
+    Using the command line
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-subpatch" class="md-nav__link">
+    Test subpatch
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../basic-usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ref/glossary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Glossary
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ref/releases/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Releases
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../imprint/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Imprint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#with-pipx-into-your-home-directory" class="md-nav__link">
+    With pipx into your HOME directory
+  </a>
+  
+    <nav class="md-nav" aria-label="With pipx into your HOME directory">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-pipx" class="md-nav__link">
+    Install pipx
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-subpatch-with-pipx" class="md-nav__link">
+    Install subpatch with pipx
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-a-standalone-script-into-the-path" class="md-nav__link">
+    As a standalone script into the PATH
+  </a>
+  
+    <nav class="md-nav" aria-label="As a standalone script into the PATH">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-bin-folder" class="md-nav__link">
+    Create a bin folder
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#download-and-install-subpatch" class="md-nav__link">
+    Download and install subpatch
+  </a>
+  
+    <nav class="md-nav" aria-label="Download and install subpatch">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-download" class="md-nav__link">
+    Manual download
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-the-command-line" class="md-nav__link">
+    Using the command line
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-subpatch" class="md-nav__link">
+    Test subpatch
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="installation">Installation</h1>
+<p>This tutorial explains who to install subpatch on your computer. Currently
+there are two ways to install subpatch:</p>
+<ol>
+<li>With <a href="https://pipx.pypa.io/stable/">pipx</a> into your HOME directory</li>
+<li>As a standalone script into the PATH</li>
+</ol>
+<p><strong>NOTE</strong>: subpatch is currently in a very <em>very</em> early stage. Do not use it in
+production environments!</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>To follow this tutorial you need a PC or notebook with a Linux Operating
+System installed. This tutorial will assume <a href="https://ubuntu.com/">Ubuntu</a>, but
+any current distribution should work. Also MacOS may work out of the box, but
+it's not tested for now.</p>
+<h2 id="with-pipx-into-your-home-directory">With pipx into your HOME directory</h2>
+<p>The subpatch project is released on <a href="https://pypi.org/">PyPI</a>, the "Python
+Package Index". The <a href="https://pypi.org/project/subpatch/">PyPI's subpatch site</a>
+contains the project specific informations.</p>
+<h3 id="install-pipx">Install pipx</h3>
+<p>To install subpatch, you can use <a href="https://pipx.pypa.io/">pipx</a>. pipx is a tool
+to manage <a href="https://docs.python.org/3/tutorial/venv.html">python virtual
+environments</a> in your HOME
+directory.</p>
+<p>To install pipx on Ubuntu, execute</p>
+<pre><code>$ sudo apt install pipx
+</code></pre>
+<p><em>NOTE</em>: For other distributions use the distro specific package manager.</p>
+<p>To check if pipx works, you can execute the <code>list</code> command. An example:</p>
+<pre><code>$ pipx list
+nothing has been installed with pipx 😴
+</code></pre>
+<h3 id="install-subpatch-with-pipx">Install subpatch with pipx</h3>
+<p>If everything is fine, you can install the latest version of subpatch with the command</p>
+<pre><code>$ pipx install subpatch
+</code></pre>
+<p>The output of the command should look like</p>
+<pre><code>  installed package subpatch 0.1a2, installed using Python 3.10.12
+  These apps are now globally available
+    - subpatch
+done! ✨ 🌟 ✨
+</code></pre>
+<p>If some of the numbers are different, that's o.k.</p>
+<p>To test that subpatch works, you can execute the command</p>
+<pre><code>$ subpatch --version
+</code></pre>
+<p>It should print the version number of subpatch that is currently installed.</p>
+<p><strong>Congratulations</strong>, now you successfully installed subpatch. A final note: To
+get further infos and the help text, execute</p>
+<pre><code>$ subpatch --help
+</code></pre>
+<h2 id="as-a-standalone-script-into-the-path">As a standalone script into the PATH</h2>
+<p>You can also install subpatch as a standalone python script into your PATH.</p>
+<h3 id="create-a-bin-folder">Create a <code>bin</code> folder</h3>
+<p>First make sure that you have a directory that is listed in your PATH. If you
+have another folder in the PATH for other scripts already, you can skip this
+step.</p>
+<p>I used a <code>bin</code> directory in the HOME folder for that. To create it, execute</p>
+<pre><code>$ mkdir ~/bin
+</code></pre>
+<p>Then this folder must be added to the environment variable PATH. This can be
+done with</p>
+<pre><code>$ echo 'export PATH=$PATH:$HOME/bin' &gt;&gt; ~/.bashrc
+</code></pre>
+<p>It adds a line at the end of the <code>~./bashrc</code> file.</p>
+<p>The change will only be active in new shells that are spawned now. So start a new shell with</p>
+<pre><code>$ bash
+</code></pre>
+<p><em>NOTE</em>: This tutorial assumes that you are using bash. If you use another
+shell, like zsh or fish, you mostly already know everything in the tutorial and
+can adapt it yourself :-)</p>
+<p>To check that the modifications of the PATH variable worked, execute</p>
+<pre><code>$ echo $PATH
+</code></pre>
+<p>It prints all folders that are scanned for executable files. The list should
+contain the <code>bin</code> folder in your HOME directory at the end.</p>
+<h3 id="download-and-install-subpatch">Download and install subpatch</h3>
+<p>The last step is to download the subpatch script and copy it into the <code>bin</code> folder.</p>
+<p>First go to the <a href="../../ref/releases/">releases page</a> and find the latest
+release. There are two options: manual download or using the command line:</p>
+<h4 id="manual-download">Manual download</h4>
+<p>Now click on the link for <em>standalone python script</em> and download the script
+with your browser.</p>
+<p>After you downloaded the standalone script into your download directory, you
+must move it to the <code>bin</code> directory. For example:</p>
+<pre><code>$ mv subpatch ~/bin/
+</code></pre>
+<p>The executable bit is not set for downloaded files. You must manually set it
+with the command</p>
+<pre><code>$ chmod +x ~/bin/subpatch
+</code></pre>
+<p>Otherwise the shell cannot execute the script.</p>
+<h4 id="using-the-command-line">Using the command line</h4>
+<p>Apart from the manual download, you can use command line tools. To download
+the script and set the executable bit, just execute:</p>
+<pre><code>$ wget https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch -O ~/bin/subpatch
+$ chmod +x ~/bin/subpatch
+</code></pre>
+<p>The above command is just an example. For other versions of subpatch, the
+version number in the URL looks different.</p>
+<h3 id="test-subpatch">Test subpatch</h3>
+<p>After download and installation you should test the subpatch command line tool.
+To test that it works, you can execute the command</p>
+<pre><code>$ subpatch --version
+</code></pre>
+<p>It should print the version number of subpatch that is currently installed.</p>
+<p><strong>Congratulations</strong>, now you successfully installed subpatch. A final note: To
+get further infos and the help text, execute</p>
+<pre><code>$ subpatch --help
+</code></pre>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/lengfeld/subpatch-website" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.4e0fa4ba.min.js"></script>
+      
+    
+  </body>
+</html>
