@@ -6,4 +6,5 @@ This website is created and maintained by
 * address: Germany, 53721 Siegburg
 * e-mail: [stefan+subpatch@lengfeld.xyz](mailto:stefan+subpatch@lengfeld.xyz)
 
-The website's source is available at [subpatch-website](https://github.com/lengfeld/subpatch-website).
+The website's source is available in the folder
+[website/ in the subpatch repository](https://github.com/lengfeld/subpatch/tree/main/website).

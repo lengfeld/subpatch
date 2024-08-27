@@ -128,7 +128,7 @@ If a subroject is not locked, the CI would also error/warn and request the
 contributer to execute a command to create a patch file!
 
 Write test that
-  $ git config -f .subpatch  subpatch."external/subpatch-website".url
+  $ git config -f .subpatch  subpatch."external/repo".url
 works and add documentation.
 This was found while reading some "git submodules" docu
 
