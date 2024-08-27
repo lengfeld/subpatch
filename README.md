@@ -160,3 +160,12 @@ Strip ".git" from URL after cloning. Should not happen
 Unify slogan/subtitle. fearless vs done-right
 
 Show software/license disclaimer at more locations.
+
+Build and test for Windows (Setup windows VM in gnome boxes?)
+
+The command "subpatch update" (or how it's called) should be able to add the
+changelog or added commits automatically to the commit message.
+
+Sync github release page and website release page.
+
+Add checksum of subpatch script to release page. Maybe sign with gpg key.

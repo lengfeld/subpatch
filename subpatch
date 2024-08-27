@@ -152,6 +152,7 @@ def cmd_add(args, parser):
     # TODO in case of failure, remove download git dir!
 
     # Add files for committing
+    # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
     git_add([remote_git_name])
     with cwd(path_superproject):
         git_add([".subpatch"])
@@ -255,6 +256,8 @@ def main():
         ret = main_wrapped()
     except AppException as e:
         if e._code == ErrorCode.NOT_IMPLEMENTED:
+            # TODO error code should have a message to explain the exact feature
+            # TODO the message should show the github issue url!
             print("Error: Feature not implemented yet!", file=sys.stderr)
         elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
             print("Error: No git repo as superproject found!", file=sys.stderr)
