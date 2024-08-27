@@ -8,8 +8,9 @@ already proven and works!
 
 The subpatch project will provide two things:
 
-* A command line tool called `subpatch` to manage subprojects (in a monorepo). The github
-  repo is [subpatch](https://github.com/lengfeld/subpatch).
+* A command line tool called `subpatch` to manage subprojects in a source control repository,
+  e.g. in a git repository. The github repository is
+  [subpatch](https://github.com/lengfeld/subpatch).
 * Documentation, explanations and opinions about multi repo setups and
   management. This is this website.
 
@@ -33,9 +34,9 @@ subpatch is interesting for you if you want to do the following tasks:
 
 subpatch will be a subprojects management tool based on the following ideas:
 
-* It's based on the idea of monorepos. The files of subprojects are added as
-  normal files to the superproject.  In most cases this will be just a git
-  repository.
+* It's based on the idea of `git add` and `git read-tree`. The files of
+  subprojects are added as normal files to the superproject.  In most cases
+  this will be just a git repository.
 * The metadata of a subproject is saved in a git-config styled configuration file.
 * Modifications of the subproject are possible and subpatch helps to maintain
   a linear patch stack of the modifications.
@@ -45,8 +46,6 @@ subpatch will be a subprojects management tool based on the following ideas:
 
 ## subpatch main difference
 
-subpatch is based on the concept of
-[monorepos](https://en.wikipedia.org/wiki/Monorepo).
 When you use subpatch the subprojects are not git repository itself. The files
 of the subprojects are added as files to the superproject. You will only have
 to deal with a single git repository.
