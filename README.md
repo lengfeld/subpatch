@@ -43,15 +43,79 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 ## How to release
 
-testing creating a release
+*NOTE:* This section is still work-in-progress.
+
+First all tests should be green:
+
+    $ make tests
+
+Update the README from the website:
+
+    $ ./update-website.sh
+    $ git diff
+    $ git commit -a # if necessary
+
+Increase version number, create commit and tag
+
+    $ vim subpatch
+    $ git add -p subpatch
+    $ git commit -m "Release version v0.1a2"
+    $ git show  # check
+    $ git tag -m "subpatch version v0.1a2" v0.1a2
+    $ git show v0.1a2  # checks
+    $ git describe     # check
+
+Build release
 
     $ make dist
+
+Test installation locally
+
+    $ pipx install dist/subpatch-0.1a2-py3-none-any.whl
+    $ subpatch --version
+    # make some tests "status" and "add" command
+    $ pipx uninstall subpatch
+
+Publish release on test pypi website
+
     $ twine upload --repository testpypi dist/*
+    # Check website
+    #   https://test.pypi.org/project/subpatch/0.1a2/
+    # and
+    #   https://test.pypi.org/project/subpatch/
 
-How to test install
+Make test install from test pypi
 
-    $ pipx install --index-url https://test.pypi.org/simple/ subpatch
+    $ pipx install -i https://test.pypi.org/simple/ subpatch
+    # make some tests
+    $ pipx uninstall subpatch
 
+Publish release commit and tag
+
+    $ git push origin main --follow-tags --dry-run
+    To github.com:lengfeld/subpatch.git
+       479f2d4..9ed50ba  main -> main
+     * [new tag]         v0.1a2 -> v0.1a2
+    $ git push origin main --follow-tags
+
+    # Check tag website on github
+    https://github.com/lengfeld/subpatch/tags
+
+Make release to real pypi
+
+    $ twine upload dist/*
+    # visit website
+    #    https://pypi.org/project/subpatch/
+
+Make release on github
+
+    Goto https://github.com/lengfeld/subpatch/releases
+    - Create Release
+    - Add release notes
+    - Add subpatch script as a binary artifact
+    - Marke as pre-release
+    Looks like
+       https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
 
 
 ## TODOs
