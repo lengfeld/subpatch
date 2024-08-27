@@ -1,5 +1,6 @@
 site_name: subpatch
 site_url: https://subpatch.net
+docs_dir: website
 theme:
   name: material
   features:
