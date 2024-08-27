@@ -114,27 +114,42 @@ contain the `bin` folder in your HOME directory at the end.
 The last step is to download the subpatch script and copy it into the `bin` folder.
 
 First go to the [releases page](../ref/releases.md) and find the latest
-release. Now you can either click on the link for *standalone python script*
-and download the script with your browser. Or you copy the link and download
-the script on the commandline with
+release. There are two options: manual download or using the command line:
 
-    $ wget https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch
+#### Manual download
 
-The above command is just an example. For other versions of subpatch, the URL
-looks different.
+Now click on the link for *standalone python script* and download the script
+with your browser.
 
-After you downloaded the standalone script, you must move it to the `bin`
-directory. For example:
+After you downloaded the standalone script into your download directory, you
+must move it to the `bin` directory. For example:
 
     $ mv subpatch ~/bin/
 
-The executable bit is not set, for downloaded files. You must set it manually with the command
+The executable bit is not set for downloaded files. You must manually set it
+with the command
 
     $ chmod +x ~/bin/subpatch
 
 Otherwise the shell cannot execute the script.
 
-To test that subpatch works, you can execute the command
+
+#### Using the command line
+
+Apart from the manual download, you can use command line tools. To download
+the script and set the executable bit, just execute:
+
+    $ wget https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch -O ~/bin/subpatch
+    $ chmod +x ~/bin/subpatch
+
+The above command is just an example. For other versions of subpatch, the
+version number in the URL looks different.
+
+
+### Test subpatch
+
+After download and installation you should test the subpatch command line tool.
+To test that it works, you can execute the command
 
     $ subpatch --version
 
