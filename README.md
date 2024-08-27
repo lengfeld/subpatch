@@ -1,4 +1,4 @@
-# subpatch - subprojects done right!
+# subpatch: fearless multi-repository management - stay relaxed!
 
 subpatch is currently only an idea, but based on proven concepts.
 See the website [subpatch.net](https://subpatch.net) for more details.
