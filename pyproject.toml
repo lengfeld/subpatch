@@ -46,3 +46,6 @@ subpatch = "subpatch:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "subpatch.__version__"}
+
+[tool.setuptools]
+py-modules = ["subpatch"]
