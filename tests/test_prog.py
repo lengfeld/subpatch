@@ -10,54 +10,11 @@ from copy import copy
 from time import sleep
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
+from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git
+
 
 path = realpath(__file__)
-sys.path.append(join(dirname(path), "../"))
-
-from helpers import TestCaseTempFolder, cwd
 SUBPATCH_PATH = join(dirname(path), "..", "subpatch")
-
-# TODO split tests between function/internal tests and tests
-# executing the supatch command
-from subpatch import git_get_toplevel
-
-
-# NOTES
-# - Paths/filenames are python <string> objects/types
-# - file content is python <bytes> object
-
-
-def touch(filename, file_content):
-    with open(filename, "bw") as f:
-        f.write(file_content)
-
-
-def mkdir(filename):
-    os.mkdir(filename)
-
-
-class Git():
-    def init(self):
-        self.call(["init", "-q"])
-
-    def add(self, filename):
-        self.call(["add", filename])
-
-    def commit(self, msg):
-        self.call(["commit", "-m", "msg", "-q"])
-
-    def call(self, args):
-        call(["git"] + args)
-
-    # TODO what is the member function naming convention?
-    def diff_staged_files(self):
-        # TODO use '\0' delimeter instead of '\n'
-        p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE)
-        stdout, _ = p.communicate()
-        if p.returncode != 0:
-            raise Exception("error here")
-
-        return stdout.rstrip(b"\n").split(b"\n")
 
 
 def subpatch(args, stderr=None, stdout=None):
@@ -272,35 +229,6 @@ Adding subproject 'subproject' was successful.
 
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
-
-
-class TestGit(TestCaseTempFolder):
-    def testGitGetToplevelNotInGitFolder(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                self.assertIsNone(git_get_toplevel())
-
-    def testGitGetToplevel(self):
-        mkdir("subproject")
-        with cwd("subproject"):
-            git = Git()
-            git.init()
-            touch("hello", b"content")
-            git.add("hello")
-            git.commit("msg")
-
-            cur_cwd = os.getcwd().encode("utf8")
-            git_path = git_get_toplevel()
-            self.assertEqual(git_path, cur_cwd)
-            self.assertTrue(git_path.endswith(b"/subproject"))
-
-            mkdir("test")
-
-            with cwd("test"):
-                # It's still the toplevel dir, not the subdir "test"
-                git_path = git_get_toplevel()
-                self.assertEqual(git_path, cur_cwd)
-                self.assertTrue(git_path.endswith(b"/subproject"))
 
 
 if __name__ == '__main__':

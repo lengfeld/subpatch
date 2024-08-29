@@ -6,6 +6,10 @@ all:
 .PHONY: tests
 tests:       ### Runs the python unit tests
 	python3 -m unittest discover -s tests
+	@# Also test executing the scripts by hand
+	tests/test_lib.py
+	tests/test_prog.py
+	cd tests && ./test_lib.py && ./test_prog.py
 
 
 # for README.md, TODO.md and CHANGELOG.md

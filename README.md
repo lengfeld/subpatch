@@ -18,8 +18,8 @@ Useful makefile targets
 
 How to execute a single tests
 
-    $ python3 tests/test_main.py TestNoCommands.testVersion
-    $ tests/test_main.py TestNoCommands.testVersion
+    $ python3 tests/test_prog.py TestNoCommands.testVersion
+    $ tests/test_prog.py TestNoCommands.testVersion
 
 
 ## License - full disclaimer

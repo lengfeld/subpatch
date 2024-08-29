@@ -7,7 +7,47 @@ import tempfile
 import unittest
 import shutil
 import contextlib
+from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import isfile, isdir, join, realpath, dirname
+
+
+# TODO unify
+# NOTES
+# - Paths/filenames are python <string> objects/types
+# - file content is python <bytes> object
+
+
+class Git():
+    def init(self):
+        self.call(["init", "-q"])
+
+    def add(self, filename):
+        self.call(["add", filename])
+
+    def commit(self, msg):
+        self.call(["commit", "-m", "msg", "-q"])
+
+    def call(self, args):
+        call(["git"] + args)
+
+    # TODO what is the member function naming convention?
+    def diff_staged_files(self):
+        # TODO use '\0' delimeter instead of '\n'
+        p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("error here")
+
+        return stdout.rstrip(b"\n").split(b"\n")
+
+
+def touch(filename, file_content):
+    with open(filename, "bw") as f:
+        f.write(file_content)
+
+
+def mkdir(filename):
+    os.mkdir(filename)
 
 
 class TestCaseTempFolder(unittest.TestCase):
