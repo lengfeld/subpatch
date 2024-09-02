@@ -124,6 +124,7 @@ def cmd_add(args, parser):
 
     # TODO maybe add pid to avoid race conditions
     # TODO "git submodule init" creates a bare repoistory in ".git/modules"
+    # TODO clone only a single branch and mabye use --depth 1
     assert len(remote_git_name) != 0
     local_tmp_name = remote_git_name + "-tmp"
     git_clone(remote_git_url, local_tmp_name)
@@ -159,7 +160,7 @@ def cmd_add(args, parser):
 
     # TODO prepare commit message
 
-    # NOTE: Design decision: The output is relative to the current workin dir.
+    # NOTE: Design decision: The output is relative to the current working dir.
     # The content of '%s' is the remote git name or the path relative to the
     # current working dir. It's not relative to the top level dir of the git repo.
     print("Adding subproject '%s' was successful." % (remote_git_name,))
