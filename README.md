@@ -118,7 +118,7 @@ Make release on github
        https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
 
 
-## TODOs
+## TODOs and ideas
 
 Start using pylint
 
@@ -169,3 +169,16 @@ changelog or added commits automatically to the commit message.
 Sync github release page and website release page.
 
 Add checksum of subpatch script to release page. Maybe sign with gpg key.
+
+Improve build process. Last time I released with uncomitted changes.
+
+Use version/tag in example docs/tut/basic-usage.md and remove the explanation.
+
+Add github action to deploy the website automatically
+
+If subpatch is a toolkit and works nicely as a toolkit, write a "yocto layer
+manager". So the same as a "package manager" but for the Yocto layers. Features
+* seraching for layers
+* selecting, downloading, adding layers and
+* automatically resolve dependencies onto other layers
+  (Core feature of package managers)

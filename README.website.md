@@ -23,10 +23,3 @@ It structures documentation into four categories:
 * tutorials
 * how-to guides
 * reference
-
-
-# TODOs
-
-Use version/tag in example docs/tut/basic-usage.md and remove the explanation.
-
-Add github action to deploy automatically
