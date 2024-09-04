@@ -9,7 +9,7 @@ engineering.
 This page explains the issue with two examples:
 
 * Example 1: C/C++ library as source dependency
-* Example 2: Embedded Linux firmware based on Yocto
+* Example 2: multi repository project for linux embedded firmware
 
 
 ## Example 1: C/C++ library as source dependency

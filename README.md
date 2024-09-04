@@ -186,3 +186,47 @@ manager". So the same as a "package manager" but for the Yocto layers. Features
 For the technical comparisons of the tools add
 * the programming language
 * the start of development
+
+Draw/find a logo. Maybe something like '/sub/patch'.
+
+Setup sphinx build for website.
+* find differnces, .e.g sitemap and 404 page.
+
+Common problems (why you should use subptach)
+* stories/PRs/feature requests span multi repos
+* checkout out a feature for review needs multipe repos
+* dependend commits/atomic commits problem/two commits problem
+* Anti point: devs must be trained to honor code ownership, use tools.
+  (General problem of monorepos)
+* disappearing of upstream recoures
+
+Write summary for every tool that stats what feature this tool
+does not implement compared to subpatch.
+
+Write about the benefits of supatch.
+
+Check whether kas and west can support other superprojects than git.
+
+Look at https://gitmodules.com/ (git submodules done right) and
+add them ot the list and comparision
+
+Add checker that checks available of out-going links.
+
+Add germany haftungs-stuff in the imprint.
+
+Write about Critic/pitfalls/Bad-stuff of subpatch
+* subpatch is just a generic APM. With the same problems as other APMs
+  for downstream consumers, like embedded build systems.
+* APM issue again: subpatch does not allow dependency resolution or sharing!
+  If multiple subprojects uses itself subpatch, there is no dependency
+  sharing!
+
+Add other multi repo management tools to explanation page.
+
+Add explanation of source/external dependency and there different types like
+internal helper libraries to external projects (To the glossary)
+
+Idea/feature request: repo and git submodules support relative subproject URLs.
+These are resolved to the url of the superproject. This allows to mirror a
+superproject and the subprojects without changing the URLs in the
+manifest/config file. Should subpatch also support this feature?

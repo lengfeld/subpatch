@@ -7,7 +7,8 @@ nav:
   - Home: 'index.md'
   - Explanations:
     - Introduction: 'exp/intro.md'
-    - Subpatch Design: 'exp/design.md'
+    - Pre-subpatch history: 'exp/history.md'
+    - subpatch design: 'exp/design.md'
     - Comparison to other tools: 'exp/comparison.md'
 #   - Frequently Asked Questions : 'exp/faq.md'
   - Tutorials:

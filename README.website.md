@@ -23,3 +23,8 @@ It structures documentation into four categories:
 * tutorials
 * how-to guides
 * reference
+
+
+# Conventions
+
+The term 'subpatch' is always spelled lowercase. Even at the start of sentence.

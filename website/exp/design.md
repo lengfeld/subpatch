@@ -2,7 +2,8 @@
 
 subpatch is based on my experiences and learnings as a (embedded) software
 engineer. Everything that I have seen and done in the last ten years feeds into
-the following list of requirements.
+the following list of requirements. See the [history page](history.md) for
+details.
 
 *NOTE*: For now the implementation of subpatch not complete. Please read the
 requirement list as a vision for the first major release of subpatch, not as a
@@ -34,20 +35,20 @@ dependency later.
 (**R7**) If the source dependency is patched locally, it should help
 maintaining a linear patch stack.
 
-(**R8**) When doing an update of a source dependency and there are no conflicts
-with the local patches, the tool should rebase local patches automatically.
+(**R8**) should rebase local patches automatically, when doing an update of a
+source dependency and there are *no conflicts* with the local patches.
 
-(**R9**) When doing an update of a source dependency and there are are conflicts
-with the local patches, the tool should help porting the local patches.
+(**R9**) should help porting the local patches, when doing an update of a
+source dependency and there are *conflicts* with the local patches.
 
 (**R10**) should provided an stable command line API (plumbing commands) to
 support other tools to track source dependencies, e.g. to automatically check
 for updates or for CVEs.
 
-(**R11**) Should support every development platform that also supports git and
+(**R11**) should support every development platform that also supports git and
 python, like Linux, unixes, Windows and MacOS.
 
-(**R12**) Should scale to the size of the AOSP (Android Open Source Project)
+(**R12**) should scale to the size of the AOSP (Android Open Source Project).
 
 
 ## Design decisions
