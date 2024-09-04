@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://subpatch.net/exp/design-goals/">
+        <link rel="canonical" href="https://subpatch.net/exp/design/">
       
       
         <link rel="prev" href="../intro/">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Design Goals - subpatch</title>
+        <title>Subpatch Design - subpatch</title>
       
     
     
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#design-goals" class="md-skip">
+        <a href="#subpatch-design" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Design Goals
+              Subpatch Design
             
           </span>
         </div>
@@ -278,15 +278,59 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Subpatch Design
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Design Goals
+    Subpatch Design
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    Design Decisions
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -525,6 +569,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    Design Decisions
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -538,20 +604,57 @@
                   
 
 
-<h1 id="design-goals">Design Goals</h1>
-<p>subpatch is designed based on the following goals. The tool subpatch</p>
-<ol>
-<li>minimizes complexity compared to other tools</li>
-<li>does not interfere with the vcs<ol>
-<li>is distributed (as in git)</li>
-<li>allows nesting</li>
-</ol>
-</li>
-<li>allows local patching/forking of subprojects</li>
-<li>is vcs agnostic, but integrates with the vcs</li>
-<li>does not mix build tool and vcs</li>
-</ol>
-<p>TOOD explain every design goal in detail</p>
+<h1 id="subpatch-design">subpatch design</h1>
+<p>subpatch is based on my experiences and learnings as a (embedded) software
+engineer. Everything that I have seen and done in the last ten years feeds into
+the following list of requirements.</p>
+<p><em>NOTE</em>: For now the implementation of subpatch not complete. Please read the
+requirement list as a vision for the first major release of subpatch, not as a
+status of the implementation.</p>
+<h2 id="requirements">Requirements</h2>
+<p>The tool …</p>
+<p>(<strong>R1</strong>) should support git, cvs, mercurial, subversion and non-cvs environment
+as superprojects.</p>
+<p>(<strong>R2</strong>) do not interfere with the vcs. The existing workflows
+like checking out, cloning, switching branches, updating, rebasing, tagging,
+forking, bisecting, releasing and ... should stay the same.</p>
+<p>(<strong>R3</strong>) should support git, cvs, mercurial, subversion and source
+code archives (like tarballs or zip files) as source dependencies</p>
+<p>(<strong>R4</strong>) should track the original metadata (e.g. url, commit ids,
+checksums, ... ) of the source dependency to verify the authenticity of the
+dependency later.</p>
+<p>(<strong>R5</strong>) should help integrating updates of the source dependencies.</p>
+<p>(<strong>R6</strong>) should support local patching of source dependencies.</p>
+<p>(<strong>R7</strong>) If the source dependency is patched locally, it should help
+maintaining a linear patch stack.</p>
+<p>(<strong>R8</strong>) When doing an update of a source dependency and there are no conflicts
+with the local patches, the tool should rebase local patches automatically.</p>
+<p>(<strong>R9</strong>) When doing an update of a source dependency and there are are conflicts
+with the local patches, the tool should help porting the local patches.</p>
+<p>(<strong>R10</strong>) should provided an stable command line API (plumbing commands) to
+support other tools to track source dependencies, e.g. to automatically check
+for updates or for CVEs.</p>
+<p>(<strong>R11</strong>) Should support every development platform that also supports git and
+python, like Linux, unixes, Windows and MacOS.</p>
+<p>(<strong>R12</strong>) Should scale to the size of the AOSP (Android Open Source Project)</p>
+<h2 id="design-decisions">Design Decisions</h2>
+<p>While developing subpatch, the following design decisions were taken. The
+requirement list still still gives a lot of freedom for the implementation.
+Therefore the chosen decisions are documented and explained here.</p>
+<p>(<strong>DD1</strong>): written in python3 (but open for a port to another later if successful)</p>
+<ul>
+<li>[+] faster iteration speed</li>
+<li>[+] easier deployment/install of users. python runs everywhere.</li>
+<li>[+] programming language that I know really good and written a lot of code
+  already.</li>
+</ul>
+<p>(<strong>DD2</strong>): config file format is <code>git-config</code></p>
+<ul>
+<li>[+] the same config format that the main cvs for subpatch (=git) uses.</li>
+<li>[+] Most developers are already familiar with the config format, e.g. because
+  they are modyfing <code>~/.git config</code>.</li>
+</ul>
+<p><em>NOTE:</em> This list is not completed yet and should grow while supbatch is developed.</p>
 
 
 

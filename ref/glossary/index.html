@@ -267,11 +267,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../exp/design-goals/" class="md-nav__link">
+      <a href="../../exp/design/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Design Goals
+    Subpatch Design
   </span>
   
 
@@ -495,6 +495,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#naming-in-different-contexts" class="md-nav__link">
+    Naming in different contexts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#version-control-system-vcs" class="md-nav__link">
     version control system (vcs)
   </a>
@@ -597,6 +604,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#naming-in-different-contexts" class="md-nav__link">
+    Naming in different contexts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#version-control-system-vcs" class="md-nav__link">
     version control system (vcs)
   </a>
@@ -625,12 +639,46 @@
 a git repository itself, e.g. for <code>git submodule</code>. When using subpatch the
 superproject has the configuration file <code>.subpatch</code> at its top level directory.</p>
 <h2 id="subprojects">subproject(s)</h2>
-<p>The <em>subproject</em> or <em>subprojects</em> are the external projects, often called third
-party dependencies, that are added to the superproject.</p>
+<p>The <em>subproject</em> or <em>subprojects</em> are the external projects, often called (third
+party) dependencies, that are added to the superproject.</p>
 <p><em>Note</em>: The terms <em>super-</em> and <em>sub-</em>projects are always relative to a specific
 project setup. It might be the case that the superproject of a project (e.g. a
 C library with third party dependencies) is the subproject of another project
 (e.g. a C++ application, using the library).</p>
+<h2 id="naming-in-different-contexts">Naming in different contexts</h2>
+<p>The terms superproject/subproject and project/dependency are specific to a
+given context, but can be used interchangeably. Here is an overview:</p>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Name for super*</th>
+<th>Name for sub*</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>package manager</td>
+<td>project</td>
+<td>(source) dependencies</td>
+</tr>
+<tr>
+<td>multi repo problem</td>
+<td>superproject</td>
+<td>subprojects</td>
+</tr>
+<tr>
+<td>multi repo problem</td>
+<td>super repository</td>
+<td>sub repositories</td>
+</tr>
+<tr>
+<td>multi repo problem</td>
+<td>superrepo</td>
+<td>subrepos</td>
+</tr>
+</tbody>
+</table>
 <h2 id="version-control-system-vcs">version control system (vcs)</h2>
 <p>A <em>version control system</em> is a tool to track changes to a set of files and provides
 auxiliary functional. Sometimes these are also called <em>source code management</em> tools.</p>
