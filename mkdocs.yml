@@ -3,8 +3,6 @@ site_url: https://subpatch.net
 docs_dir: website
 theme:
   name: readthedocs
-  features:
-    - navigation.sections
 nav:
   - Home: 'index.md'
   - Explanations:
