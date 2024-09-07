@@ -182,3 +182,7 @@ manager". So the same as a "package manager" but for the Yocto layers. Features
 * selecting, downloading, adding layers and
 * automatically resolve dependencies onto other layers
   (Core feature of package managers)
+
+For the technical comparision of the tools add
+* the programming language
+* the start of development
