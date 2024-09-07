@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/intro/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/history/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Introduction - subpatch</title>
+    <title>Pre-subpatch history - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Introduction";
-        var mkdocs_page_input_path = "exp/intro.md";
-        var mkdocs_page_url = "/exp/intro/";
+        var mkdocs_page_name = "Pre-subpatch history";
+        var mkdocs_page_input_path = "exp/history.md";
+        var mkdocs_page_url = "/exp/history/";
       </script>
     
     <!--[if lt IE 9]>
@@ -45,17 +45,11 @@
               </ul>
               <p class="caption"><span class="caption-text">Explanations</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Introduction</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#example-1-cc-library-as-source-dependency">Example 1: C/C++ library as source dependency</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#example-2-embedded-linux-firmware-based-on-yocto">Example 2: Embedded Linux firmware based on Yocto</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#recap">Recap</a>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Pre-subpatch history</a>
+    <ul class="current">
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../design/">subpatch design</a>
                   </li>
@@ -95,7 +89,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Explanations</li>
-      <li class="breadcrumb-item active">Introduction</li>
+      <li class="breadcrumb-item active">Pre-subpatch history</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -104,68 +98,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="introduction">Introduction</h1>
-<p>This page should introduce you to the problem space of multi repository
-management and third party source dependencies. It's not a common problem for
-every software developers. The problem only arises when dealing for bigger
-software products, inter team software dependencies and in embedded software
-engineering.</p>
-<p>This page explains the issue with two examples:</p>
-<ul>
-<li>Example 1: C/C++ library as source dependency</li>
-<li>Example 2: Embedded Linux firmware based on Yocto</li>
-</ul>
-<h2 id="example-1-cc-library-as-source-dependency">Example 1: C/C++ library as source dependency</h2>
-<p>This example illustrates a third party source dependency.</p>
-<p>I publish a small C/C++ library
-<a href="https://github.com/lengfeld/aminilog">aminilog</a>. It's useful when writing
-C/C++ code in a Android Application project that uses the Android NDK (Native
-Development toolkit). The library provides ready to use logging macros, so a
-developer does need to write the logging macros for every NDK project from
-scratch.</p>
-<p>The library is only publish as a git repository. It's really simple. So there
-are no releases or tags and no binary artifacts, too. Also binary artifacts
-would do not make sense, because all of the library content are C/C++ Macros
-that must be evaluated at compile time of the user of the header.</p>
-<p>For a talk about the
-<a href="https://www.youtube.com/watch?v=NKP4JcVegbY">Glass-To-Glass-Latency in Android</a>
-I made a lot of experiments on the Android platform and develop an Android
-Application that could perform various tests. I published the code of the
-application on github in the repo
-<a href="https://github.com/inovex/android-glass-to-glass-latency/">inovex/android-glass-to-glass-latency</a></p>
-<p>In this application I also used the Android NDK to write some C++ code to
-access some libc functions from Java and to trigger the torch light of the
-Pixel2 phone as fast as possible.</p>
-<p>And while written and testing the C++ code I needed to write some log messages.
-Therefore I have imported my <em>aminilog</em> library as a source dependency into the
-project. The commands were roughly the following:</p>
-<pre><code>$ mkdir external/
-$ cd external/
-$ git clone https://github.com/lengfeld/aminilog.git
-$ rm -rf aminilog/.git
-$ git add aminilog/
-$ git commit -m "add aminilog dependency"
-</code></pre>
-<p>And then I integrate the library into the cmake build systems by adding the line</p>
-<pre><code>add_subdirectory(../../../../pixeltorch pixeltorch)
-[...]
-target_link_libraries(${PROJECT_NAME} android [...] aminilog)
-</code></pre>
-<p>into the <code>CMakeLists.txt</code>.</p>
-<p>In this example the git repository
-<a href="https://github.com/inovex/android-glass-to-glass-latency/">android-glass-to-glass-latency</a>
-is the superproject and the source dependency
-<a href="https://github.com/lengfeld/aminilog">aminilog</a> is the subproject.</p>
-<h2 id="example-2-embedded-linux-firmware-based-on-yocto">Example 2: Embedded Linux firmware based on Yocto</h2>
-<p>TODO add example</p>
-<h2 id="recap">Recap</h2>
-<p>TODO write recap</p>
+                <h1 id="pre-subpatch-history">Pre-subpatch history</h1>
+<p>subpatch is not my first attempt to solve the multi repository problem. There
+is a longer history before I started the subpatch project. This page should
+tell my path in this problem space and what learings I made along the way.</p>
+<p>TODO write history and define learnings as (<strong>L?</strong>)</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../history/" class="btn btn-neutral float-right" title="Pre-subpatch history">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../intro/" class="btn btn-neutral float-left" title="Introduction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../design/" class="btn btn-neutral float-right" title="subpatch design">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -188,10 +131,10 @@ is the superproject and the source dependency
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../.." style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../intro/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../history/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../design/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
