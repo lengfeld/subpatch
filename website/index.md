@@ -59,3 +59,33 @@ This is in contrast to other tools, e.g.
 
 These tools manage multi git repository management and try to combine them into
 a big superproject.
+
+```{eval-rst}
+.. Hidden TOCs
+
+.. toctree::
+    :caption: Explanation
+    :maxdepth: 2
+    :hidden:
+
+    exp/intro
+    exp/design
+    exp/comparison
+
+.. toctree::
+    :caption: Tutorials
+    :maxdepth: 2
+    :hidden:
+
+    tut/installation
+    tut/basic-usage
+
+.. toctree::
+    :caption: Reference
+    :maxdepth: 2
+    :hidden:
+
+    ref/glossary
+    ref/releases
+    imprint
+```

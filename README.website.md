@@ -1,16 +1,37 @@
 # subpatch's wobsite
 
 This is the source of the website [subpatch.net](https://subpatch.net).
-It's generate with [mkdocs](https://www.mkdocs.org/) and uses the
-[material theme](https://squidfunk.github.io/mkdocs-material/).
+It's generate with [sphinx](https://www.sphinx-doc.org/en/master/)
+and uses the
+[Read the Docs Sphinx Theme](https://sphinx-rtd-theme.readthedocs.io/en/stable/index.html).
 
-How to test locally:
 
-    $ mkdocs serve
+## Prepare build environment
 
-How to deploy:
+To install sphinx, tools and the theme, you can use:
 
-    $ mkdocs gh-deploy
+    $ python -m venv venv
+    $ . venv/bin/activate
+    $ pip install sphinx
+    $ pip install myst-parser
+    $ pip install sphinx-rtd-theme
+
+
+## Building and publish
+
+To build the website locally, execute:
+
+    $ . venv/bin/activate
+    $ cd website
+    $ make html
+
+To show the result, execute
+
+    $ browse _build/html/index.html
+
+To deploy, execute:
+
+    TODO
 
 
 # Background

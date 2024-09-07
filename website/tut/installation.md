@@ -34,41 +34,53 @@ directory.
 
 To install pipx on Ubuntu, execute
 
-    $ sudo apt install pipx
+``` console
+$ sudo apt install pipx
+```
 
 *NOTE*: For other distributions use the distro specific package manager.
 
 To check if pipx works, you can execute the `list` command. An example:
 
-    $ pipx list
-    nothing has been installed with pipx 😴
+``` console
+$ pipx list
+nothing has been installed with pipx 😴
+```
 
 
 ### Install subpatch with pipx
 
 If everything is fine, you can install the latest version of subpatch with the command
 
-    $ pipx install subpatch
+``` console
+$ pipx install subpatch
+```
 
 The output of the command should look like
 
-      installed package subpatch 0.1a2, installed using Python 3.10.12
-      These apps are now globally available
-        - subpatch
-    done! ✨ 🌟 ✨
+``` console
+  installed package subpatch 0.1a2, installed using Python 3.10.12
+  These apps are now globally available
+    - subpatch
+done! ✨ 🌟 ✨
+```
 
 If some of the numbers are different, that's o.k.
 
 To test that subpatch works, you can execute the command
 
-    $ subpatch --version
+``` console
+$ subpatch --version
+```
 
 It should print the version number of subpatch that is currently installed.
 
 **Congratulations**, now you successfully installed subpatch. A final note: To
 get further infos and the help text, execute
 
-    $ subpatch --help
+``` console
+$ subpatch --help
+```
 
 
 ## As a standalone script into the PATH
@@ -84,18 +96,24 @@ step.
 
 I used a `bin` directory in the HOME folder for that. To create it, execute
 
-    $ mkdir ~/bin
+``` console
+$ mkdir ~/bin
+```
 
 Then this folder must be added to the environment variable PATH. This can be
 done with
 
-    $ echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+``` console
+$ echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+```
 
 It adds a line at the end of the `~./bashrc` file.
 
 The change will only be active in new shells that are spawned now. So start a new shell with
 
-    $ bash
+``` console
+$ bash
+```
 
 *NOTE*: This tutorial assumes that you are using bash. If you use another
 shell, like zsh or fish, you mostly already know everything in the tutorial and
@@ -103,7 +121,9 @@ can adapt it yourself :-)
 
 To check that the modifications of the PATH variable worked, execute
 
-    $ echo $PATH
+``` console
+$ echo $PATH
+```
 
 It prints all folders that are scanned for executable files. The list should
 contain the `bin` folder in your HOME directory at the end.
@@ -124,12 +144,16 @@ with your browser.
 After you downloaded the standalone script into your download directory, you
 must move it to the `bin` directory. For example:
 
-    $ mv subpatch ~/bin/
+``` console
+$ mv subpatch ~/bin/
+```
 
 The executable bit is not set for downloaded files. You must manually set it
 with the command
 
-    $ chmod +x ~/bin/subpatch
+``` console
+$ chmod +x ~/bin/subpatch
+```
 
 Otherwise the shell cannot execute the script.
 
@@ -139,8 +163,10 @@ Otherwise the shell cannot execute the script.
 Apart from the manual download, you can use command line tools. To download
 the script and set the executable bit, just execute:
 
-    $ wget https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch -O ~/bin/subpatch
-    $ chmod +x ~/bin/subpatch
+``` console
+$ wget https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch -O ~/bin/subpatch
+$ chmod +x ~/bin/subpatch
+```
 
 The above command is just an example. For other versions of subpatch, the
 version number in the URL looks different.
@@ -151,11 +177,15 @@ version number in the URL looks different.
 After download and installation you should test the subpatch command line tool.
 To test that it works, you can execute the command
 
-    $ subpatch --version
+``` console
+$ subpatch --version
+```
 
 It should print the version number of subpatch that is currently installed.
 
 **Congratulations**, now you successfully installed subpatch. A final note: To
 get further infos and the help text, execute
 
-    $ subpatch --help
+``` console
+$ subpatch --help
+```

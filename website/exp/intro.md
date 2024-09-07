@@ -42,18 +42,22 @@ Pixel2 phone as fast as possible.  And while written and testing the C++ code I
 needed to write some log messages.  Therefore I imported my aminilog library as
 a source dependency into the project. The commands were roughly the following:
 
-    $ mkdir external/
-    $ cd external/
-    $ git clone https://github.com/lengfeld/aminilog.git
-    $ rm -rf aminilog/.git
-    $ git add aminilog/
-    $ git commit -m "add aminilog dependency"
+``` console
+$ mkdir external/
+$ cd external/
+$ git clone https://github.com/lengfeld/aminilog.git
+$ rm -rf aminilog/.git
+$ git add aminilog/
+$ git commit -m "add aminilog dependency"
+```
 
 And then I integrated the library into the cmake build systems by adding the line
 
-    add_subdirectory(../../../../pixeltorch pixeltorch)
-    [...]
-    target_link_libraries(${PROJECT_NAME} android [...] aminilog)
+```
+add_subdirectory(../../../../pixeltorch pixeltorch)
+[...]
+target_link_libraries(${PROJECT_NAME} android [...] aminilog)
+```
 
 into the `CMakeLists.txt`.
 
