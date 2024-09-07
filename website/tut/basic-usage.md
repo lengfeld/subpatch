@@ -23,7 +23,7 @@ To follow the tutorial you need the following setup
 
 First you need to clone the
 [example repository](https://github.com/lengfeld/subpatch-example0). It's
-the superproject that contains minimal C library . On the command line execute
+the superproject that contains minimal C library. On the command line execute
 
     $ git clone https://github.com/lengfeld/subpatch-example0
     $ cd subpatch-example0

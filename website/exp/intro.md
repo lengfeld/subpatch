@@ -1,10 +1,10 @@
 # Introduction
 
-This page should introduce you to the problem space of multi repository
-management and third party source dependencies. It's not a common problem for
-every software developers. The problem only arises when dealing for bigger
-software products, inter team software dependencies and in embedded software
-engineering.
+Welcome to the realm of multi-repository management and third-party source
+dependencies. Even if you are an experienced software developer, you may not
+have encountered this issue in your career already.  It only arises when
+working on larger software projects, managing inter-team software dependencies,
+or in the field of embedded software engineering.
 
 This page explains the issue with two examples:
 
@@ -16,32 +16,31 @@ This page explains the issue with two examples:
 
 This example illustrates a third party source dependency.
 
-I publish a small C/C++ library
+I maintain a small C/C++ library called
 [aminilog](https://github.com/lengfeld/aminilog). It's useful when writing
-C/C++ code in a Android Application project that uses the Android NDK (Native
-Development toolkit). The library provides ready to use logging macros, so a
-developer does need to write the logging macros for every NDK project from
-scratch.
+C/C++ code in an Android Application project that uses the
+[Android NDK](https://developer.android.com/ndk/)
+(Native Development toolkit). The library provides ready to use logging macros,
+because the NDK only contains the low level APIs for logging.
 
-The library is only publish as a git repository. It's really simple. So there
-are no releases or tags and no binary artifacts, too. Also binary artifacts
-would do not make sense, because all of the library content are C/C++ Macros
-that must be evaluated at compile time of the user of the header.
+I publish the library as a plain git repository. Since it is really
+simple, there are no release tarballs or tags and no binary artifacts. Also
+binary artifacts would do not make sense, because all of the library content
+are C/C++ macros that must be evaluated at compile time.
 
-For a talk about the
-[Glass-To-Glass-Latency in Android](https://www.youtube.com/watch?v=NKP4JcVegbY)
-I made a lot of experiments on the Android platform and develop an Android
-Application that could perform various tests. I published the code of the
-application on github in the repo
-[inovex/android-glass-to-glass-latency](https://github.com/inovex/android-glass-to-glass-latency/)
+In 2023 I prepared a talk about the
+[Glass-To-Glass-Latency in Android](https://www.youtube.com/watch?v=NKP4JcVegbY).
+For my latency experiments I created a git repository and needed the above
+mentioned C/C++ library as a source dependency.  I develop an Android
+Application that could perform various tests and experiments. The code of the
+application is on github in the repo
+[inovex/android-glass-to-glass-latency](https://github.com/inovex/android-glass-to-glass-latency/).
 
 In this application I also used the Android NDK to write some C++ code to
 access some libc functions from Java and to trigger the torch light of the
-Pixel2 phone as fast as possible.
-
-And while written and testing the C++ code I needed to write some log messages.
-Therefore I imported my *aminilog* library as a source dependency into the
-project. The commands were roughly the following:
+Pixel2 phone as fast as possible.  And while written and testing the C++ code I
+needed to write some log messages.  Therefore I imported my aminilog library as
+a source dependency into the project. The commands were roughly the following:
 
     $ mkdir external/
     $ cd external/
