@@ -40,7 +40,7 @@ access some libc functions from Java and to trigger the torch light of the
 Pixel2 phone as fast as possible.
 
 And while written and testing the C++ code I needed to write some log messages.
-Therefore I have imported my *aminilog* library as a source dependency into the
+Therefore I imported my *aminilog* library as a source dependency into the
 project. The commands were roughly the following:
 
     $ mkdir external/
@@ -50,7 +50,7 @@ project. The commands were roughly the following:
     $ git add aminilog/
     $ git commit -m "add aminilog dependency"
 
-And then I integrate the library into the cmake build systems by adding the line
+And then I integrated the library into the cmake build systems by adding the line
 
     add_subdirectory(../../../../pixeltorch pixeltorch)
     [...]
@@ -58,16 +58,19 @@ And then I integrate the library into the cmake build systems by adding the line
 
 into the `CMakeLists.txt`.
 
-In this example the git repository
+That was all. I added the source files of the [aminilog](https://github.com/lengfeld/aminilog)
+library as files to the git repository
 [android-glass-to-glass-latency](https://github.com/inovex/android-glass-to-glass-latency/)
-is the superproject and the source dependency
-[aminilog](https://github.com/lengfeld/aminilog) is the subproject.
+and integrated them to the cmake build system.
+In this example the git repository *android-glass-to-glass-latency* is the
+superproject and the source dependency *aminilog* is the subproject.
 
 
 ## Example 2: Embedded Linux firmware based on Yocto
 
-TODO add example
+This example illustrates a multi repository setup of a Yocto project.
 
+TODO add example
 
 ## Recap
 

@@ -1,6 +1,13 @@
 # Glossary
 
-This page is a glossary. More important terms are at the top.
+This page contains explanations of the terms in the context subpatch. The terms
+are _not_ sorted alphabetically. They are sorted according to relevance. More
+important terms are at the top, less important terms are at the bottom.
+
+
+## multi repository management/setup/problem
+
+tbd
 
 
 ## superproject
@@ -45,3 +52,5 @@ Popular version control systems are
 * [subversion (svn)](https://subversion.apache.org/)
 * [mercurial](https://www.mercurial-scm.org/)
 * [Concurrent Versions System (cvs)](http://savannah.nongnu.org/projects/cvs)
+
+The older name for vcs is *rcs* (*revision control system*).
