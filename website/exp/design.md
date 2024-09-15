@@ -50,13 +50,13 @@ python, like Linux, unixes, Windows and MacOS.
 (**R12**) Should scale to the size of the AOSP (Android Open Source Project)
 
 
-## Design Decisions
+## Design decisions
 
-While developing subpatch, the following design decisions were taken. The
-requirement list still still gives a lot of freedom for the implementation.
-Therefore the chosen decisions are documented and explained here.
+The requirement list still gives a lot of freedom for the implementation.
+Therefore I document and explain the chosen decisions here, while developing
+subpatch.
 
-(**DD1**): written in python3 (but open for a port to another later if successful)
+(**DD1**): written in python3 (but open for a port to another language later if successful)
 
 * [+] faster iteration speed
 * [+] easier deployment/install of users. python runs everywhere.
