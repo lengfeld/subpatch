@@ -21,7 +21,7 @@ like checking out, cloning, switching branches, updating, rebasing, tagging,
 forking, bisecting, releasing and ... should stay the same.
 
 (**R3**) should support git, cvs, mercurial, subversion and source
-code archives (like tarballs or zip files) as source dependencies
+code archives (like tarballs or zip files) as source dependencies/subprojects.
 
 (**R4**) should track the original metadata (e.g. url, commit ids,
 checksums, ... ) of the source dependency to verify the authenticity of the
