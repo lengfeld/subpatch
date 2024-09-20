@@ -65,6 +65,8 @@
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Glossary</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#multi-repository-managementsetupproblem">multi repository management/setup/problem</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#superproject">superproject</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subprojects">subproject(s)</a>
@@ -72,6 +74,8 @@
     <li class="toctree-l2"><a class="reference internal" href="#naming-in-different-contexts">Naming in different contexts</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#version-control-system-vcs">version control system (vcs)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#application-level-package-manager-apm">application-level package manager (APM)</a>
     </li>
     </ul>
                   </li>
@@ -107,7 +111,15 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="glossary">Glossary</h1>
-<p>This page is a glossary. More important terms are at the top.</p>
+<p>This page contains explanations of the terms in the context subpatch. The terms
+are <em>not</em> sorted alphabetically. They are sorted according to relevance. More
+important terms are at the top, less important terms are at the bottom.</p>
+<h2 id="multi-repository-managementsetupproblem">multi repository management/setup/problem</h2>
+<p>The <em>multi repository problem</em> is when your project consists of multiple
+repositories and there are interdependencies between these repositories. E.g.
+when you must checkout multiple repos, because your build spans across multiple</p>
+<p>On this website the problem is sometimes called <em>multi repository setup</em>. The
+process of handling such a project is called <em>multi repository management</em>.</p>
 <h2 id="superproject">superproject</h2>
 <p>The <em>superproject</em> is the parent project in a multi repository setup. It's often
 a git repository itself, e.g. for <code>git submodule</code>. When using subpatch the
@@ -126,14 +138,14 @@ given context, but can be used interchangeably. Here is an overview:</p>
 <thead>
 <tr>
 <th>Context</th>
-<th>Name for super*</th>
-<th>Name for sub*</th>
+<th>Name for super…</th>
+<th>Name for sub…</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>package manager</td>
-<td>project</td>
+<td>project/package</td>
 <td>(source) dependencies</td>
 </tr>
 <tr>
@@ -163,6 +175,20 @@ auxiliary functional. Sometimes these are also called <em>source code management
 <li><a href="https://www.mercurial-scm.org/">mercurial</a></li>
 <li><a href="http://savannah.nongnu.org/projects/cvs">Concurrent Versions System (cvs)</a></li>
 </ul>
+<p>The older name for vcs is <em>rcs</em> (<em>revision control system</em>).</p>
+<h2 id="application-level-package-manager-apm">application-level package manager (APM)</h2>
+<p>The term <em>application-level pakcage managers</em> (APM) is used to described
+package managers provided in the ecosystem of the programming language. Examples:</p>
+<ul>
+<li><a href="https://yarnpkg.com/">yarn</a> for Javascript</li>
+<li><a href="https://crates.io/">cargo</a> for rust</li>
+<li><a href="https://pip.pypa.io/en/stable/">pip</a> for python</li>
+<li><a href="https://conan.io/">conan</a> for C++</li>
+</ul>
+<p>See also the Wikipedia entry
+<a href="https://en.wikipedia.org/wiki/List_of_software_package_management_systems#Application-level_package_managers">Application-level package managers</a>.
+These APMs are in contrast to package managers of Linux distributions, like rpm and
+dpkg, and embedded build systems, like buildroot and Yocto.</p>
               
             </div>
           </div><footer>

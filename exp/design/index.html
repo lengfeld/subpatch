@@ -53,7 +53,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#design-decisions">Design Decisions</a>
+    <li class="toctree-l2"><a class="reference internal" href="#design-decisions">Design decisions</a>
     </li>
     </ul>
                   </li>
@@ -105,7 +105,8 @@
                 <h1 id="subpatch-design">subpatch design</h1>
 <p>subpatch is based on my experiences and learnings as a (embedded) software
 engineer. Everything that I have seen and done in the last ten years feeds into
-the following list of requirements.</p>
+the following list of requirements. See the <a href="../history/">history page</a> for
+details.</p>
 <p><em>NOTE</em>: For now the implementation of subpatch not complete. Please read the
 requirement list as a vision for the first major release of subpatch, not as a
 status of the implementation.</p>
@@ -117,7 +118,7 @@ as superprojects.</p>
 like checking out, cloning, switching branches, updating, rebasing, tagging,
 forking, bisecting, releasing and ... should stay the same.</p>
 <p>(<strong>R3</strong>) should support git, cvs, mercurial, subversion and source
-code archives (like tarballs or zip files) as source dependencies</p>
+code archives (like tarballs or zip files) as source dependencies/subprojects.</p>
 <p>(<strong>R4</strong>) should track the original metadata (e.g. url, commit ids,
 checksums, ... ) of the source dependency to verify the authenticity of the
 dependency later.</p>
@@ -125,21 +126,21 @@ dependency later.</p>
 <p>(<strong>R6</strong>) should support local patching of source dependencies.</p>
 <p>(<strong>R7</strong>) If the source dependency is patched locally, it should help
 maintaining a linear patch stack.</p>
-<p>(<strong>R8</strong>) When doing an update of a source dependency and there are no conflicts
-with the local patches, the tool should rebase local patches automatically.</p>
-<p>(<strong>R9</strong>) When doing an update of a source dependency and there are are conflicts
-with the local patches, the tool should help porting the local patches.</p>
+<p>(<strong>R8</strong>) should rebase local patches automatically, when doing an update of a
+source dependency and there are <em>no conflicts</em> with the local patches.</p>
+<p>(<strong>R9</strong>) should help porting the local patches, when doing an update of a
+source dependency and there are <em>conflicts</em> with the local patches.</p>
 <p>(<strong>R10</strong>) should provided an stable command line API (plumbing commands) to
 support other tools to track source dependencies, e.g. to automatically check
 for updates or for CVEs.</p>
-<p>(<strong>R11</strong>) Should support every development platform that also supports git and
+<p>(<strong>R11</strong>) should support every development platform that also supports git and
 python, like Linux, unixes, Windows and MacOS.</p>
-<p>(<strong>R12</strong>) Should scale to the size of the AOSP (Android Open Source Project)</p>
-<h2 id="design-decisions">Design Decisions</h2>
-<p>While developing subpatch, the following design decisions were taken. The
-requirement list still still gives a lot of freedom for the implementation.
-Therefore the chosen decisions are documented and explained here.</p>
-<p>(<strong>DD1</strong>): written in python3 (but open for a port to another later if successful)</p>
+<p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
+<h2 id="design-decisions">Design decisions</h2>
+<p>The requirement list still gives a lot of freedom for the implementation.
+Therefore I document and explain the chosen decisions here, while developing
+subpatch.</p>
+<p>(<strong>DD1</strong>): written in python3 (but open for a port to another language later if successful)</p>
 <ul>
 <li>[+] faster iteration speed</li>
 <li>[+] easier deployment/install of users. python runs everywhere.</li>

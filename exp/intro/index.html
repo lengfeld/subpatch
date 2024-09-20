@@ -113,7 +113,7 @@ engineering.</p>
 <p>This page explains the issue with two examples:</p>
 <ul>
 <li>Example 1: C/C++ library as source dependency</li>
-<li>Example 2: Embedded Linux firmware based on Yocto</li>
+<li>Example 2: multi repository project for linux embedded firmware</li>
 </ul>
 <h2 id="example-1-cc-library-as-source-dependency">Example 1: C/C++ library as source dependency</h2>
 <p>This example illustrates a third party source dependency.</p>
@@ -137,7 +137,7 @@ application on github in the repo
 access some libc functions from Java and to trigger the torch light of the
 Pixel2 phone as fast as possible.</p>
 <p>And while written and testing the C++ code I needed to write some log messages.
-Therefore I have imported my <em>aminilog</em> library as a source dependency into the
+Therefore I imported my <em>aminilog</em> library as a source dependency into the
 project. The commands were roughly the following:</p>
 <pre><code>$ mkdir external/
 $ cd external/
@@ -146,17 +146,20 @@ $ rm -rf aminilog/.git
 $ git add aminilog/
 $ git commit -m "add aminilog dependency"
 </code></pre>
-<p>And then I integrate the library into the cmake build systems by adding the line</p>
+<p>And then I integrated the library into the cmake build systems by adding the line</p>
 <pre><code>add_subdirectory(../../../../pixeltorch pixeltorch)
 [...]
 target_link_libraries(${PROJECT_NAME} android [...] aminilog)
 </code></pre>
 <p>into the <code>CMakeLists.txt</code>.</p>
-<p>In this example the git repository
+<p>That was all. I added the source files of the <a href="https://github.com/lengfeld/aminilog">aminilog</a>
+library as files to the git repository
 <a href="https://github.com/inovex/android-glass-to-glass-latency/">android-glass-to-glass-latency</a>
-is the superproject and the source dependency
-<a href="https://github.com/lengfeld/aminilog">aminilog</a> is the subproject.</p>
+and integrated them to the cmake build system.
+In this example the git repository <em>android-glass-to-glass-latency</em> is the
+superproject and the source dependency <em>aminilog</em> is the subproject.</p>
 <h2 id="example-2-embedded-linux-firmware-based-on-yocto">Example 2: Embedded Linux firmware based on Yocto</h2>
+<p>This example illustrates a multi repository setup of a Yocto project.</p>
 <p>TODO add example</p>
 <h2 id="recap">Recap</h2>
 <p>TODO write recap</p>

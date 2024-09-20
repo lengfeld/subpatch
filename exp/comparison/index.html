@@ -131,7 +131,7 @@ problem. Other tools are</p>
 <td>git-cfg</td>
 <td>xml</td>
 <td>git-cfg</td>
-<td>???</td>
+<td>yaml</td>
 <td>yaml</td>
 <td>none</td>
 </tr>
@@ -153,27 +153,38 @@ problem. Other tools are</p>
 <td>git</td>
 <td>git</td>
 </tr>
+<tr>
+<td>language</td>
+<td>python</td>
+<td>python</td>
+<td>C</td>
+<td>python</td>
+<td>python</td>
+<td>shell</td>
+</tr>
 </tbody>
 </table>
 <p>Explanations of the rows:</p>
 <ul>
 <li><em>config format</em>: The format of the config file that is used to track the
-  information about the subprojects.</li>
-<li><em>superproject</em>: This is the type of cvs that is the top level repository and
-  also (often) tracks the configuration of subprojects. The repo tool is special here:
-  It tracks the subprojects in a manifest file in a separate git
-  repository, the so called <em>manifest repository</em>. But this repository is not
-  part of the directory hierarchy when the project is checked out. It does not
-  sit at the top level of the superproject.</li>
-<li><em>subprojects</em>: This is the type of cvs that is support as a subproject. For all
+  information about the subprojects. For repo and west the file is called the
+  <em>manifest</em> file.</li>
+<li><em>superproject</em>: The type of cvs that is the top level repository and
+  also (often) tracks the configuration of subprojects. (2)</li>
+<li><em>subprojects</em>: The type of cvs that is support as a subproject. For all
   other tools, except subpatch, only other git repositories are supported.</li>
+<li><em>language</em>: The main programming language that the tool is written in.</li>
 </ul>
 <p>Legend:</p>
 <ul>
 <li><code>git-cfg</code> stands for the <a href="https://git-scm.com/docs/git-config">git config format</a>
   used in <code>.git/config</code>, <code>~/.gitconfig</code> and <code>.gitmodules</code>.</li>
-<li><code>(1)</code>: subpatch does not support all other cvs as super- and subprojects for
+<li>(1): subpatch does not support all other cvs as super- and subprojects for
   now. Still work in progress.</li>
+<li>(2): The repo tool is special here. It tracks the subprojects in a manifest
+  file in a separate git repository, the so called <em>manifest repository</em>. But
+  this repository is not part of the directory hierarchy when the project is
+  checked out. It does not sit at the top level of the superproject.</li>
 </ul>
               
             </div>
