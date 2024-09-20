@@ -227,3 +227,7 @@ Idea/feature request: repo and git submodules support relative subproject URLs.
 These are resolved to the url of the superproject. This allows to mirror a
 superproject and the subprojects without changing the URLs in the
 manifest/config file. Should subpatch also support this feature?
+
+Add a very short and fast getting started guide to the frontpage. More detailed
+install instructions are provided as tutorials. But a reader should start very
+very quickly.
