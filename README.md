@@ -207,9 +207,6 @@ Write about the benefits of supatch.
 
 Check whether kas and west can support other superprojects than git.
 
-Look at https://gitmodules.com/ (git submodules done right) and
-add them ot the list and comparision
-
 Add checker that checks available of out-going links.
 
 Add germany haftungs-stuff in the imprint.

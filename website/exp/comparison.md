@@ -44,3 +44,16 @@ Legend:
   file in a separate git repository, the so called *manifest repository*. But
   this repository is not part of the directory hierarchy when the project is
   checked out. It does not sit at the top level of the superproject.
+
+
+# Other multi repository management tools
+
+Apart from the above already mentioned tools there exits a long list of other
+attempts to solve the multi repository problem. The following list should
+list all the other tools I have found so far:
+
+* [Git X-Modules](https://gitmodules.com/)
+* [GitSlave](https://gitslave.sourceforge.net/)
+* [Combo-layer](https://wiki.yoctoproject.org/wiki/Combo-layer)
+
+If you know additional tools, please post a pull request or email me.
