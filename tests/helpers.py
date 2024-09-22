@@ -27,6 +27,7 @@ class Git():
     def commit(self, msg):
         self.call(["commit", "-m", "msg", "-q"])
 
+    # TODO maybe name "run", because of "runSubpatch"
     def call(self, args):
         call(["git"] + args)
 

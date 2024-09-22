@@ -16,7 +16,7 @@ path = realpath(__file__)
 SUBPATCH_PATH = join(dirname(path), "..", "subpatch")
 
 
-class MyTests(unittest.TestCase):
+class TestCaseHelper(unittest.TestCase):
     def assertFileContent(self, filename, content):
         with open(filename, "br") as f:
             self.assertEqual(f.read(), content)
@@ -47,7 +47,8 @@ class TestsSubpatch(TestCaseTempFolder):
         self.assertEqual(p.returncode, 0)
         return p
 
-class TestNoCommands(MyTests, TestsSubpatch):
+
+class TestNoCommands(TestCaseHelper, TestsSubpatch):
     def testStartWithoutArgs(self):
         p = self.runSubpatch([], stderr=DEVNULL)
         self.assertEqual(p.returncode, 2)
@@ -104,7 +105,7 @@ def create_super_and_subproject():
         git.commit("msg")
 
 
-class TestCmdStatus(MyTests, TestsSubpatch):
+class TestCmdStatus(TestCaseHelper, TestsSubpatch):
     def testNotInSuperproject(self):
         # NOTE this does not fail, because the tmp folder is in the git folder
         # of the subpatch project itself.
@@ -141,7 +142,7 @@ NOTE: Output format is just a hack. Not the final output format yet!
                              p.stdout)
 
 
-class TestCmdAdd(MyTests, TestsSubpatch):
+class TestCmdAdd(TestCaseHelper, TestsSubpatch):
     def test_not_in_superproject(self):
         # NOTE this does not fail, because the tmp folder is in the git folder
         # of the subpatch project itself.
