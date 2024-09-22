@@ -236,3 +236,10 @@ manifest/config file. Should subpatch also support this feature?
 Add a very short and fast getting started guide to the frontpage. More detailed
 install instructions are provided as tutorials. But a reader should start very
 very quickly.
+
+Adding a git subprojects that has itself submodules? What should happen?
+* Should the exaxt subproject git tree be adding inclusiv the git commit objects?
+* Should the sumodules be downloaded add as plain files?
+* Should it just be ignored?
+
+Add a generic "-q/--quiet" option. Should only print errors.

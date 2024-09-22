@@ -221,7 +221,6 @@ Adding subproject 'subproject' was successful.
             # Check working tree
             self.assertTrue(os.path.isdir("subproject"))
 
-            # TODO what is the coding style for member naming
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
                               b"A\tsubproject/hello"])

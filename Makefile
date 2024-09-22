@@ -9,7 +9,8 @@ tests:       ### Runs the python unit tests
 	@# Also test executing the scripts by hand
 	tests/test_lib.py
 	tests/test_prog.py
-	cd tests && ./test_lib.py && ./test_prog.py
+	tests/test_submodule.py
+	cd tests && ./test_lib.py && ./test_prog.py && ./test_submodule.py
 
 
 # for README.md, TODO.md and CHANGELOG.md

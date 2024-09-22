@@ -86,7 +86,28 @@ def git_add(args):
         raise Exception("git failure")
 
 # TODO clarify naming: path, filename, url
-# TODO calrify name for remote git name and path/url
+# TODO clairfy name for remote git name and path/url
+
+# Git namings
+#  - object: something in the object store that has a SHA1
+#  - object type: blob, tree, commit, tag
+#  - ref: short for "reference", like branches and tags
+#  - rev: short for "revision", which are commit objects
+
+
+# Returns the type of the git object as a bytes object without a trailing
+# newline.
+# TODO Maybe introduce a enum for that
+def git_get_object_type(rev):
+    p = Popen(["git", "cat-file", "-t", rev], stdout=PIPE, stderr=DEVNULL)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        # TODO Create a generic git error exception
+        raise Exception("failed here")
+
+    stdout = stdout.rstrip(b"\n")
+    assert stdout in (b"blob", b"commit", b"tree", b"tag")
+    return stdout
 
 
 def cmd_add(args, parser):
@@ -101,6 +122,10 @@ def cmd_add(args, parser):
     # TODO Make this a generic function and move to a function
     # Use rstrip('/') to remove trailing slashes, e.g.
     #    subpatch add ../other-git-dir/
+    # TODO generic function to convert url to canonical repo name. e.g.
+    #     …bla/foo/.git/ -> "foo"
+    #     …bla/foo.git/  -> "foo"
+    #     …bla/foo       -> "foo"
     remote_git_name = remote_git_url.rstrip("/").split("/")[-1]
 
     path_superproject = git_get_toplevel()
@@ -108,6 +133,9 @@ def cmd_add(args, parser):
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
     # TODO check that git repo has nothing in the index!
+    # But some chnages are ok:
+    # TODO add tests that adds a subproject after a "git rm -r" to the same folder.
+    # This should work
 
     # TODO Check if the subproject already exists in this dir!
     if os.path.exists(remote_git_name):
@@ -117,7 +145,6 @@ def cmd_add(args, parser):
         raise AppException(ErrorCode.UNKNOWN)
 
     # TOOD create/update ".subpatch" file
-    # TODO maybe rename to path_config. Everything is subpatch here!
     path_config = join(path_superproject, b".subpatch")
     if os.path.exists(path_config):
         raise AppException(ErrorCode.NOT_IMPLEMENTED)
@@ -167,6 +194,9 @@ def cmd_add(args, parser):
     print("- To inspect the changes, use `git status` and `git diff --staged`.")
     print("- If you want to keep the changes, commit them with `git commit`.")
     print("- If you want to revert the changes, execute 'git reset --merge`.")
+
+    # TODO Idea "subpatch status" should print the info/help text. The status
+    # command should be command to get help if a user is lost.
 
     return 0
 

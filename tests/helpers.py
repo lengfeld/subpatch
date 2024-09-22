@@ -33,18 +33,20 @@ class Git():
         p = Popen(["git", "show-ref", "-s", ref], stdout=PIPE)
         stdout, _ = p.communicate()
         if p.returncode != 0:
-            raise Exception("error here")
+            raise Exception("error here TODO")
 
         return stdout.rstrip(b"\n")
 
     def commit(self, msg):
-        self.call(["commit", "-m", "msg", "-q"])
+        self.call(["commit", "-m", msg, "-q"])
+
+    def commit_all(self, msg):
+        self.call(["commit", "-a", "-m", msg, "-q"])
 
     # TODO maybe name "run", because of "runSubpatch"
     def call(self, args):
         call(["git"] + args)
 
-    # TODO what is the member function naming convention?
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
         p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE)
