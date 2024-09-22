@@ -3,9 +3,10 @@
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
 import os
+import sys
+import shutil
 import tempfile
 import unittest
-import shutil
 import contextlib
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import isfile, isdir, join, realpath, dirname
@@ -23,6 +24,18 @@ class Git():
 
     def add(self, filename):
         self.call(["add", filename])
+
+    def tag(self, name, message):
+        self.call(["tag", name, "-m", message])
+
+    # Returns the SHA1 checksum as a bytes object without trailing newline!
+    def getSHA1(self, ref):
+        p = Popen(["git", "show-ref", "-s", ref], stdout=PIPE)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("error here")
+
+        return stdout.rstrip(b"\n")
 
     def commit(self, msg):
         self.call(["commit", "-m", "msg", "-q"])
@@ -66,6 +79,28 @@ class TestCaseTempFolder(unittest.TestCase):
                                       dir=os.path.dirname(__file__))
         cls.old_cwd = os.getcwd()
         os.chdir(cls.tmpdir)
+
+
+# TODO add "file" or "filesystem" or "dir" in name
+class TestCaseHelper(unittest.TestCase):
+    def assertFileExists(self, filename):
+        # TODO add better explanation if something goes wrong!
+        self.assertTrue(os.path.exists(filename))
+
+    def assertFileExistsAndIsDir(self, filename):
+        self.assertTrue(os.path.isdir(filename))
+
+    def assertFileContent(self, filename, content_expected):
+        with open(filename, "br") as f:
+            content_actual = f.read()
+
+            # TOOD unify debug env variable
+            if os.environ.get("DEBUG", "0") == "1":
+                print("file content of '%s':" % (filename,))
+                sys.stdout.buffer.write(content_actual)
+                sys.stdout.buffer.flush()
+
+            self.assertEqual(content_actual, content_expected)
 
 
 @contextlib.contextmanager

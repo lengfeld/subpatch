@@ -9,21 +9,15 @@ import tempfile
 from time import sleep
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git
+from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git, TestCaseHelper
 
 
 path = realpath(__file__)
 SUBPATCH_PATH = join(dirname(path), "..", "subpatch")
 
 
-class TestCaseHelper(unittest.TestCase):
-    def assertFileContent(self, filename, content):
-        with open(filename, "br") as f:
-            self.assertEqual(f.read(), content)
-
-
-class TestsSubpatch(TestCaseTempFolder):
-    def runSubpatch(self, args, stderr=None, stdout=None):
+class TestSubpatch(TestCaseTempFolder):
+    def run_subpatch(self, args, stderr=None, stdout=None):
         if os.environ.get("DEBUG", "0") == "1":
             print("Running subpatch command: %s" % (args,), file=sys.stderr)
 
@@ -42,32 +36,32 @@ class TestsSubpatch(TestCaseTempFolder):
         p.stderr = stderr_output
         return p
 
-    def runSubpatchOk(self, args, stderr=None, stdout=None):
-        p = self.runSubpatch(args, stderr=stderr, stdout=stdout)
+    def run_subpatch_ok(self, args, stderr=None, stdout=None):
+        p = self.run_subpatch(args, stderr=stderr, stdout=stdout)
         self.assertEqual(p.returncode, 0)
         return p
 
 
-class TestNoCommands(TestCaseHelper, TestsSubpatch):
-    def testStartWithoutArgs(self):
-        p = self.runSubpatch([], stderr=DEVNULL)
+class TestNoCommands(TestCaseHelper, TestSubpatch):
+    def test_start_without_args(self):
+        p = self.run_subpatch([], stderr=DEVNULL)
         self.assertEqual(p.returncode, 2)
 
-    def testVersion(self):
-        p = self.runSubpatchOk(["--version"], stdout=PIPE)
+    def test_version(self):
+        p = self.run_subpatch_ok(["--version"], stdout=PIPE)
         self.assertIn(b"subpatch version ", p.stdout)
-        p = self.runSubpatchOk(["-v"], stdout=PIPE)
+        p = self.run_subpatch_ok(["-v"], stdout=PIPE)
         self.assertIn(b"subpatch version ", p.stdout)
 
-    def testInfo(self):
-        p = self.runSubpatchOk(["--info"], stdout=PIPE)
+    def test_info(self):
+        p = self.run_subpatch_ok(["--info"], stdout=PIPE)
         self.assertEqual(b"""\
 homepage:  https://subpatch.net
 git repo:  https://github.com/lengfeld/subpatch
 license:   GPL-2.0-or-later
 """, p.stdout)
 
-    def testControlC(self):
+    def test_control_c(self):
         # NOTE Using "deepcopy" or "copy" for 'os.environ' does not work.  It
         # does not make a copy. The original _global_ instance is changed.
         # Rework the code to use 'dict(os.environ)'. This makes a realy copy!.
@@ -105,34 +99,34 @@ def create_super_and_subproject():
         git.commit("msg")
 
 
-class TestCmdStatus(TestCaseHelper, TestsSubpatch):
-    def testNotInSuperproject(self):
+class TestCmdStatus(TestCaseHelper, TestSubpatch):
+    def test_not_in_superproject(self):
         # NOTE this does not fail, because the tmp folder is in the git folder
         # of the subpatch project itself.
         # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with tempfile.TemporaryDirectory() as tmpdirname:
             with cwd(tmpdirname):
-                p = self.runSubpatch(["status"], stderr=PIPE)
+                p = self.run_subpatch(["status"], stderr=PIPE)
                 self.assertEqual(p.returncode, 4)
                 self.assertEqual(b"Error: No git repo as superproject found!\n",
                                  p.stderr)
 
-    def testNoSubpatchConfigFile(self):
+    def test_no_subpatch_config_file(self):
         mkdir("superproject")
         with cwd("superproject"):
             git = Git()
             git.init()
-            p = self.runSubpatch(["status"], stderr=PIPE)
+            p = self.run_subpatch(["status"], stderr=PIPE)
             self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
                              p.stderr)
             self.assertEqual(p.returncode, 4)
 
-    def testNoSubpatchConfigFile(self):
+    def test_no_subpatch_config_file(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            self.runSubpatchOk(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
 
-            p = self.runSubpatch(["status"], stdout=PIPE)
+            p = self.run_subpatch(["status"], stdout=PIPE)
             self.assertEqual(p.returncode, 0)
             self.assertEqual(b"""\
 NOTE: Output format is just a hack. Not the final output format yet!
@@ -142,20 +136,20 @@ NOTE: Output format is just a hack. Not the final output format yet!
                              p.stdout)
 
 
-class TestCmdAdd(TestCaseHelper, TestsSubpatch):
+class TestCmdAdd(TestCaseHelper, TestSubpatch):
     def test_not_in_superproject(self):
         # NOTE this does not fail, because the tmp folder is in the git folder
         # of the subpatch project itself.
         # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with tempfile.TemporaryDirectory() as tmpdirname:
             with cwd(tmpdirname):
-                p = self.runSubpatch(["add", "../ignore"], stderr=PIPE)
+                p = self.run_subpatch(["add", "../ignore"], stderr=PIPE)
                 self.assertEqual(b"Error: No git repo as superproject found!\n",
                                  p.stderr)
                 self.assertEqual(p.returncode, 4)
 
     def test_without_url_arg(self):
-        p = self.runSubpatch(["add"], stderr=PIPE)
+        p = self.run_subpatch(["add"], stderr=PIPE)
         self.assertEqual(p.returncode, 2)
         self.assertIn(b"the following arguments are required: url", p.stderr)
 
@@ -165,7 +159,7 @@ class TestCmdAdd(TestCaseHelper, TestsSubpatch):
         with cwd("superproject"):
             touch(".subpatch", b"")
 
-            p = self.runSubpatch(["add", "../subproject"], stderr=PIPE)
+            p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
             self.assertEqual(b"Error: Feature not implemented yet!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
@@ -176,7 +170,7 @@ class TestCmdAdd(TestCaseHelper, TestsSubpatch):
             # Just create a file. It should also fail!
             touch("subproject", b"")
 
-            p = self.runSubpatch(["add", "../subproject"], stderr=PIPE)
+            p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
             self.assertEqual(b"Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
@@ -184,7 +178,7 @@ class TestCmdAdd(TestCaseHelper, TestsSubpatch):
         create_super_and_subproject()
         with cwd("superproject"):
             git = Git()
-            p = self.runSubpatchOk(["add", "../subproject/"], stdout=PIPE)
+            p = self.run_subpatch_ok(["add", "../subproject/"], stdout=PIPE)
             self.assertIn(b"Adding subproject 'subproject' was successful", p.stdout)
             self.assertTrue(os.path.isdir("subproject"))
 
@@ -198,7 +192,7 @@ class TestCmdAdd(TestCaseHelper, TestsSubpatch):
             git = Git()
             mkdir("subdir")
             with cwd("subdir"):
-                p = self.runSubpatchOk(["add", "../../subproject"], stdout=PIPE)
+                p = self.run_subpatch_ok(["add", "../../subproject"], stdout=PIPE)
                 self.assertIn(b"Adding subproject 'subproject' was successful", p.stdout)
                 self.assertTrue(os.path.isdir("subproject"))
 
@@ -214,7 +208,7 @@ class TestCmdAdd(TestCaseHelper, TestsSubpatch):
 
         with cwd("superproject"):
             git = Git()
-            p = self.runSubpatchOk(["add", "../subproject"], stdout=PIPE)
+            p = self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
             stdout = p.stdout
             self.assertEqual(b"""\
 Adding subproject 'subproject' was successful.

@@ -17,12 +17,12 @@ from subpatch import git_get_toplevel
 
 
 class TestGit(TestCaseTempFolder):
-    def testGitGetToplevelNotInGitFolder(self):
+    def test_git_get_toplevel_not_in_git_folder(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             with cwd(tmpdirname):
                 self.assertIsNone(git_get_toplevel())
 
-    def testGitGetToplevel(self):
+    def test_git_get_toplevel(self):
         mkdir("subproject")
         with cwd("subproject"):
             git = Git()
