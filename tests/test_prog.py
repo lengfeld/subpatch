@@ -9,7 +9,8 @@ import tempfile
 from time import sleep
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git, TestCaseHelper
+from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper
+from localwebserver import LocalWebserver, FileRequestHandler
 
 
 path = realpath(__file__)
@@ -82,16 +83,14 @@ license:   GPL-2.0-or-later
 
 
 def create_super_and_subproject():
-    mkdir("subproject")
-    with cwd("subproject"):
+    with cwd("subproject", create=True):
         git = Git()
         git.init()
         touch("hello", b"content")
         git.add("hello")
         git.commit("msg")
 
-    mkdir("superproject")
-    with cwd("superproject"):
+    with cwd("superproject", create=True):
         git = Git()
         git.init()
         touch("hello", b"content")
@@ -112,8 +111,7 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch):
                                  p.stderr)
 
     def test_no_subpatch_config_file(self):
-        mkdir("superproject")
-        with cwd("superproject"):
+        with cwd("superproject", create=True):
             git = Git()
             git.init()
             p = self.run_subpatch(["status"], stderr=PIPE)
@@ -182,17 +180,23 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
             self.assertIn(b"Adding subproject 'subproject' was successful", p.stdout)
             self.assertTrue(os.path.isdir("subproject"))
 
-            # NOTE The trailing slash in the url!
+            # NOTE The trailing slash in the URL in the config file!
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"subproject\"]\n\turl = ../subproject/\n")
 
     def test_add_in_subdirectory(self):
         create_super_and_subproject()
-        with cwd("superproject"):
+
+        # Prepare repo for dump http protocol
+        # See https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols
+        with cwd("subproject"):
             git = Git()
-            mkdir("subdir")
-            with cwd("subdir"):
-                p = self.run_subpatch_ok(["add", "../../subproject"], stdout=PIPE)
+            git.call(["update-server-info"])
+
+        with LocalWebserver(8000, FileRequestHandler), cwd("superproject"):
+            git = Git()
+            with cwd("subdir", create=True):
+                p = self.run_subpatch_ok(["add", "http://localhost:8000/subproject/.git/"], stdout=PIPE)
                 self.assertIn(b"Adding subproject 'subproject' was successful", p.stdout)
                 self.assertTrue(os.path.isdir("subproject"))
 
@@ -201,7 +205,10 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
                               b"A\tsubdir/subproject/hello"])
 
             self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subdir/subproject\"]\n\turl = ../../subproject\n")
+                                   b"""\
+[subpatch \"subdir/subproject\"]
+\turl = http://localhost:8000/subproject/.git/
+""")
 
     def test_add_with_stdout_output_and_index_updates(self):
         create_super_and_subproject()
@@ -219,7 +226,7 @@ Adding subproject 'subproject' was successful.
                              stdout)
 
             # Check working tree
-            self.assertTrue(os.path.isdir("subproject"))
+            self.assertFileExistsAndIsDir("subproject")
 
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -227,6 +234,64 @@ Adding subproject 'subproject' was successful.
 
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+
+    def test_add_with_extra_path_but_empty(self):
+        create_super_and_subproject()
+        with cwd("superproject"):
+            git = Git()
+            p = self.run_subpatch(["add", "../subproject", ""], stdout=DEVNULL, stderr=PIPE)
+            self.assertEqual(4, p.returncode)
+            self.assertEqual(b"Error: Invalid arguments: path is empty\n",
+                             p.stderr)
+
+    def test_add_with_extra_path(self):
+        create_super_and_subproject()
+        with cwd("superproject"):
+            git = Git()
+
+            # TODO add "-q" argument
+            p = self.run_subpatch_ok(["add", "../subproject", "folder"], stdout=DEVNULL)
+            self.assertFileExistsAndIsDir("folder")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tfolder/hello"])
+            self.assertFileContent(".subpatch",
+                                   b"[subpatch \"folder\"]\n\turl = ../subproject\n")
+            # Remove all stagged changes
+            git.call(["reset", "--merge"])
+
+            # Add same subproject but in a subfolder
+            p = self.run_subpatch_ok(["add", "../subproject", "sub/folder"], stdout=DEVNULL)
+            self.assertFileExistsAndIsDir("sub/folder")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tsub/folder/hello"])
+            self.assertFileContent(".subpatch",
+                                   b"[subpatch \"sub/folder\"]\n\turl = ../subproject\n")
+
+            # Remove all stagged changes
+            git.call(["reset", "--merge"])
+
+            # Add subproject with trailing slash in path
+            p = self.run_subpatch_ok(["add", "../subproject", "folder/"], stdout=DEVNULL)
+
+            self.assertFileExistsAndIsDir("folder")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tfolder/hello"])
+            # NOTE: The trailing slash is removed
+            self.assertFileContent(".subpatch",
+                                   b"[subpatch \"folder\"]\n\turl = ../subproject\n")
+            # Remove all stagged changes
+            git.call(["reset", "--merge"])
+
+    def test_add_in_subdirectory_with_relative_path_fails(self):
+        create_super_and_subproject()
+        with cwd("superproject/sub", create=True):
+            p = self.run_subpatch(["add", "../../subproject"], stderr=PIPE)
+            self.assertEqual(4, p.returncode)
+            self.assertEqual(b"Error: When using relative repository URLs, you current work diretory must be the toplevel folder of the superproject!\n",
+                             p.stderr)
 
 
 if __name__ == '__main__':

@@ -43,6 +43,17 @@ class Git():
     def commit_all(self, msg):
         self.call(["commit", "-a", "-m", msg, "-q"])
 
+    SUBMODULE_EXTRA_ARGS = ["-c", "protocol.file.allow=always"]
+
+    def submodule(self, args):
+        # Fix an issue here: Fails with "file not supported" when running as
+        # tests:
+        # * https://github.com/flatpak/flatpak-builder/issues/495
+        # * https://lists.archlinux.org/archives/list/arch-dev-public@lists.archlinux.org/thread/YYY6KN2BJH7KR722GF26SEWNXPLAANNQ/
+        # It works as a normal user, but not in the test code. Add
+        # 'allow=always' to fix this.
+        self.call(self.SUBMODULE_EXTRA_ARGS + ["submodule"] + args)
+
     # TODO maybe name "run", because of "runSubpatch"
     def call(self, args):
         call(["git"] + args)
@@ -89,6 +100,9 @@ class TestCaseHelper(unittest.TestCase):
         # TODO add better explanation if something goes wrong!
         self.assertTrue(os.path.exists(filename))
 
+    def assertFileDoesNotExist(self, filename):
+        self.assertFalse(os.path.exists(filename))
+
     def assertFileExistsAndIsDir(self, filename):
         self.assertTrue(os.path.isdir(filename))
 
@@ -106,10 +120,12 @@ class TestCaseHelper(unittest.TestCase):
 
 
 @contextlib.contextmanager
-def cwd(cwd):
-    old_cwd = os.getcwd()
+def cwd(path, create=False):
+    if create:
+        mkdir(path)
+    old_path = os.getcwd()
     try:
-        os.chdir(cwd)
+        os.chdir(path)
         yield
     finally:
-        os.chdir(old_cwd)
+        os.chdir(old_path)

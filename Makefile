@@ -20,7 +20,9 @@ tests:       ### Runs the python unit tests
 
 .PHONY: lint
 lint:                 ### Runs the pycodestyle on source code
-	pycodestyle subpatch *.py tests/*.py
+	@# The default line length 79 is too limited for modern use.
+	@# I don't have 80 column terminals anymore.
+	pycodestyle subpatch *.py tests/*.py --max-line-length=100
 
 
 .PHONY: dist

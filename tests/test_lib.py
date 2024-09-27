@@ -8,12 +8,13 @@ import unittest
 import tempfile
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git
+from helpers import TestCaseTempFolder, cwd, touch, Git
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from subpatch import git_get_toplevel, git_get_object_type
+from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
+                     URLTypes, get_name_from_repository_url
 
 
 class TestGit(TestCaseTempFolder):
@@ -39,8 +40,7 @@ class TestGit(TestCaseTempFolder):
                 self.assertIsNone(git_get_toplevel())
 
     def test_git_get_toplevel(self):
-        mkdir("subproject")
-        with cwd("subproject"):
+        with cwd("subproject", create=True):
             git = Git()
             git.init()
             touch("hello", b"content")
@@ -52,13 +52,36 @@ class TestGit(TestCaseTempFolder):
             self.assertEqual(git_path, cur_cwd)
             self.assertTrue(git_path.endswith(b"/subproject"))
 
-            mkdir("test")
-
-            with cwd("test"):
+            with cwd("test", create=True):
                 # It's still the toplevel dir, not the subdir "test"
                 git_path = git_get_toplevel()
                 self.assertEqual(git_path, cur_cwd)
                 self.assertTrue(git_path.endswith(b"/subproject"))
+
+
+class TestFuncs(unittest.TestCase):
+    def test_get_url_type(self):
+        self.assertEqual(URLTypes.REMOTE, get_url_type("https://xx"))
+        self.assertEqual(URLTypes.REMOTE, get_url_type("http://xx"))
+        self.assertEqual(URLTypes.REMOTE, get_url_type("git://xx"))
+        self.assertEqual(URLTypes.REMOTE, get_url_type("ssh://xx"))
+        self.assertEqual(URLTypes.LOCAL_RELATIVE, get_url_type("folder"))
+        self.assertEqual(URLTypes.LOCAL_RELATIVE, get_url_type("sub/folder"))
+        self.assertEqual(URLTypes.LOCAL_ABSOLUTE, get_url_type("/sub/folder"))
+
+        self.assertRaises(NotImplementedError, get_url_type, "rsync://xx")
+        self.assertRaises(ValueError, get_url_type, "")
+
+    def test_get_name_from_repository_url(self):
+        f = get_name_from_repository_url
+        self.assertEqual("name", f("name"))
+        self.assertEqual("name", f("/name/"))
+        self.assertEqual("name", f("/name/.git/"))
+        self.assertEqual("name", f("/name/.git"))
+        self.assertEqual("name", f("/name.git"))
+        self.assertEqual("name", f("/name.git/"))
+        self.assertEqual("name", f("sub/name.git/"))
+        self.assertEqual("name", f("http://localhost:8000/name/.git/"))
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ import time
 from enum import Enum
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL
-from os.path import join
+from os.path import join, abspath
 import contextlib
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
@@ -36,18 +36,55 @@ def cwd(cwd):
         os.chdir(old_cwd)
 
 
+# TODO Write blockpost about common error categories, e.g. in HTTP and errnor
+# E.g. there is also
+#  * invalid argument
+#  * (generic) runtime error (maybe the same as IO error=)
+#  * permission deinied
 class ErrorCode(Enum):
     UNKNOWN = 1
     NOT_IMPLEMENTED = 2
     NOT_IN_A_GIT_REPO = 3
     # Subpatch is not yet configured for superproject
     NOT_CONFIGURED_FOR_SUPERPROJECT = 4
+    # The user has given a invalid argument on the commandline
+    INVALID_ARGUMENT = 5
+    CUSTOM = 6
 
 
 class AppException(Exception):
-    def __init__(self, code):
+    def __init__(self, code, msg=None):
         self._code = code
-        super().__init__()
+        if msg is not None:
+            super().__init__(msg)
+        else:
+            super().__init__()
+
+
+class URLTypes(Enum):
+    LOCAL_RELATIVE = 1
+    LOCAL_ABSOLUTE = 2
+    REMOTE = 3
+
+
+def get_url_type(repository_url):
+    if len(repository_url) == 0:
+        raise ValueError("The repository URL is empty!")
+    # TODO mabye using url parsing library?
+    # TODO Implemente "file://" prefix
+    if repository_url.startswith("http"):
+        return URLTypes.REMOTE
+    elif repository_url.startswith("git"):
+        return URLTypes.REMOTE
+    elif repository_url.startswith("ssh"):
+        return URLTypes.REMOTE
+    if "://" in repository_url:
+        raise NotImplementedError("The repository URL '%s' is not implemented yet"
+                                  % (repository_url,))
+    # Is mostly just a local path
+    if repository_url[0] == "/":
+        return URLTypes.LOCAL_ABSOLUTE
+    return URLTypes.LOCAL_RELATIVE
 
 
 def nocommand(args, parser):
@@ -71,8 +108,9 @@ def git_get_toplevel():
 
 # NOTE This is cwd aware
 # TODO add --depth to speed up performance!
-def git_clone(remote_url, local_name):
-    p = Popen(["git", "clone", "-q", remote_url, local_name])
+# NOTE: Names 'repository_url' and 'directory' are from the 'git clone' docu.
+def git_clone(repository_url, directory):
+    p = Popen(["git", "clone", "-q", repository_url, directory])
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
@@ -88,16 +126,21 @@ def git_add(args):
 # TODO clarify naming: path, filename, url
 # TODO clairfy name for remote git name and path/url
 
+# Namings:
 # Git namings
 #  - object: something in the object store that has a SHA1
 #  - object type: blob, tree, commit, tag
 #  - ref: short for "reference", like branches and tags
 #  - rev: short for "revision", which are commit objects
+# Variable names:
+#  - repository_url: The URL for a git/svn/.. repository.
+#      Can be a http, git or file URL. Or just a local path.
 
 
 # Returns the type of the git object as a bytes object without a trailing
 # newline.
 # TODO Maybe introduce a enum for that
+# TODO not use. Implement sanity check
 def git_get_object_type(rev):
     p = Popen(["git", "cat-file", "-t", rev], stdout=PIPE, stderr=DEVNULL)
     stdout, _ = p.communicate()
@@ -110,31 +153,66 @@ def git_get_object_type(rev):
     return stdout
 
 
+# Convert URLs. Examples:
+#     …bla/foo/.git/ -> "foo"
+#     …bla/foo.git/  -> "foo"
+#     …bla/foo       -> "foo"
+def get_name_from_repository_url(repository_url):
+    if len(repository_url) == 0:
+        raise ValueError("The repository URL is empty!")
+    u = repository_url
+    u = u.rstrip("/")
+    if u.endswith(".git"):
+        u = u[:-4]
+    u = u.rstrip("/")
+    u = u.split("/")[-1]
+    return u
+
+
 def cmd_add(args, parser):
     if args.url is None:
         # TODO make error message nicer
         raise Exception("Not the correct amount of args")
+    if args.path is not None:
+        # The optional path argument was given. Make some checks
+        if len(args.path) == 0:
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "path is empty")
+        # TODO But something like "/./././" is also invalid"
 
-    remote_git_url = args.url
+    repository_url = args.url
 
     # TODO check with ls-remote that remote is accessable
 
-    # TODO Make this a generic function and move to a function
-    # Use rstrip('/') to remove trailing slashes, e.g.
-    #    subpatch add ../other-git-dir/
-    # TODO generic function to convert url to canonical repo name. e.g.
-    #     …bla/foo/.git/ -> "foo"
-    #     …bla/foo.git/  -> "foo"
-    #     …bla/foo       -> "foo"
-    remote_git_name = remote_git_url.rstrip("/").split("/")[-1]
+    if args.path is None:
+        remote_git_name = get_name_from_repository_url(repository_url)
+    else:
+        remote_git_name = args.path
+        # TODO split into path and name component
+        # sanitzie path. Remove double slashes trailing slash
+        # and paths that are outside of the repository
+        # - For now just remove trailing slashes
+        remote_git_name = remote_git_name.rstrip("/")
 
     path_superproject = git_get_toplevel()
     if path_superproject is None:
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
+    if get_url_type(repository_url) == URLTypes.LOCAL_RELATIVE:
+        # Check the currenty work diretory of the call is the top level
+        # directory of the repository. If not, a relative path on the
+        # commadline is not relative to the top level diretory and must be
+        # converted. This conversion is a bit complex and error prone.  So
+        # just enfore (like also git does) that the current work diretory
+        # is the top level repository in that case.
+        # TODO this comparision is guly. Write this nicer!
+        if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(path_superproject):
+            raise AppException(ErrorCode.CUSTOM,
+                               "When using relative repository URLs, you current work diretory must be the toplevel folder of the superproject!")
+
     # TODO check that git repo has nothing in the index!
     # But some chnages are ok:
     # TODO add tests that adds a subproject after a "git rm -r" to the same folder.
+    # So the changes are in the filesystem and in the index, but not committed yet.
     # This should work
 
     # TODO Check if the subproject already exists in this dir!
@@ -154,7 +232,7 @@ def cmd_add(args, parser):
     # TODO clone only a single branch and mabye use --depth 1
     assert len(remote_git_name) != 0
     local_tmp_name = remote_git_name + "-tmp"
-    git_clone(remote_git_url, local_tmp_name)
+    git_clone(repository_url, local_tmp_name)
 
     # Remove ".git" folder in this repo
     local_repo_git_dir = join(local_tmp_name, ".git")
@@ -169,10 +247,13 @@ def cmd_add(args, parser):
     path = cwd_local_name_realpath[len(git_toplevel_path_realpath) + 1:]
     with open(path_config, "w") as f:
         f.write('[subpatch "%s"]\n' % (path,))
-        # TODO remote_git_url is the verbatim copy of the argument. It my
+        # TODO repository_url is the verbatim copy of the argument. It my
         # contain a trailing slash that is not significant. Should the trainling slash be removed?
         # Or the varbatim copy of the argument used?
-        f.write("\turl = %s\n" % (remote_git_url,))
+        # TODO if the path is relative to a local folder, it's relative to the current working directory.
+        # Then also the path in the config file is relative.
+        # This can be wired, because it then depends on the cwd of the inovcation!
+        f.write("\turl = %s\n" % (repository_url,))
 
     # Move files into place
     os.rename(local_tmp_name, remote_git_name)
@@ -257,6 +338,8 @@ def main_wrapped():
     parser_add.set_defaults(func=cmd_add)
     parser_add.add_argument(dest="url", type=str,
                             help="URL or path to git repo")
+    parser_add.add_argument(dest="path", type=str, default=None, nargs='?',
+                            help="folder or path in the local repo")
 
     parser_status = subparsers.add_parser("status",
                                           help="List all subprojects in the superproject")
@@ -286,6 +369,7 @@ def main():
     try:
         ret = main_wrapped()
     except AppException as e:
+        # TODO allow to append a generic error message for all messages, not only for invalid argument.
         if e._code == ErrorCode.NOT_IMPLEMENTED:
             # TODO error code should have a message to explain the exact feature
             # TODO the message should show the github issue url!
@@ -295,11 +379,19 @@ def main():
         elif e._code == ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT:
             # TODO add steps to resolve the issue. e.g. touching the file
             print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
+        elif e._code == ErrorCode.INVALID_ARGUMENT:
+            # TODO change structure of errors. It contains two colons now.
+            # Looks ugly.
+            print("Error: Invalid arguments: %s" % (e,), file=sys.stderr)
+        elif e._code == ErrorCode.CUSTOM:
+            print("Error: %s" % (e,), file=sys.stderr)
         else:
             assert e._code == ErrorCode.UNKNOWN
             # TODO find a better name for UNKNOWN
             # Dont' print a message here. The caller has already written the
             # message.
+            # TODO maybe it still better that the error is printed here and not
+            # printed by the caller!
             pass
         ret = 4
     except KeyboardInterrupt:

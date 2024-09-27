@@ -7,7 +7,7 @@ import sys
 import unittest
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, mkdir, touch, Git, TestCaseHelper
+from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper
 
 
 # In the current directory, createa a git repo with two branches and a tag
@@ -44,23 +44,16 @@ def create_git_repo_with_single_commit():
 
 
 class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
-    def test_add(self):
-        mkdir("subproject")
-        with cwd("subproject"):
+    def test_add_with_head_and_branch(self):
+        with cwd("subproject", create=True):
             create_git_repo_with_branches_and_tags()
             git = Git()
             sha1_tag_v1 = git.getSHA1("v1")
 
-        mkdir("superproject")
-        with cwd("superproject"):
+        with cwd("superproject", create=True):
             create_git_repo_with_single_commit()
             git = Git()
-            # Fix an issue here: Fails with "file not supported"
-            # * https://github.com/flatpak/flatpak-builder/issues/495
-            # * https://lists.archlinux.org/archives/list/arch-dev-public@lists.archlinux.org/thread/YYY6KN2BJH7KR722GF26SEWNXPLAANNQ/
-            # It works as a normal user, but not in the test code. Add allow
-            # always.
-            git.call(["-c", "protocol.file.allow=always", "submodule", "-q", "add", "../subproject/", "subproject1"])
+            git.submodule(["-q", "add", "../subproject/", "subproject1"])
             self.assertFileExistsAndIsDir("subproject1")
 
             # By default submodule uses the HEAD of the subproject. This points
@@ -78,10 +71,11 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
 
             # Adding the same subproject a second time, but with a different
             # branch and into a different directory.
-            # NOTE: There is no way to directly specific a tag name or a commit
-            # object. Only branches with the argument "-b" are supported!
-            # And this branch name is then added to the config file.
-            git.call(["-c", "protocol.file.allow=always", "submodule", "add", "-q", "-b", "v1-stable", "../subproject/", "subproject2"])
+            # NOTE/LEARNING: There is no way to directly specific a tag name or
+            # a commit object. Only branches with the argument "-b" are
+            # supported!  And this branch name is then added to the config
+            # file.
+            git.submodule(["add", "-q", "-b", "v1-stable", "../subproject/", "subproject2"])
             self.assertFileContent("subproject2/file", b"change on stable")
             self.assertFileContent(".gitmodules",
                                    b"""\
@@ -94,6 +88,36 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
 \tbranch = v1-stable
 """)
             git.commit_all("add subproject2")
+
+    def test_add_in_subdir_fails(self):
+        with cwd("subproject", create=True):
+            create_git_repo_with_single_commit()
+
+        with cwd("superproject", create=True):
+            create_git_repo_with_single_commit()
+            git = Git()
+
+            # NOTE/LEARNING: 'git submodule add' with relative path only works
+            # in the toplevel directory!
+            with cwd("folder", create=True):
+                # TODO "git.submodule()" and others methods do not have an
+                # interface for failing commands. So fallback to popen here.
+                p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS + ["submodule", "add", "../../subproject/"],
+                          stderr=PIPE)
+                _, stderr = p.communicate()
+                self.assertEqual(128, p.returncode)
+                self.assertEqual(b"fatal: Relative path can only be used from the toplevel of the working tree\n",
+                                 stderr)
+
+            # But you can be in the toplevel directory and specific a subdirectory!
+            git.submodule(["add", "-q", "../subproject/", "folder/subproject"])
+            self.assertFileContent("folder/subproject/hello", b"content")
+            self.assertFileContent(".gitmodules",
+                                   b"""\
+[submodule "folder/subproject"]
+\tpath = folder/subproject
+\turl = ../subproject/
+""")
 
 
 if __name__ == '__main__':
