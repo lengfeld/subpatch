@@ -58,7 +58,10 @@ Popular version control systems are
 * [mercurial](https://www.mercurial-scm.org/)
 * [Concurrent Versions System (cvs)](http://savannah.nongnu.org/projects/cvs)
 
-The older name for vcs is *rcs* (*revision control system*).
+The older name for vcs is *rcs* (*revision control system*). And yet another
+(current) name is *scm* (*source control management*). Then name is used
+on the [git website](https://git-scm.com/).
+
 
 ## application-level package manager (APM)
 
