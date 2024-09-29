@@ -33,10 +33,9 @@ class DefaultRequestHandler(SimpleHTTPRequestHandler):
 # See a good example:
 #    https://github.com/python/cpython/blob/3.12/Lib/http/server.py
 class FileRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, request, client_address, self2):
-        global SAVED_PATH
-        self._current_dir = SAVED_PATH
-        super(SimpleHTTPRequestHandler, self).__init__(request, client_address, self2)
+    def __init__(self, request, client_address, self_of_TCPServer):
+        self._serve_directory = self_of_TCPServer._serve_directory
+        super(SimpleHTTPRequestHandler, self).__init__(request, client_address, self_of_TCPServer)
 
     # Make the server quiet. Do not print anything to stdout.
     # See https://stackoverflow.com/a/56230070
@@ -49,7 +48,7 @@ class FileRequestHandler(SimpleHTTPRequestHandler):
 
         # Remove the leading slash. Otherwise join() will not work!
         assert path_parsed.path[0] == "/"
-        abs_path = join(self._current_dir, path_parsed.path[1:])
+        abs_path = join(self._serve_directory, path_parsed.path[1:])
 
         try:
             with open(abs_path, "rb") as f:
@@ -70,9 +69,8 @@ class FileRequestHandler(SimpleHTTPRequestHandler):
 # See also https://github.com/python/cpython/blob/main/Lib/test/test_httpservers.py#L47
 class LocalWebserver:
     def __init__(self, port, request_handler=None):
-        global SAVED_PATH
         self._port = port
-        SAVED_PATH = os.getcwd()
+        self._serve_directory = os.getcwd()
         if request_handler is None:
             self._request_handler = DefaultRequestHandler
         else:
@@ -80,6 +78,7 @@ class LocalWebserver:
 
     def __enter__(self):
         self._httpd = TCPServerReuseAddress(("::1", self._port), self._request_handler)
+        self._httpd._serve_directory = self._serve_directory
 
         def f():
             # The following call uses polling internall to check for the exit

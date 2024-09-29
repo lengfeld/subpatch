@@ -7,32 +7,8 @@ import sys
 import unittest
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper
-
-
-# In the current directory, createa a git repo with two branches and a tag
-def create_git_repo_with_branches_and_tags():
-    git = Git()
-    git.init()
-    git.call(["switch", "-c", "main", "-q"])
-    touch("file", b"inital")
-    git.add("file")
-    git.commit("initial commit")
-    git.tag("v1", "initial release")
-
-    touch("file", b"change on main")
-    git.add("file")
-    git.commit("change on main")
-    git.tag("v2", "new release after change")
-
-    git.call(["switch", "-c", "v1-stable", "v1", "-q"])
-    touch("file", b"change on stable")
-    git.add("file")
-    git.commit("change on stable")
-    git.tag("v1.1", "new release on stable")
-
-    # Switch HEAD back to 'main' branch
-    git.call(["switch", "-q", "main"])
+from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper, \
+                    create_git_repo_with_branches_and_tags
 
 
 def create_git_repo_with_single_commit():
@@ -48,7 +24,7 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
         with cwd("subproject", create=True):
             create_git_repo_with_branches_and_tags()
             git = Git()
-            sha1_tag_v1 = git.getSHA1("v1")
+            sha1_tag_v1 = git.get_sha1("v1")
 
         with cwd("superproject", create=True):
             create_git_repo_with_single_commit()

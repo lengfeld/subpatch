@@ -239,3 +239,8 @@ Adding a git subprojects that has itself submodules? What should happen?
 * Should it just be ignored?
 
 Add a generic "-q/--quiet" option. Should only print errors.
+
+Introduction typing in the code base
+
+Add test cases to verify hat svn and hg also uses the term 'revision' and
+argument `-r`.

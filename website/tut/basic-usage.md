@@ -52,20 +52,18 @@ called `external`. To add the dependency execute the commands
 
     $ mkdir external
     $ cd external
-    $ subpatch add https://github.com/google/googletest
+    $ subpatch add https://github.com/google/googletest -r v1.15.2
 
 The last command takes some seconds to execute. It downloads the git repository
-and extract the files. It uses the default branch of the git repository. In
-most cases this is the `main` or the `master` branch. If you want to download
-another branch or tag, you must use an additional argument (*NOTE:* this
-argument is not implemented yet).
+and extract the files. It uses revision `v1.15.2` of the git repository. It's a
+git tag that points to the current latest release of googletest.
 
 When the command finishes it prints the message
 
-    Adding subproject 'googletest' was successful.
+    Adding subproject 'https://github.com/google/googletest' into 'googletest'... Done.
     - To inspect the changes, use `git status` and `git diff --staged`.
     - If you want to keep the changes, commit them with `git commit`.
-    - If you want to revert the changes, execute 'git reset --merge`.
+    - If you want to revert the changes, execute `git reset --merge`.
 
 The message contains three different options. To see what subpatch added
 to the git index, execute
@@ -77,7 +75,7 @@ There are around 240 new files. Commit them by executing
     $ cd ..
     $ git commit -m "external: Adding GooglTest dependency"
 
-*Info*: Apart from the files of the third party dependency subpatch also
+Info: Apart from the files of the third party dependency subpatch also
 adds some metadata to the superproject. You can find it a the root
 directory of the git repository in the file `.subpatch`. For this
 tutorial the content looks like
@@ -94,7 +92,7 @@ configuration already in the file, just remove the comments. Now the last lines
 of the file should look like
 
     # Tests
-    add_subdirectory(external/googletest.git gtest)
+    add_subdirectory(external/googletest gtest)
     add_executable(test test.cc)
     target_link_libraries(test GTest::gtest_main add)
     include(GoogleTest)

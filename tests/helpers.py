@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import unittest
 import contextlib
-from subprocess import Popen, PIPE, DEVNULL, call
+from subprocess import Popen, PIPE, DEVNULL
 from os.path import isfile, isdir, join, realpath, dirname
 
 
@@ -17,8 +17,54 @@ from os.path import isfile, isdir, join, realpath, dirname
 # - Paths/filenames are python <string> objects/types
 # - file content is python <bytes> object
 
+# In the current directory, create a git repo with two branches and a tag
+# TODO Add self argument and checks for stable commit ids
+# Some users depend on stable commit ids already.
+def create_git_repo_with_branches_and_tags():
+    git = Git()
+    git.init()
+    git.call(["switch", "-c", "main", "-q"])
+    touch("file", b"initial")
+    git.add("file")
+    git.commit("initial commit")
+    git.tag("v1", "initial release")
 
+    touch("file", b"change on main")
+    git.add("file")
+    git.commit("change on main")
+    git.tag("v2", "new release after change")
+
+    git.call(["switch", "-c", "v1-stable", "v1", "-q"])
+    touch("file", b"change on stable")
+    git.add("file")
+    git.commit("change on stable")
+    git.tag("v1.1", "new release on stable")
+
+    # Switch HEAD back to 'main' branch
+    git.call(["switch", "-q", "main"])
+
+
+# TODO Make this to GitExtra or GitTests and also have a Git class in
+# subpatch.py.
 class Git():
+    def __init__(self):
+        env = dict(os.environ)  # Get and copy the current environment
+
+        # Only for unittests. So commit doesn't complain about empty user and
+        # email.
+        # Use different names for author and committer and different dates.
+        # They should not be the same, because this had already masked a bug in
+        # the code.  Using GIT_*_DATE makes SHA1 sum reproducable accross all
+        # unit tests.
+        env[b"GIT_AUTHOR_NAME"] = "OTHER other"
+        env[b"GIT_AUTHOR_EMAIL"] = "other@example.com"
+        env[b"GIT_AUTHOR_DATE"] = b"01 Oct 2016 14:00:00 +0800"
+        env[b"GIT_COMMITTER_NAME"] = b"GIT git"
+        env[b"GIT_COMMITTER_EMAIL"] = b"git@example.com"
+        env[b"GIT_COMMITTER_DATE"] = b"09 Oct 2001 13:00:00 +0200"
+
+        self._env = env
+
     def init(self):
         self.call(["init", "-q"])
 
@@ -29,8 +75,8 @@ class Git():
         self.call(["tag", name, "-m", message])
 
     # Returns the SHA1 checksum as a bytes object without trailing newline!
-    def getSHA1(self, ref):
-        p = Popen(["git", "show-ref", "-s", ref], stdout=PIPE)
+    def get_sha1(self, rev):
+        p = Popen(["git", "rev-parse", "-q", "--verify", rev], stdout=PIPE, env=self._env)
         stdout, _ = p.communicate()
         if p.returncode != 0:
             raise Exception("error here TODO")
@@ -56,11 +102,14 @@ class Git():
 
     # TODO maybe name "run", because of "runSubpatch"
     def call(self, args):
-        call(["git"] + args)
+        p = Popen(["git"] + args, env=self._env)
+        p.communicate()
+        if p.returncode != 0:
+            raise Exception("error here")
 
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
-        p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE)
+        p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE, env=self._env)
         stdout, _ = p.communicate()
         if p.returncode != 0:
             raise Exception("error here")
@@ -122,7 +171,7 @@ class TestCaseHelper(unittest.TestCase):
 @contextlib.contextmanager
 def cwd(path, create=False):
     if create:
-        mkdir(path)
+        os.makedirs(path)
     old_path = os.getcwd()
     try:
         os.chdir(path)

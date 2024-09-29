@@ -15,6 +15,7 @@ nav:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'
   - Reference:
+    - Command line arguments: 'ref/command-line.md'
     - Glossary: 'ref/glossary.md'
     - Releases: 'ref/releases.md'
   - Imprint: 'imprint.md'
