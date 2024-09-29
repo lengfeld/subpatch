@@ -55,7 +55,7 @@ Popular version control systems are
 
 * [git](https://git-scm.com/)
 * [subversion (svn)](https://subversion.apache.org/)
-* [mercurial](https://www.mercurial-scm.org/)
+* [mercurial (hg)](https://www.mercurial-scm.org/)
 * [Concurrent Versions System (cvs)](http://savannah.nongnu.org/projects/cvs)
 
 The older name for vcs is *rcs* (*revision control system*). And yet another
