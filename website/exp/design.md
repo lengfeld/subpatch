@@ -60,8 +60,8 @@ Therefore the chosen decisions are documented and explained here.
 (**DD1**): written in python3 (but open for a port to another language later if successful)
 
 * [+] faster iteration speed
-* [+] easier deployment/install for users of subpatch. python runs everywhere.
-* [+] programming language that I know really good and written a lot of code
+* [+] Easier deployment/install for users of subpatch. python runs everywhere.
+* [+] Programming language that I know really good and written a lot of code
   already.
 
 (**DD2**): config file format is `git-config`
@@ -69,5 +69,12 @@ Therefore the chosen decisions are documented and explained here.
 * [+] the same config format that the main cvs for subpatch (=git) uses.
 * [+] Most developers are already familiar with the config format, e.g. because
   they are modyfing `~/.git config`.
+
+(**DD3**): The config is a single file and placed at the root of the repository
+
+* [+] The project's root directory can be found even without scm. E.g. after
+  the source code was exported with `git archive`.
+* [+] A single file avoids a search in all sub directories. Can be expensive
+  for big projects.
 
 *NOTE:* This list is not completed yet and should grow while supbatch is developed.
