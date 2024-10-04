@@ -105,11 +105,11 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="introduction">Introduction</h1>
-<p>This page should introduce you to the problem space of multi repository
-management and third party source dependencies. It's not a common problem for
-every software developers. The problem only arises when dealing for bigger
-software products, inter team software dependencies and in embedded software
-engineering.</p>
+<p>Welcome to the realm of multi-repository management and third-party source
+dependencies. Even if you are an experienced software developer, you may not
+have encountered this issue in your career already.  It only arises when
+working on larger software projects, managing inter-team software dependencies,
+or in the field of embedded software engineering.</p>
 <p>This page explains the issue with two examples:</p>
 <ul>
 <li>Example 1: C/C++ library as source dependency</li>
@@ -117,28 +117,28 @@ engineering.</p>
 </ul>
 <h2 id="example-1-cc-library-as-source-dependency">Example 1: C/C++ library as source dependency</h2>
 <p>This example illustrates a third party source dependency.</p>
-<p>I publish a small C/C++ library
+<p>I maintain a small C/C++ library called
 <a href="https://github.com/lengfeld/aminilog">aminilog</a>. It's useful when writing
-C/C++ code in a Android Application project that uses the Android NDK (Native
-Development toolkit). The library provides ready to use logging macros, so a
-developer does need to write the logging macros for every NDK project from
-scratch.</p>
-<p>The library is only publish as a git repository. It's really simple. So there
-are no releases or tags and no binary artifacts, too. Also binary artifacts
-would do not make sense, because all of the library content are C/C++ Macros
-that must be evaluated at compile time of the user of the header.</p>
-<p>For a talk about the
-<a href="https://www.youtube.com/watch?v=NKP4JcVegbY">Glass-To-Glass-Latency in Android</a>
-I made a lot of experiments on the Android platform and develop an Android
-Application that could perform various tests. I published the code of the
-application on github in the repo
-<a href="https://github.com/inovex/android-glass-to-glass-latency/">inovex/android-glass-to-glass-latency</a></p>
+C/C++ code in an Android Application project that uses the
+<a href="https://developer.android.com/ndk/">Android NDK</a>
+(Native Development toolkit). The library provides ready to use logging macros,
+because the NDK only contains the low level APIs for logging.</p>
+<p>I publish the library as a plain git repository. Since it is really
+simple, there are no release tarballs or tags and no binary artifacts. Also
+binary artifacts would do not make sense, because all of the library content
+are C/C++ macros that must be evaluated at compile time.</p>
+<p>In 2023 I prepared a talk about the
+<a href="https://www.youtube.com/watch?v=NKP4JcVegbY">Glass-To-Glass-Latency in Android</a>.
+For my latency experiments I created a git repository and needed the above
+mentioned C/C++ library as a source dependency.  I develop an Android
+Application that could perform various tests and experiments. The code of the
+application is on github in the repo
+<a href="https://github.com/inovex/android-glass-to-glass-latency/">inovex/android-glass-to-glass-latency</a>.</p>
 <p>In this application I also used the Android NDK to write some C++ code to
 access some libc functions from Java and to trigger the torch light of the
-Pixel2 phone as fast as possible.</p>
-<p>And while written and testing the C++ code I needed to write some log messages.
-Therefore I imported my <em>aminilog</em> library as a source dependency into the
-project. The commands were roughly the following:</p>
+Pixel2 phone as fast as possible.  And while written and testing the C++ code I
+needed to write some log messages.  Therefore I imported my aminilog library as
+a source dependency into the project. The commands were roughly the following:</p>
 <pre><code>$ mkdir external/
 $ cd external/
 $ git clone https://github.com/lengfeld/aminilog.git
