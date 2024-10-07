@@ -15,7 +15,7 @@ lt;dr: The summary of all learnings is
    accidental complexity.
 * (**L5**) The build process must not span multiple of your own repositories.
 * (**L6**) The only sane way to maintain a downstream fork is a linear patch
-  stack (series of patches).
+  stack (=series of patches).
 * (**L7**) Good development practices, like atomic commits, must still be
   possible with the multi repository management tool. Even across the used
   subprojects.
@@ -194,7 +194,7 @@ source files and reapplied the patches with `git cherry-pick`. That process
 worked nicely. The learning is:
 
 (**L6**) The only sane way to maintain a downstream fork is a linear patch
-stack (series of patches).
+stack (=series of patches).
 
 And that is actually a very old thing. Linux distributions, like the big ones
 for the desktop but also for embedded devices, maintain a linear patch stack
