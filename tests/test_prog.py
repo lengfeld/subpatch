@@ -160,15 +160,28 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
         self.assertEqual(p.returncode, 2)
         self.assertIn(b"the following arguments are required: url", p.stderr)
 
-    def test_subpatch_config_already_exists(self):
+    def test_adding_two_subproject(self):
         create_super_and_subproject()
 
         with cwd("superproject"):
-            touch(".subpatch", b"")
+            p = self.run_subpatch(["add", "../subproject", "dirB"], stdout=DEVNULL)
+            self.assertEqual(0, p.returncode)
+            p = self.run_subpatch(["add", "../subproject", "dirA"], stdout=DEVNULL)
+            self.assertEqual(0, p.returncode)
 
-            p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
-            self.assertEqual(b"Error: Feature not implemented yet!\n", p.stderr)
-            self.assertEqual(4, p.returncode)
+            self.assertFileContent(".subpatch",
+                                   b"""\
+[subpatch \"dirA\"]
+\turl = ../subproject
+[subpatch \"dirB\"]
+\turl = ../subproject
+""")
+
+            git = Git()
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tdirA/hello",
+                              b"A\tdirB/hello"])
 
     def test_subproject_directory_already_exists(self):
         create_super_and_subproject()
@@ -206,6 +219,8 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
         with LocalWebserver(8000, FileRequestHandler), cwd("superproject"):
             git = Git()
             with cwd("subdir", create=True):
+                # NOTE: This also tests that "/.git/" is not used as the local
+                # directory name.
                 p = self.run_subpatch_ok(["add", "http://localhost:8000/subproject/.git/"], stdout=PIPE)
                 self.assertIn(b"Adding subproject 'http://localhost:8000/subproject/.git/' into 'subproject'... Done.",
                               p.stdout)

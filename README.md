@@ -193,7 +193,7 @@ Draw/find a logo. Maybe something like '/sub/patch'.
 Setup sphinx build for website.
 * find differnces, .e.g sitemap and 404 page.
 
-Common problems (why you should use subptach)
+Common problems (why you should use subpatch)
 * stories/PRs/feature requests span multi repos
 * checkout out a feature for review needs multipe repos
 * dependend commits/atomic commits problem/two commits problem

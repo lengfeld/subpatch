@@ -7,6 +7,7 @@ import sys
 import unittest
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
+from localwebserver import LocalWebserver, FileRequestHandler
 from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper, \
                     create_git_repo_with_branches_and_tags
 
@@ -78,7 +79,8 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
             with cwd("folder", create=True):
                 # TODO "git.submodule()" and others methods do not have an
                 # interface for failing commands. So fallback to popen here.
-                p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS + ["submodule", "add", "../../subproject/"],
+                p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS +
+                          ["submodule", "add", "../../subproject/"],
                           stderr=PIPE)
                 _, stderr = p.communicate()
                 self.assertEqual(128, p.returncode)
@@ -93,6 +95,33 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
 [submodule "folder/subproject"]
 \tpath = folder/subproject
 \turl = ../subproject/
+""")
+
+    def test_add_from_url(self):
+        with cwd("subproject", create=True):
+            create_git_repo_with_single_commit()
+            # Prepare repo for dump http protocol
+            # See https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols
+            # TODO refactor combine with test_prog.py
+            git = Git()
+            git.call(["update-server-info"])
+
+        with LocalWebserver(8000, FileRequestHandler), cwd("superproject", create=True):
+            create_git_repo_with_single_commit()
+            git = Git()
+
+            git.submodule(["-q", "add", "http://localhost:8000/subproject/.git/", "subproject1"])
+            git.submodule(["-q", "add", "http://localhost:8000/subproject/.git", "subproject2"])
+            # NOTE: The URL is taken verbatim. The leading slash is not changed
+            # by 'git' before writing it in to config file.
+            self.assertFileContent(".gitmodules",
+                                   b"""\
+[submodule "subproject1"]
+\tpath = subproject1
+\turl = http://localhost:8000/subproject/.git/
+[submodule "subproject2"]
+\tpath = subproject2
+\turl = http://localhost:8000/subproject/.git
 """)
 
 

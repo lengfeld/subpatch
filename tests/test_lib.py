@@ -17,7 +17,99 @@ sys.path.append(join(dirname(path), "../"))
 from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      URLTypes, get_name_from_repository_url, \
                      git_init_and_fetch, is_sha1, ObjectType, git_ls_remote, \
-                     git_ls_remote_guess_ref, git_verify
+                     git_ls_remote_guess_ref, git_verify, \
+                     config_parse, config_add_section, split_with_ts, config_unparse
+
+
+class TestConfigParse(unittest.TestCase):
+    def test_split_with_ts(self):
+        self.assertEqual([], list(split_with_ts("")))
+        self.assertEqual(["\n"], list(split_with_ts("\n")))
+        self.assertEqual(["x"], list(split_with_ts("x")))
+        self.assertEqual(["x\n"], list(split_with_ts("x\n")))
+        self.assertEqual(["x\n", "y"], list(split_with_ts("x\ny")))
+        self.assertEqual(["x\n", "y\n"], list(split_with_ts("x\ny\n")))
+
+    def test_parse(self):
+        self.assertEqual([], list(config_parse([])))
+        self.assertEqual([(1, "\n")], list(config_parse(["\n"])))
+        self.assertEqual([(1, " \n")], list(config_parse([" \n"])))
+        self.assertEqual([(1, "# comment")], list(config_parse(["# comment"])))
+        self.assertEqual([(1, " # comment")], list(config_parse([" # comment"])))
+        self.assertEqual([(1, " ; comment")], list(config_parse([" ; comment"])))
+        self.assertEqual([(1, "\t; comment")], list(config_parse(["\t; comment"])))
+
+        self.assertEqual([(2, " [name] \n", "name", None)],
+                         list(config_parse([" [name] \n"])))
+        self.assertEqual([(2, " [name \"sub\"] \n", "name", "sub")],
+                         list(config_parse([" [name \"sub\"] \n"])))
+
+        self.assertEqual([(3, "name = value\n", "name", "value")],
+                         list(config_parse(["name = value\n"])))
+        self.assertEqual([(3, "  name\t=\tvalue  \n", "name", "value")],
+                         list(config_parse(["  name\t=\tvalue  \n"])))
+
+    def test_unparse(self):
+        self.assertEqual("", config_unparse([]))
+        self.assertEqual("\n", config_unparse([(1, "\n")]))
+        self.assertEqual("\t\n", config_unparse([(1, "\t\n")]))
+        self.assertEqual("name = value", config_unparse([(3, "name = value", "name", "value")]))
+        self.assertEqual("name = value\n", config_unparse([(3, "name = value\n", "name", "value")]))
+
+    def test_add_section(self):
+        parts_to_add = [(3, "name = value\n", "name", "value")]
+
+        def test(config, result_ok):
+            result_actual = config_add_section(config_parse(split_with_ts(config)),
+                                               "a", "b", parts_to_add)
+            self.assertEqual(list(result_actual), list(config_parse(split_with_ts(result_ok))))
+
+        test("", """\
+[a "b"]
+name = value
+""")
+
+        test("""\
+[a "a"]
+""", """\
+[a "a"]
+[a "b"]
+name = value
+""")
+        test("""\
+[a "a"]
+[a "c"]
+""", """\
+[a "a"]
+[a "b"]
+name = value
+[a "c"]
+""")
+
+        test("""\
+[b "a"]
+""", """\
+[a "b"]
+name = value
+[b "a"]
+""")
+
+        # TODO add this testcase
+        #         test("""\
+        # [a]
+        # """, """\
+        # [a]
+        # [a "b"]
+        # name = value
+        # """)
+
+        test("""\
+[b]
+""", """\
+[a "b"]
+name = value
+[b]
+""")
 
 
 class TestGit(TestCaseTempFolder):
@@ -79,7 +171,8 @@ class TestGit(TestCaseTempFolder):
             self.assertEqual(ObjectType.COMMIT, git_get_object_type(sha1))
 
             # TODO replace with specific git exception
-            self.assertRaises(Exception, git_init_and_fetch, "../remote", "refs/heads/does_not_exists")
+            self.assertRaises(Exception, git_init_and_fetch,
+                              "../remote", "refs/heads/does_not_exists")
 
     def test_git_ls_remote(self):
         with cwd("remote", create=True):
