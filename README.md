@@ -158,11 +158,6 @@ Add how-to use subpatch for Zeyphr project
 
 Integrated manpage into tool. Otherwise a single file install has no manpage!
 
-Strip ".git" from URL after cloning. Should not happen
-
-   $ subpatch  add https://github.com/google/googletest.git
-   Adding subproject 'googletest.git' was successful.
-
 Unify slogan/subtitle. fearless vs done-right
 
 Show software/license disclaimer at more locations.
