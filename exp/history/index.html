@@ -81,6 +81,8 @@
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/command-line/">Command line arguments</a>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
@@ -129,7 +131,7 @@ the history and what learnings I made along the way. These learnings lead to
    accidental complexity.</li>
 <li>(<strong>L5</strong>) The build process must not span multiple of your own repositories.</li>
 <li>(<strong>L6</strong>) The only sane way to maintain a downstream fork is a linear patch
-  stack (series of patches).</li>
+  stack (=series of patches).</li>
 <li>(<strong>L7</strong>) Good development practices, like atomic commits, must still be
   possible with the multi repository management tool. Even across the used
   subprojects.</li>
@@ -263,7 +265,7 @@ top of it.</p>
 source files and reapplied the patches with <code>git cherry-pick</code>. That process
 worked nicely. The learning is:</p>
 <p>(<strong>L6</strong>) The only sane way to maintain a downstream fork is a linear patch
-stack (series of patches).</p>
+stack (=series of patches).</p>
 <p>And that is actually a very old thing. Linux distributions, like the big ones
 for the desktop but also for embedded devices, maintain a linear patch stack
 for their packages (=source dependencies). It's a process that has been done

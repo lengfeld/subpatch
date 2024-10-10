@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/releases/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/command-line/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Releases - subpatch</title>
+    <title>Command line arguments - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Releases";
-        var mkdocs_page_input_path = "ref/releases.md";
-        var mkdocs_page_url = "/ref/releases/";
+        var mkdocs_page_name = "Command line arguments";
+        var mkdocs_page_input_path = "ref/command-line.md";
+        var mkdocs_page_url = "/ref/command-line/";
       </script>
     
     <!--[if lt IE 9]>
@@ -63,17 +63,17 @@
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../command-line/">Command line arguments</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Command line arguments</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-status">subpatch status</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-add">subpatch add</a>
+    </li>
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Releases</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#v01a3">v0.1a3</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#v01a2">v0.1a2</a>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../releases/">Releases</a>
                   </li>
               </ul>
               <ul>
@@ -95,7 +95,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Reference</li>
-      <li class="breadcrumb-item active">Releases</li>
+      <li class="breadcrumb-item active">Command line arguments</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -104,32 +104,52 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="releases">Releases</h1>
-<p>This page lists all subpatch release with the release notes. The order is:
-newest/latest releases are at the top, oldest releases are at the bottom.</p>
-<h2 id="v01a3">v0.1a3</h2>
-<p>Second release of subpatch. The <code>add</code> command supports the <code>-r | --revision</code> command line argument and you can add multiple subprojects to a superproject. So some more basic things are covered. It's somehow useful now.</p>
-<p>Links:</p>
-<ul>
-<li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a3">github release page</a></li>
-<li><a href="https://github.com/lengfeld/subpatch/releases/download/v0.1a3/subpatch">subpatch</a>
-  (standalone python script)</li>
-</ul>
-<h2 id="v01a2">v0.1a2</h2>
-<p>First release of subpatch. For now it supports only two commands: <code>add</code> and
-<code>status</code> with a very limited amount of functionality.</p>
-<p>Links:</p>
-<ul>
-<li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a2">github release page</a></li>
-<li><a href="https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch">subpatch</a>
-  (standalone python script)</li>
-</ul>
+                <h1 id="command-line-arguments">Command line arguments</h1>
+<p>The subpatch command line tool uses the common argument structure with multiple
+arguments and one command. It is the same as other popular tools like <code>git</code> or
+<code>docker</code>. Examples:</p>
+<pre><code>subpatch status
+subpatch add &lt;url&gt; -r &lt;revision&gt;
+</code></pre>
+<p>Here <code>status</code> and <code>add</code> are commands and <code>-r &lt;revision</code> is an optional
+argument. </p>
+<p>subpatch uses the <a href="https://docs.python.org/3/library/argparse.html">argparse module</a> of python.
+So the following commands are equivalent:</p>
+<pre><code>subpatch add -r=&lt;revision&gt; &lt;url&gt;
+subpatch add -r&lt;revision&gt; &lt;url&gt;
+subpatch add -r &lt;revision&gt; &lt;url&gt;
+subpatch add &lt;url&gt; --revision=&lt;revision&gt;
+subpatch add &lt;url&gt; --revision &lt;revision&gt;
+</code></pre>
+<h2 id="subpatch-status">subpatch status</h2>
+<pre><code>subpatch status
+</code></pre>
+<p>Show the current state of all subprojects in the superproject. Much like <code>git
+status</code>.</p>
+<h2 id="subpatch-add">subpatch add</h2>
+<pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [--revision | -r &lt;revision&gt;]
+</code></pre>
+<p>Add the subproject at <code>url</code> at the optional <code>path</code> in the current repository.
+Currently <code>url</code> can only point to a git repository. Other subproject types
+are not yet supported.</p>
+<p>The <code>path</code> is optional. If it's omitted the canonical subproject name is used.
+It's mostly the last folder name in the <code>url</code>. If <code>path</code> is provided it can
+include also sub directories.</p>
+<p>If no <code>--revision</code> argument is given, subpatch uses the remote default branch
+for git repositories. It's mostly the <code>main</code> branch, but the remote repository
+can configured also different branches as the default <code>HEAD</code>.</p>
+<p><code>-r,--revision</code>: Specify the revision of the subproject that should be included
+in the superproject. For git repositories it can be a branch name, a tag name
+or a commit id. For performance you should give a branch name or tag name. The
+git protocol allows to clone a single branch or tag efficiently. For git commit
+ids subpatch needs to download the whole repository including all branches,
+tags and the complete history instead of just a single revision.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../glossary/" class="btn btn-neutral float-left" title="Glossary"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../imprint/" class="btn btn-neutral float-right" title="Imprint">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../../tut/basic-usage/" class="btn btn-neutral float-left" title="Basic usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../glossary/" class="btn btn-neutral float-right" title="Glossary">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -152,10 +172,10 @@ newest/latest releases are at the top, oldest releases are at the bottom.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../glossary/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../../tut/basic-usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../imprint/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../glossary/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

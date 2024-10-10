@@ -77,6 +77,8 @@
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/command-line/">Command line arguments</a>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
@@ -148,18 +150,16 @@ because the GoogleTest dependency is missing. You will add it shortly.</p>
 called <code>external</code>. To add the dependency execute the commands</p>
 <pre><code>$ mkdir external
 $ cd external
-$ subpatch add https://github.com/google/googletest
+$ subpatch add https://github.com/google/googletest -r v1.15.2
 </code></pre>
 <p>The last command takes some seconds to execute. It downloads the git repository
-and extract the files. It uses the default branch of the git repository. In
-most cases this is the <code>main</code> or the <code>master</code> branch. If you want to download
-another branch or tag, you must use an additional argument (<em>NOTE:</em> this
-argument is not implemented yet).</p>
+and extract the files. It uses revision <code>v1.15.2</code> of the git repository. It's a
+git tag that points to the current latest release of googletest.</p>
 <p>When the command finishes it prints the message</p>
-<pre><code>Adding subproject 'googletest' was successful.
+<pre><code>Adding subproject 'https://github.com/google/googletest' into 'googletest'... Done.
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
-- If you want to revert the changes, execute 'git reset --merge`.
+- If you want to revert the changes, execute `git reset --merge`.
 </code></pre>
 <p>The message contains three different options. To see what subpatch added
 to the git index, execute</p>
@@ -169,7 +169,7 @@ to the git index, execute</p>
 <pre><code>$ cd ..
 $ git commit -m "external: Adding GooglTest dependency"
 </code></pre>
-<p><em>Info</em>: Apart from the files of the third party dependency subpatch also
+<p>Info: Apart from the files of the third party dependency subpatch also
 adds some metadata to the superproject. You can find it a the root
 directory of the git repository in the file <code>.subpatch</code>. For this
 tutorial the content looks like</p>
@@ -182,7 +182,7 @@ Open the <code>CMakeLists.txt</code> file and enable them. You can find the need
 configuration already in the file, just remove the comments. Now the last lines
 of the file should look like</p>
 <pre><code># Tests
-add_subdirectory(external/googletest.git gtest)
+add_subdirectory(external/googletest gtest)
 add_executable(test test.cc)
 target_link_libraries(test GTest::gtest_main add)
 include(GoogleTest)
@@ -201,7 +201,7 @@ tests should pass!</p>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../ref/glossary/" class="btn btn-neutral float-right" title="Glossary">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../../ref/command-line/" class="btn btn-neutral float-right" title="Command line arguments">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -227,7 +227,7 @@ tests should pass!</p>
       <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../ref/glossary/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../ref/command-line/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
