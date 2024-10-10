@@ -528,6 +528,11 @@ class SuperHelperGit:
     def add(self, paths):
         git_add(paths)
 
+    def print_add_success(self):
+        print("- To inspect the changes, use `git status` and `git diff --staged`.")
+        print("- If you want to keep the changes, commit them with `git commit`.")
+        print("- If you want to revert the changes, execute `git reset --merge`.")
+
 
 def cmd_add(args, parser):
     if args.url is None:
@@ -542,6 +547,8 @@ def cmd_add(args, parser):
         # TODO disallow absolute paths
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
+
+    revision = args.revision
 
     sub_url = args.url
 
@@ -576,6 +583,15 @@ def cmd_add(args, parser):
     if super_abspath is None:
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
+    # Get local path relative to top level directory
+    # TODO refactor that very ugly code !!!!
+    super_realpath = os.path.realpath(super_abspath)
+    sub_realpath = os.path.realpath(join(os.getcwd(), cwd_to_sub_relpath))
+    assert sub_realpath.startswith(super_realpath.decode("utf8"))
+    super_to_sub_relpath = sub_realpath[len(super_realpath) + 1:]
+
+    config_abspath = join(super_abspath, b".subpatch")
+
     url_type = get_url_type(sub_url)
 
     if url_type == URLTypes.LOCAL_RELATIVE:
@@ -609,24 +625,17 @@ def cmd_add(args, parser):
 
     local_tmp_name = cwd_to_sub_relpath + "-tmp"
 
+    # NOTE: Design decision: The output is relative to the current working dir.
+    # The content of '%s' is the remote git name or the path relative to the
+    # current working dir. It's not relative to the top level dir of the git repo.
     print("Adding subproject '%s' into '%s'..." % (sub_url, cwd_to_sub_relpath,), end="")
     sys.stdout.flush()
 
-    download_config = DownloadConfig(url=sub_url,
-                                     revision=args.revision)
+    download_config = DownloadConfig(url=sub_url, revision=revision)
 
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     sub_helper.download(download_config, local_tmp_name)
-
-    # Get local path relative to top level directory
-    # TODO refactor that very ugly code !!!!
-    git_toplevel_path_realpath = os.path.realpath(super_abspath)
-    cwd_local_name_realpath = os.path.realpath(join(os.getcwd(), cwd_to_sub_relpath))
-    assert cwd_local_name_realpath.startswith(git_toplevel_path_realpath.decode("utf8"))
-    path = cwd_local_name_realpath[len(git_toplevel_path_realpath) + 1:]
-
-    config_abspath = join(super_abspath, b".subpatch")
 
     try:
         # TODO read as bytes instead of str type
@@ -644,8 +653,11 @@ def cmd_add(args, parser):
     # trailing slash is also in the config file. It's not sanitized. It's the
     # same behavior as 'git submodule' does.
     subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
+    if revision is not None:
+        subproject_config_parts.append((3, "\trevision = %s\n" % (revision,), "revision", revision))
 
-    config_parts_new = config_add_section(config_parts, "subpatch", path, subproject_config_parts)
+    config_parts_new = config_add_section(config_parts, "subpatch",
+                                          super_to_sub_relpath, subproject_config_parts)
 
     with open(config_abspath, "w") as f:
         f.write(config_unparse(config_parts_new))
@@ -663,18 +675,11 @@ def cmd_add(args, parser):
 
     print(" Done.")
 
-    # TODO move this into SuperHelper
-    # TODO prepare commit message
-
-    # NOTE: Design decision: The output is relative to the current working dir.
-    # The content of '%s' is the remote git name or the path relative to the
-    # current working dir. It's not relative to the top level dir of the git repo.
-    print("- To inspect the changes, use `git status` and `git diff --staged`.")
-    print("- If you want to keep the changes, commit them with `git commit`.")
-    print("- If you want to revert the changes, execute `git reset --merge`.")
-
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
+    super_helper.print_add_success()
+
+    # TODO Maybe prepare a commit/patch/change message
 
     return 0
 

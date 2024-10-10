@@ -380,29 +380,41 @@ Adding subproject '../subproject' into 'subproject'... Done.
                              p.stdout)
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+\trevision = refs/heads/main
+""")
             git.call(["reset", "--merge"])  # Remove all stagged changes
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", "v1"], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"initial")
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+\trevision = v1
+""")
             git.call(["reset", "--merge"])  # Remove all stagged changes
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_commit], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on stable")
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+\trevision = %s
+""" % (object_id_commit,))
             git.call(["reset", "--merge"])  # Remove all stagged changes
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_tag], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+\trevision = %s
+""" % (object_id_tag,))
             git.call(["reset", "--merge"])  # Remove all stagged changes
 
 
