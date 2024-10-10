@@ -184,23 +184,25 @@ class URLTypes(Enum):
     REMOTE = 3
 
 
-def get_url_type(repository_url):
-    if len(repository_url) == 0:
-        raise ValueError("The repository URL is empty!")
+def get_url_type(url):
+    if len(url) == 0:
+        raise ValueError("The URL is empty!")
+
     # TODO mabye using url parsing library?
     # TODO Implemente "file://" prefix
-    if repository_url.startswith("http"):
+    if url.startswith("http"):
         return URLTypes.REMOTE
-    elif repository_url.startswith("git"):
+    elif url.startswith("git"):
         return URLTypes.REMOTE
-    elif repository_url.startswith("ssh"):
+    elif url.startswith("ssh"):
         return URLTypes.REMOTE
-    if "://" in repository_url:
-        raise NotImplementedError("The repository URL '%s' is not implemented yet"
-                                  % (repository_url,))
+    if "://" in url:
+        raise NotImplementedError("The URL '%s' is not implemented yet" % (url,))
+
     # Is mostly just a local path
-    if repository_url[0] == "/":
+    if url[0] == "/":
         return URLTypes.LOCAL_ABSOLUTE
+
     return URLTypes.LOCAL_RELATIVE
 
 
@@ -225,9 +227,8 @@ def git_get_toplevel():
 
 # NOTE This is cwd aware
 # TODO add --depth to speed up performance!
-# NOTE: Names 'repository_url' and 'directory' are from the 'git clone' docu.
-def git_clone(repository_url, directory):
-    p = Popen(["git", "clone", "-q", repository_url, directory])
+def git_clone(url, directory):
+    p = Popen(["git", "clone", "-q", url, directory])
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
@@ -248,13 +249,13 @@ def is_sha1(sha1):
 
 
 # TODO Split this command. It seems like a ugly combination
-def git_init_and_fetch(repository_url, ref):
+def git_init_and_fetch(url, ref):
     p = Popen(["git", "init", "-q"])
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
 
-    p = Popen(["git", "fetch", "-q", repository_url, ref], stderr=DEVNULL)
+    p = Popen(["git", "fetch", "-q", url, ref], stderr=DEVNULL)
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure: %d" % (p.returncode,))
@@ -277,12 +278,6 @@ def git_add(args):
 
 # TODO clarify naming: path, filename, url
 # TODO clairfy name for remote git name and path/url
-# TOOD clarify naming:
-#  currently the "add" argument uses the term "repository_url".
-#  But this is wrong. It can also be a tarball url.
-#  Clarify the naming at the different levels. e.g. the names
-#  remote subproject.
-#  The term "repository_url" can also be used for the superproject.
 
 # Namings:
 # Git namings
@@ -297,8 +292,10 @@ def git_add(args):
 #     E.g. a <sha1>, "HEAD", "x..y" or "main:file"
 #
 # Variable names:
-#  - repository_url: The URL for a git/svn/.. repository.
+#  - url: The URL for a git/svn/.. repository or tarball.
 #      Can be a http, git or file URL. Or just a local path.
+#    Variant:
+#       sub_url: The subproject's URL, e.g. to clone/download
 
 
 # As of git v2.9.0 these are all valid git objects
@@ -337,16 +334,15 @@ def git_get_object_type(rev):
 #     …bla/foo/.git/ -> "foo"
 #     …bla/foo.git/  -> "foo"
 #     …bla/foo       -> "foo"
-def get_name_from_repository_url(repository_url):
-    if len(repository_url) == 0:
-        raise ValueError("The repository URL is empty!")
-    u = repository_url
-    u = u.rstrip("/")
-    if u.endswith(".git"):
-        u = u[:-4]
-    u = u.rstrip("/")
-    u = u.split("/")[-1]
-    return u
+def get_name_from_repository_url(url):
+    if len(url) == 0:
+        raise ValueError("The URL is empty!")
+    url = url.rstrip("/")
+    if url.endswith(".git"):
+        url = url[:-4]
+    url = url.rstrip("/")
+    url = url.split("/")[-1]
+    return url
 
 
 # Check whether the 'rev' can be resolved to a valid object in the repository
@@ -389,11 +385,11 @@ def parse_sha1_names(lines, sep=b' '):
 
 # git_ls_remote ::  string(url) -> dict<ref_name, sha1>
 # Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
-def git_ls_remote(repository_url):
+def git_ls_remote(url):
     # NOTE Subpress stderr output of 'ls-remote'. In case of a fetch failure
     # stuff is written to stderr.
 
-    p = Popen(["git", "ls-remote", repository_url], stdout=PIPE)
+    p = Popen(["git", "ls-remote", url], stdout=PIPE)
     stdout, _ = p.communicate()
     if p.returncode != 0:
         raise Exception("todo")
@@ -413,10 +409,10 @@ def git_ls_remote(repository_url):
 # Returns
 #  - None if ref could not be resolved
 # TODO also return the matched object
-def git_ls_remote_guess_ref(repository_url, ref):
+def git_ls_remote_guess_ref(url, ref):
     # TODO "git ls-remote" also allows to query a single ref or a pattern of
     # refs!
-    refs_sha1 = git_ls_remote(repository_url)
+    refs_sha1 = git_ls_remote(url)
 
     ref = ref.encode("utf8")
 
@@ -436,7 +432,7 @@ def git_ls_remote_guess_ref(repository_url, ref):
 
 @dataclass
 class DownloadConfig:
-    repository_url: Any
+    url: Any
     revision: Any = None
 
 
@@ -447,7 +443,7 @@ class CloneConfig:
     ref: str = None
 
 
-def git_resolve_to_clone_config(repository_url, revision):
+def git_resolve_to_clone_config(url, revision):
     # Some heuristics to sort out branch, commit/tag id or tag
     if revision is not None:
         if is_sha1(revision.encode("utf8")):
@@ -459,7 +455,7 @@ def git_resolve_to_clone_config(repository_url, revision):
             return CloneConfig(full_clone=True, object_id=revision)
         else:
             # It looks like a ref to a branch or tag. Try to resolve it
-            ref_resolved = git_ls_remote_guess_ref(repository_url, revision)
+            ref_resolved = git_ls_remote_guess_ref(url, revision)
             if ref_resolved is None:
                 raise AppException(ErrorCode.INVALID_ARGUMENT,
                                    "The reference '%s' cannot be resolved to a branch or tag!" % (revision,))
@@ -482,17 +478,17 @@ class SubHelperGit:
         #  - that is already partially implemented
         # TODO handle potential submodules in the subproject correctly
 
-        repository_url = download_config.repository_url
+        url = download_config.url
         revision = download_config.revision
 
-        clone_config = git_resolve_to_clone_config(repository_url, revision)
+        clone_config = git_resolve_to_clone_config(url, revision)
 
         # There are three cases:
         #   - full clone + with object id
         #   - full clone + without object id
         #   - fetch + with ref
         if clone_config.full_clone:
-            git_clone(repository_url, folder)
+            git_clone(url, folder)
             if clone_config.object_id is not None:
                 with cwd(folder):
                     if not git_verify(clone_config.object_id):
@@ -512,12 +508,12 @@ class SubHelperGit:
         else:
             with cwd(folder, create=True):
                 # TODO Not work with relative paths, because a subdir is used!
-                if get_url_type(repository_url) == URLTypes.LOCAL_RELATIVE:
+                if get_url_type(url) == URLTypes.LOCAL_RELATIVE:
                     # This is ugly!
-                    repository_url_tmp = "../" + repository_url
+                    url_tmp = "../" + url
                 else:
-                    repository_url_tmp = repository_url
-                object_id = git_init_and_fetch(repository_url_tmp, clone_config.ref)
+                    url_tmp = url
+                object_id = git_init_and_fetch(url_tmp, clone_config.ref)
                 git_reset_hard(object_id)
 
         # Remove ".git" folder in this repo
@@ -546,7 +542,7 @@ def cmd_add(args, parser):
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
 
-    repository_url = args.url
+    sub_url = args.url
 
     # For now just assume that the subproject is a git repo
     sub_helper = SubHelperGit()
@@ -557,7 +553,7 @@ def cmd_add(args, parser):
     # TODO check with ls-remote that remote is accessible
 
     if args.path is None:
-        remote_git_name = get_name_from_repository_url(repository_url)
+        remote_git_name = get_name_from_repository_url(sub_url)
     else:
         remote_git_name = args.path
         # TODO split into path and name component
@@ -573,9 +569,9 @@ def cmd_add(args, parser):
     if path_superproject is None:
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
-    repository_url_type = get_url_type(repository_url)
+    url_type = get_url_type(sub_url)
 
-    if repository_url_type == URLTypes.LOCAL_RELATIVE:
+    if url_type == URLTypes.LOCAL_RELATIVE:
         # Check the current work directory of the call is the top level
         # directory of the repository. If not, a relative path on the
         # commadline is not relative to the top level directory and must be
@@ -586,7 +582,7 @@ def cmd_add(args, parser):
         if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(path_superproject):
             raise AppException(ErrorCode.CUSTOM,
                                "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
-    elif repository_url_type == URLTypes.LOCAL_ABSOLUTE:
+    elif url_type == URLTypes.LOCAL_ABSOLUTE:
         # TODO add reason why it's not supported
         raise AppException(ErrorCode.CUSTOM, "Absolute local paths to a remote repository are not supported!")
 
@@ -607,10 +603,10 @@ def cmd_add(args, parser):
 
     local_tmp_name = remote_git_name + "-tmp"
 
-    print("Adding subproject '%s' into '%s'..." % (repository_url, remote_git_name,), end="")
+    print("Adding subproject '%s' into '%s'..." % (sub_url, remote_git_name,), end="")
     sys.stdout.flush()
 
-    download_config = DownloadConfig(repository_url=repository_url,
+    download_config = DownloadConfig(url=sub_url,
                                      revision=args.revision)
 
     # Fetch remote repository/tarball into local folder and checkout the
@@ -637,11 +633,11 @@ def cmd_add(args, parser):
     # TODO currently this always uses "\t" for indention. Try to use the style
     # that is already used in the subpatch file. E.g. four-spaces, two-spaces
     # or no-spaces.
-    # NOTE: DDX/Design decision: The repository_url is taken as a verbatim copy
+    # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
     # of the argument. If there is a trailing slash in the argument, then the
     # trailing slash is also in the config file. It's not sanitized. It's the
     # same behavior as 'git submodule' does.
-    subproject_config_parts = [(3, "\turl = %s\n" % (repository_url), "url", repository_url)]
+    subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
 
     # TODO if the path is relative to a local folder, it's relative to the current working directory.
     # Then also the path in the config file is relative.
