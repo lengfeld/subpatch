@@ -24,8 +24,8 @@ __LICENSE__ = "GPL-2.0-or-later"
 
 
 # Name conventions for variables
-#    path_superproject
-#    path_config
+#    super_abspath
+#    config_abspath
 # TODO not finialized yet
 
 # TODO refactor. copyied from helpers
@@ -533,6 +533,7 @@ def cmd_add(args, parser):
     if args.url is None:
         # TODO make error message nicer
         raise Exception("Not the correct amount of args")
+
     if args.path is not None:
         # The optional path argument was given. Make some checks
         if len(args.path) == 0:
@@ -544,6 +545,15 @@ def cmd_add(args, parser):
 
     sub_url = args.url
 
+    # Example              ../folder/superproject/dirA/dirB/subproject/
+    #
+    # super_abspath:       ../folder/superproject
+    # cwd_abspath:         ../folder/superproject/dirA
+    # super_to_sub_relpath:                       dirA/dirB/subproject
+    # super_to_cwd_relpath:                       dirA
+    # cwd_to_sub_relpath:                              dirB/subproject
+    # sub_name:                                             subproject
+
     # For now just assume that the subproject is a git repo
     sub_helper = SubHelperGit()
 
@@ -553,20 +563,17 @@ def cmd_add(args, parser):
     # TODO check with ls-remote that remote is accessible
 
     if args.path is None:
-        remote_git_name = get_name_from_repository_url(sub_url)
+        cwd_to_sub_relpath = get_name_from_repository_url(sub_url)
     else:
-        remote_git_name = args.path
+        cwd_to_sub_relpath = args.path
         # TODO split into path and name component
         # sanitize path. Remove double slashes trailing slash
         # and paths that are outside of the repository
         # - For now just remove trailing slashes
-        remote_git_name = remote_git_name.rstrip("/")
+        cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
-    # TODO The name 'remote_git_name' is misleading it can also be a relative
-    # path like "sub/name"
-
-    path_superproject = git_get_toplevel()
-    if path_superproject is None:
+    super_abspath = git_get_toplevel()
+    if super_abspath is None:
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
     url_type = get_url_type(sub_url)
@@ -579,7 +586,7 @@ def cmd_add(args, parser):
         # just enforce (like also git does) that the current work directory
         # is the top level repository in that case.
         # TODO this comparision is ugly. Write this nicer!
-        if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(path_superproject):
+        if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(super_abspath):
             raise AppException(ErrorCode.CUSTOM,
                                "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
     elif url_type == URLTypes.LOCAL_ABSOLUTE:
@@ -593,17 +600,16 @@ def cmd_add(args, parser):
     # This should work
 
     # TODO Also check the config file whether a entry already exists
-    if os.path.exists(remote_git_name):
+    if os.path.exists(cwd_to_sub_relpath):
         # TODO explain what can be done: Either remove the dir or use another name!
         raise AppException(ErrorCode.CUSTOM,
-                           "Directory '%s' alreay exists. Cannot add subproject!" % (remote_git_name,))
+                           "File '%s' alreay exists. Cannot add subproject!" % (cwd_to_sub_relpath,))
 
     # TODO maybe add pid to avoid race conditions
-    assert len(remote_git_name) != 0
 
-    local_tmp_name = remote_git_name + "-tmp"
+    local_tmp_name = cwd_to_sub_relpath + "-tmp"
 
-    print("Adding subproject '%s' into '%s'..." % (sub_url, remote_git_name,), end="")
+    print("Adding subproject '%s' into '%s'..." % (sub_url, cwd_to_sub_relpath,), end="")
     sys.stdout.flush()
 
     download_config = DownloadConfig(url=sub_url,
@@ -615,16 +621,16 @@ def cmd_add(args, parser):
 
     # Get local path relative to top level directory
     # TODO refactor that very ugly code !!!!
-    git_toplevel_path_realpath = os.path.realpath(path_superproject)
-    cwd_local_name_realpath = os.path.realpath(join(os.getcwd(), remote_git_name))
+    git_toplevel_path_realpath = os.path.realpath(super_abspath)
+    cwd_local_name_realpath = os.path.realpath(join(os.getcwd(), cwd_to_sub_relpath))
     assert cwd_local_name_realpath.startswith(git_toplevel_path_realpath.decode("utf8"))
     path = cwd_local_name_realpath[len(git_toplevel_path_realpath) + 1:]
 
-    path_config = join(path_superproject, b".subpatch")
+    config_abspath = join(super_abspath, b".subpatch")
 
     try:
         # TODO read as bytes instead of str type
-        with open(path_config, "r") as f:
+        with open(config_abspath, "r") as f:
             config_parts = config_parse(split_with_ts(f.read()))
     except FileNotFoundError:
         config_parts = []
@@ -639,25 +645,20 @@ def cmd_add(args, parser):
     # same behavior as 'git submodule' does.
     subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
 
-    # TODO if the path is relative to a local folder, it's relative to the current working directory.
-    # Then also the path in the config file is relative.
-    # This can be wired, because it then depends on the cwd of the inovcation!
-    #   NOTE: This is fixed. Relative paths are only allowed if the cwd is
-    #   the top level directory.
     config_parts_new = config_add_section(config_parts, "subpatch", path, subproject_config_parts)
 
-    with open(path_config, "w") as f:
+    with open(config_abspath, "w") as f:
         f.write(config_unparse(config_parts_new))
 
     # Move files into place
-    os.rename(local_tmp_name, remote_git_name)
+    os.rename(local_tmp_name, cwd_to_sub_relpath)
 
     # TODO in case of failure, remove download git dir!
 
     # Add files for committing
     # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
-    super_helper.add([remote_git_name])
-    with cwd(path_superproject):
+    super_helper.add([cwd_to_sub_relpath])
+    with cwd(super_abspath):
         super_helper.add([".subpatch"])
 
     print(" Done.")
@@ -693,16 +694,16 @@ def show_info(args):
 
 def cmd_status(args, parser):
     # TODO unify search for superproject with other commands!
-    path_superproject = git_get_toplevel()
-    if path_superproject is None:
+    super_abspath = git_get_toplevel()
+    if super_abspath is None:
         raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
 
     # Find subpatch file
     # Design decision:
     # Having a empty ".subpatch" config file is something different than having
     # no config file. It means that subpach is not yet configured for the project.
-    path_config = join(path_superproject, b".subpatch")
-    if not os.path.exists(path_config):
+    config_abspath = join(super_abspath, b".subpatch")
+    if not os.path.exists(config_abspath):
         raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
 
     # Just dump the contents of the file for now
@@ -712,7 +713,7 @@ def cmd_status(args, parser):
     # not use in scripts.
     # TODO add plumbing commands for scripts!
     print("NOTE: Output format is just a hack. Not the final output format yet!")
-    with open(path_config) as f:
+    with open(config_abspath) as f:
         print(f.read(), end="")
 
     return 0
