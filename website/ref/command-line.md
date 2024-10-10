@@ -25,8 +25,8 @@ So the following commands are equivalent:
 
     subpatch status
 
-Show the current state of all subprojects in the superproject. Much like `git
-status`.
+Show the current state of all subprojects in the superproject. Much like
+`git status`.
 
 
 ## subpatch add
@@ -35,7 +35,7 @@ status`.
 
 Add the subproject at `url` at the optional `path` in the current repository.
 Currently `url` can only point to a git repository. Other subproject types
-are not yet supported.
+are not supported yet.
 
 The `path` is optional. If it's omitted the canonical subproject name is used.
 It's mostly the last folder name in the `url`. If `path` is provided it can
