@@ -202,8 +202,11 @@ class TestGit(TestCaseTempFolder):
             self.assertEqual(None, git_ls_remote_guess_ref(".", "v3"))
 
     def test_git_verify(self):
-        # Check Special case: Execute not in a git repo
-        self.assertEqual(True, git_verify("main"))
+        # TODO Refactor to common code. Every tmp dir should be in /tmp!
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with cwd(tmpdirname):
+                # TODO Exception should be replaced with a git specifc exception
+                self.assertRaises(Exception, git_verify, "main")
 
         create_git_repo_with_branches_and_tags()
         self.assertEqual(True, git_verify("main"))

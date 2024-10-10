@@ -351,13 +351,17 @@ def get_name_from_repository_url(repository_url):
 
 # Check whether the 'rev' can be resolved to a valid object in the repository
 # NOTE:
-# - If this is not executed in a git repo, it also returns True.
+# - If this command is not exectued in a git repo, it raises an exception.
 def git_verify(rev):
-    p = Popen(["git", "rev-parse", "--quiet", "--verify", rev + "^{object}"], stdout=DEVNULL)
+    p = Popen(["git", "rev-parse", "--quiet", "--verify", rev + "^{object}"],
+              stdout=DEVNULL, stderr=DEVNULL)
     p.communicate()
     if p.returncode == 1:
         return False
     if p.returncode != 0:
+        # Example stderr output:
+        #   fatal: not a git repository (or any of the parent directories): .git
+        # TODO replace with git specific exception
         raise Exception("todo")
 
     return True
