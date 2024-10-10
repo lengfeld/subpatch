@@ -49,20 +49,15 @@ First all tests should be green:
 
     $ make tests
 
-Update the README from the website:
-
-    $ ./update-website.sh
-    $ git diff
-    $ git commit -a # if necessary
-
-Increase version number, create commit and tag
+Increase version number, create commit and tag. Replace `X` with the current
+version number.
 
     $ vim subpatch
     $ git add -p subpatch
-    $ git commit -m "Release version v0.1a2"
+    $ git commit -m "Release version v0.1aX"
     $ git show  # check
-    $ git tag -m "subpatch version v0.1a2" v0.1a2
-    $ git show v0.1a2  # checks
+    $ git tag -m "subpatch version v0.1aX" v0.1aX
+    $ git show v0.1aX  # check
     $ git describe     # check
 
 Build release
@@ -71,12 +66,14 @@ Build release
 
 Test installation locally
 
-    $ pipx install dist/subpatch-0.1a2-py3-none-any.whl
+    $ pipx install dist/subpatch-*.whl
     $ subpatch --version
     # make some tests "status" and "add" command
+
+    # Remove it for later install with testpypi
     $ pipx uninstall subpatch
 
-Publish release on test pypi website
+Publish release on testpypi website
 
     $ twine upload --repository testpypi dist/*
     # Check website
@@ -87,7 +84,10 @@ Publish release on test pypi website
 Make test install from test pypi
 
     $ pipx install -i https://test.pypi.org/simple/ subpatch
+
     # make some tests
+    $ subpatch --version
+
     $ pipx uninstall subpatch
 
 Publish release commit and tag
