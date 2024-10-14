@@ -17,8 +17,26 @@ The subpatch project will provide two things:
 If you are currently using
 [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) or
 [repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md) and you are
-frustrated, `subpatch`  will be mostly your solution! If you are interested,
+frustrated, subpatch  will be mostly your solution! If you are interested,
 email [me](mailto:stefan+subpatch@lengfeld.xyz).
+
+
+## Quickstart
+
+To check out subpatch really quick, do
+
+    # First ensure that you are in a git repo, ...
+    $ git status
+
+    # then download the subpatch python script, ...
+    $ wget https://subpatch.net/downloads/latest/subpatch
+    $ chmod +x ./subpatch
+
+    # and finally add a subproject!
+    $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
+    $ git commit -m "adding googletest"
+
+That's all!
 
 
 ## subpatch usecases

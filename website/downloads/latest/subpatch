@@ -1,0 +1,809 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
+
+import os
+import sys
+import shutil
+import time
+from enum import Enum
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE, DEVNULL
+from os.path import join, abspath
+from os import mkdir
+from dataclasses import dataclass
+from typing import Any
+import contextlib
+
+# See https://peps.python.org/pep-0440/ for details about the version format.
+# e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
+__version__ = "0.1a3"
+
+# It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-or-later.html
+__LICENSE__ = "GPL-2.0-or-later"
+
+
+# Name conventions for variables
+#    path_superproject
+#    path_config
+# TODO not finialized yet
+
+# TODO refactor. copyied from helpers
+@contextlib.contextmanager
+def cwd(path, create=False):
+    if create:
+        os.makedirs(path)
+    old_path = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(old_path)
+
+
+# "Section names are case-insensitive. Only alphanumeric characters, - and .
+# are allowed in section names"
+def is_section_name(b):
+    raise NotImplementedError()
+
+
+# Split with terminator sematics
+def split_with_ts(s):
+    len_s = len(s)
+    pos = 0
+    while pos < len_s:
+        new_pos = s.find("\n", pos)
+        if new_pos == -1:
+            # newline character not found anymore
+            new_pos = len_s - 1
+        yield s[pos:new_pos + 1]
+        pos = new_pos + 1
+
+
+# TODO find naming convention!
+#
+# Parse git-style config file.
+# See https://git-scm.com/docs/git-config
+# The syntax is described here:
+#    https://git-scm.com/docs/git-config/2.12.5#_syntax
+# Goal: The parsed result can be converted back to the lines object with a 1to1 mapping
+# NOTES:
+# - not supporting "[section.subsection]" syntax
+# - not supporting continouation lines yet
+# - not supporting comments at end of line yet.
+# - every line in lines, ends with a "\n" character
+#   Only the last line may not have a trailing "\n" character.
+def config_parse(lines):
+    # result items
+    #   (<leading whitespace>, <section>, <subsection>, <name>, <value>, <comment>)
+
+    def get_first(b):
+        if len(b) == 0:
+            return None
+        return b[0]
+
+    for line in lines:
+        first_char = get_first(line.lstrip())
+        if first_char is None:
+            # It's an empty line
+            yield 1, line
+        else:
+            if first_char in ('#', ';'):
+                yield 1, line
+            elif first_char == '[':
+                # section start, like: "[section]\n"
+                # Parse section name
+                # TODO Check for valid section characters
+                inner_part = line.split('[', 1)[1].split(']')[0]
+                if '"' in inner_part:
+                    # There is a subsection:
+                    #     [section  "subsection"]
+                    section_name = inner_part.split('"')[0].strip()
+                    subsection_name = inner_part.split('"', 2)[1]
+                else:
+                    section_name = inner_part
+                    subsection_name = None
+
+                yield 2, line, section_name, subsection_name
+            else:
+                # This is mostly a variable line
+                #     name = value
+                parts = line.split("=", 1)
+                name = parts[0].strip()
+                value = parts[1].strip()
+                yield 3, line, name, value
+
+
+def config_unparse(parts_list):
+    s = ""
+    for parts in parts_list:
+        s += parts[1]
+    return s
+
+
+# NOTE: the section_lines is a list of the internal parsing type. This is a bit
+# strange to expose the internal parsing data structure to the caller.
+def config_add_section(parts_list, section_name, subsection_name, section_lines):
+    # HACK: Make the variable a "box" value to access it from inside the inner
+    # function.
+    was_emit = [False]
+
+    def emit():
+        if was_emit[0]:
+            return
+        # TODO the trailing "\n" is strange here. All code is agnostice, e.g.
+        # works without newlines But here is the assumption that the config
+        # file is properly newlined.
+        yield 2, "[%s \"%s\"]\n" % (section_name, subsection_name), section_name, subsection_name
+        for parts in section_lines:
+            yield parts
+        was_emit[0] = True
+
+    for parts in parts_list:
+        if parts[0] == 2:
+            if parts[2] > section_name:
+                yield from emit()
+            elif parts[2] == section_name:
+                if parts[3] is None:
+                    yield from emit()
+                elif parts[3] > subsection_name:
+                    yield from emit()
+        yield parts
+    yield from emit()
+
+
+# TODO Write blogpost about common error categories, e.g. in HTTP and errno
+# E.g. there is also
+#  * invalid argument/Bad request
+#  * (generic) runtime error (maybe the same as IO error)
+#  * permission deined
+#  * NotImplemented/Does not exists
+class ErrorCode(Enum):
+    UNKNOWN = 1
+    NOT_IMPLEMENTED = 2
+    NOT_IN_A_GIT_REPO = 3
+    # Subpatch is not yet configured for superproject
+    NOT_CONFIGURED_FOR_SUPERPROJECT = 4
+    # The user has given a invalid argument on the command line
+    INVALID_ARGUMENT = 5
+    CUSTOM = 6
+
+
+class AppException(Exception):
+    def __init__(self, code, msg=None):
+        self._code = code
+        if msg is not None:
+            super().__init__(msg)
+        else:
+            super().__init__()
+
+
+class URLTypes(Enum):
+    LOCAL_RELATIVE = 1
+    LOCAL_ABSOLUTE = 2
+    REMOTE = 3
+
+
+def get_url_type(repository_url):
+    if len(repository_url) == 0:
+        raise ValueError("The repository URL is empty!")
+    # TODO mabye using url parsing library?
+    # TODO Implemente "file://" prefix
+    if repository_url.startswith("http"):
+        return URLTypes.REMOTE
+    elif repository_url.startswith("git"):
+        return URLTypes.REMOTE
+    elif repository_url.startswith("ssh"):
+        return URLTypes.REMOTE
+    if "://" in repository_url:
+        raise NotImplementedError("The repository URL '%s' is not implemented yet"
+                                  % (repository_url,))
+    # Is mostly just a local path
+    if repository_url[0] == "/":
+        return URLTypes.LOCAL_ABSOLUTE
+    return URLTypes.LOCAL_RELATIVE
+
+
+def nocommand(args, parser):
+    parser.print_help(file=sys.stderr)
+    return 2  # TODO why 2?
+
+
+# :: void -> None or byte object (or raises an exception)
+def git_get_toplevel():
+    p = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=DEVNULL)
+    stdout, _ = p.communicate()
+    if p.returncode == 0:
+        return stdout.rstrip(b"\n")
+    elif p.returncode == 128:
+        # fatal: not a git repository (or any of the parent directories): .git
+        return None
+    else:
+        # TODO Create a generic git error exception
+        raise Exception("git failure")
+
+
+# NOTE This is cwd aware
+# TODO add --depth to speed up performance!
+# NOTE: Names 'repository_url' and 'directory' are from the 'git clone' docu.
+def git_clone(repository_url, directory):
+    p = Popen(["git", "clone", "-q", repository_url, directory])
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+
+def git_reset_hard(sha1):
+    p = Popen(["git", "reset", "-q", "--hard", sha1])
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+
+def is_sha1(sha1):
+    assert isinstance(sha1, bytes)
+    if len(sha1) != 40:
+        return False
+    return all(0x30 <= c <= 0x39 or 0x61 <= c <= 0x66 for c in sha1)
+
+
+# TODO Split this command. It seems like a ugly combination
+def git_init_and_fetch(repository_url, ref):
+    p = Popen(["git", "init", "-q"])
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+    p = Popen(["git", "fetch", "-q", repository_url, ref], stderr=DEVNULL)
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure: %d" % (p.returncode,))
+
+    # get SHA1 of fetched object
+    with open(".git/FETCH_HEAD", "br") as f:
+        sha1 = f.read().split(b"\t", 1)[0]
+
+    assert is_sha1(sha1)
+    return sha1
+
+
+def git_add(args):
+    assert len(args) >= 1
+    p = Popen(["git", "add"] + args)
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+
+# TODO clarify naming: path, filename, url
+# TODO clairfy name for remote git name and path/url
+# TOOD clarify naming:
+#  currently the "add" argument uses the term "repository_url".
+#  But this is wrong. It can also be a tarball url.
+#  Clarify the naming at the different levels. e.g. the names
+#  remote subproject.
+#  The term "repository_url" can also be used for the superproject.
+
+# Namings:
+# Git namings
+#  - object: something in the object store that has a SHA1
+#  - object type: type of the object. Can be blob, tree, commit or tag.
+#  - object id: the hash of the object (taken from the git source code)
+#  - ref: short for "reference", like branches and tags.
+#         Everything in the 'refs' folder/namespace
+#  - rev: short for "revision"
+#     "A revision parameter <rev> typically, but not necessarily, names a
+#     commit object." See 'man gitrevisions'
+#     E.g. a <sha1>, "HEAD", "x..y" or "main:file"
+#
+# Variable names:
+#  - repository_url: The URL for a git/svn/.. repository.
+#      Can be a http, git or file URL. Or just a local path.
+
+
+# As of git v2.9.0 these are all valid git objects
+OBJECT_TYPES = (b"blob", b"tree", b"commit", b"tag")
+
+
+class ObjectType(Enum):
+    BLOB = b"blob"
+    TREE = b"tree"
+    COMMIT = b"commit"
+    TAG = b"tag"
+
+
+# Returns the type of the git object
+# TODO not used yet. Implement sanity check
+# TODO naming 'rev' is incorrect. 'rev' is only for commit objects.
+def git_get_object_type(rev):
+    p = Popen(["git", "cat-file", "-t", rev], stdout=PIPE, stderr=DEVNULL)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        # TODO Create a generic git error exception
+        raise Exception("failed here")
+
+    stdout = stdout.rstrip(b"\n")
+    assert stdout in OBJECT_TYPES
+    if stdout == b"blob":
+        return ObjectType.BLOB
+    elif stdout == b"tree":
+        return ObjectType.TREE
+    elif stdout == b"commit":
+        return ObjectType.COMMIT
+    return ObjectType.TAG
+
+
+# Convert URLs. Examples:
+#     …bla/foo/.git/ -> "foo"
+#     …bla/foo.git/  -> "foo"
+#     …bla/foo       -> "foo"
+def get_name_from_repository_url(repository_url):
+    if len(repository_url) == 0:
+        raise ValueError("The repository URL is empty!")
+    u = repository_url
+    u = u.rstrip("/")
+    if u.endswith(".git"):
+        u = u[:-4]
+    u = u.rstrip("/")
+    u = u.split("/")[-1]
+    return u
+
+
+# Check whether the 'rev' can be resolved to a valid object in the repository
+# NOTE:
+# - If this command is not exectued in a git repo, it raises an exception.
+def git_verify(rev):
+    p = Popen(["git", "rev-parse", "--quiet", "--verify", rev + "^{object}"],
+              stdout=DEVNULL, stderr=DEVNULL)
+    p.communicate()
+    if p.returncode == 1:
+        return False
+    if p.returncode != 0:
+        # Example stderr output:
+        #   fatal: not a git repository (or any of the parent directories): .git
+        # TODO replace with git specific exception
+        raise Exception("todo")
+
+    return True
+
+
+# parse_sha1_names :: bytes -> dict
+# TODO add example of input
+# TODO add tests
+def parse_sha1_names(lines, sep=b' '):
+    # remove the last new line character
+    # Should only be one character
+    lines = lines.rstrip(b'\n')
+
+    lines = [line.split(sep) for line in lines.split(b'\n')]
+    for line in lines:
+        if len(line) != 2:
+            raise Exception("Parsing error in line: sep = %s parts = %s" % (sep, line))
+    lines = [(name, sha1) for sha1, name in lines]
+    # checks
+    for _, sha1 in lines:
+        if not is_sha1(sha1):
+            raise ValueError("String is not a SHA1 sum: %s" % (sha1,))
+    return dict(lines)
+
+
+# git_ls_remote ::  string(url) -> dict<ref_name, sha1>
+# Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
+def git_ls_remote(repository_url):
+    # NOTE Subpress stderr output of 'ls-remote'. In case of a fetch failure
+    # stuff is written to stderr.
+
+    p = Popen(["git", "ls-remote", repository_url], stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("todo")
+
+    # Parse output
+    # The output of ls-remote uses the tab character as the separator. The
+    # show-ref command uses spaces.
+    return parse_sha1_names(stdout, sep=b'\t')
+
+
+# Query the remote git repo and try to resolve the 'ref'.
+# E.g.
+#  - "main" -> "refs/heads/main"
+#  - "v1" -> "refs/tags/v1"
+# Notes:
+#  - function accepts ref as string, but returns a byte Object!
+# Returns
+#  - None if ref could not be resolved
+# TODO also return the matched object
+def git_ls_remote_guess_ref(repository_url, ref):
+    # TODO "git ls-remote" also allows to query a single ref or a pattern of
+    # refs!
+    refs_sha1 = git_ls_remote(repository_url)
+
+    ref = ref.encode("utf8")
+
+    if ref in refs_sha1:
+        return ref  # Direct match
+
+    ref_as_tag = b"refs/tags/" + ref
+    if ref_as_tag in refs_sha1:
+        return ref_as_tag
+
+    ref_as_branch = b"refs/heads/" + ref
+    if ref_as_branch in refs_sha1:
+        return ref_as_branch
+
+    return None
+
+
+@dataclass
+class DownloadConfig:
+    repository_url: Any
+    revision: Any = None
+
+
+@dataclass
+class CloneConfig:
+    full_clone: bool
+    object_id: str = None
+    ref: str = None
+
+
+def git_resolve_to_clone_config(repository_url, revision):
+    # Some heuristics to sort out branch, commit/tag id or tag
+    if revision is not None:
+        if is_sha1(revision.encode("utf8")):
+            # NOTE Commit ids are bad! You cannot download just a single
+            # commit id. You can only clone everything and hope that the commit id
+            # is in there!
+            # TODO Handle tag ids special. They can be looked up by "git
+            # ls-remote".
+            return CloneConfig(full_clone=True, object_id=revision)
+        else:
+            # It looks like a ref to a branch or tag. Try to resolve it
+            ref_resolved = git_ls_remote_guess_ref(repository_url, revision)
+            if ref_resolved is None:
+                raise AppException(ErrorCode.INVALID_ARGUMENT,
+                                   "The reference '%s' cannot be resolved to a branch or tag!" % (revision,))
+            return CloneConfig(full_clone=False, ref=ref_resolved)
+    else:
+        # Use HEAD of remote repository
+        # TODO optimize this by looking at the output of "git ls-remote".
+        return CloneConfig(full_clone=True)
+
+
+# TODO finalize of naming convention for helper code for subprojects and
+# superprojects.
+class SubHelperGit:
+    # Download remote repository, checkout the request revision, remove
+    # repository metadata and leave the plan files in the dir 'local_tmp_name'.
+    def download(self, download_config, folder):
+        # NOTE "git submodule init" creates a bare repository in ".git/modules"
+        # TODO maybe also use that folder as a scrat pad.
+        # TODO clone only a single branch and maybe use --depth 1
+        #  - that is already partially implemented
+        # TODO handle potential submodules in the subproject correctly
+
+        repository_url = download_config.repository_url
+        revision = download_config.revision
+
+        clone_config = git_resolve_to_clone_config(repository_url, revision)
+
+        # There are three cases:
+        #   - full clone + with object id
+        #   - full clone + without object id
+        #   - fetch + with ref
+        if clone_config.full_clone:
+            git_clone(repository_url, folder)
+            if clone_config.object_id is not None:
+                with cwd(folder):
+                    if not git_verify(clone_config.object_id):
+                        # TODO use context wrapper for cleanup!
+                        shutil.rmtree("../" + folder)
+                        raise AppException(ErrorCode.INVALID_ARGUMENT,
+                                           "Object id '%s' does not point to a valid object!" % (clone_config.object_id,))
+
+                    object_type = git_get_object_type(clone_config.object_id)
+                    if object_type not in (ObjectType.COMMIT, ObjectType.TAG):
+                        # TODO use context wrapper for cleanup!
+                        shutil.rmtree("../" + folder)
+                        raise AppException(ErrorCode.INVALID_ARGUMENT,
+                                           "Object id '%s' does not point to a commit or tag object!" % (clone_config.object_id,))
+
+                    git_reset_hard(clone_config.object_id)
+        else:
+            with cwd(folder, create=True):
+                # TODO Not work with relative paths, because a subdir is used!
+                if get_url_type(repository_url) == URLTypes.LOCAL_RELATIVE:
+                    # This is ugly!
+                    repository_url_tmp = "../" + repository_url
+                else:
+                    repository_url_tmp = repository_url
+                object_id = git_init_and_fetch(repository_url_tmp, clone_config.ref)
+                git_reset_hard(object_id)
+
+        # Remove ".git" folder in this repo
+        local_repo_git_dir = join(folder, ".git")
+        assert os.path.isdir(local_repo_git_dir)
+        shutil.rmtree(local_repo_git_dir)
+
+
+class SuperHelperGit:
+    # Add the file in 'path' to the index
+    # TODO not all version control systems have the notion of a index!
+    def add(self, paths):
+        git_add(paths)
+
+
+def cmd_add(args, parser):
+    if args.url is None:
+        # TODO make error message nicer
+        raise Exception("Not the correct amount of args")
+    if args.path is not None:
+        # The optional path argument was given. Make some checks
+        if len(args.path) == 0:
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "path is empty")
+        # TODO But something like "/./././" is also invalid"
+        # TODO disallow absolute paths
+        # TODO think about relative paths, whether the must be relative to the
+        # remote origin url! Repo and git-submodule do that
+
+    repository_url = args.url
+
+    # For now just assume that the subproject is a git repo
+    sub_helper = SubHelperGit()
+
+    # For now just assume that the superproject is a git repo
+    super_helper = SuperHelperGit()
+
+    # TODO check with ls-remote that remote is accessible
+
+    if args.path is None:
+        remote_git_name = get_name_from_repository_url(repository_url)
+    else:
+        remote_git_name = args.path
+        # TODO split into path and name component
+        # sanitize path. Remove double slashes trailing slash
+        # and paths that are outside of the repository
+        # - For now just remove trailing slashes
+        remote_git_name = remote_git_name.rstrip("/")
+
+    # TODO The name 'remote_git_name' is misleading it can also be a relative
+    # path like "sub/name"
+
+    path_superproject = git_get_toplevel()
+    if path_superproject is None:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+    repository_url_type = get_url_type(repository_url)
+
+    if repository_url_type == URLTypes.LOCAL_RELATIVE:
+        # Check the current work directory of the call is the top level
+        # directory of the repository. If not, a relative path on the
+        # commadline is not relative to the top level directory and must be
+        # converted. This conversion is a bit complex and error prone.  So
+        # just enforce (like also git does) that the current work directory
+        # is the top level repository in that case.
+        # TODO this comparision is ugly. Write this nicer!
+        if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(path_superproject):
+            raise AppException(ErrorCode.CUSTOM,
+                               "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
+    elif repository_url_type == URLTypes.LOCAL_ABSOLUTE:
+        # TODO add reason why it's not supported
+        raise AppException(ErrorCode.CUSTOM, "Absolute local paths to a remote repository are not supported!")
+
+    # TODO check that git repo has nothing in the index!
+    # But some changes are ok:
+    # TODO add tests that adds a subproject after a "git rm -r" to the same folder.
+    # So the changes are in the filesystem and in the index, but not committed yet.
+    # This should work
+
+    # TODO Also check the config file whether a entry already exists
+    if os.path.exists(remote_git_name):
+        # TODO explain what can be done: Either remove the dir or use another name!
+        raise AppException(ErrorCode.CUSTOM,
+                           "Directory '%s' alreay exists. Cannot add subproject!" % (remote_git_name,))
+
+    # TODO maybe add pid to avoid race conditions
+    assert len(remote_git_name) != 0
+
+    local_tmp_name = remote_git_name + "-tmp"
+
+    print("Adding subproject '%s' into '%s'..." % (repository_url, remote_git_name,), end="")
+    sys.stdout.flush()
+
+    download_config = DownloadConfig(repository_url=repository_url,
+                                     revision=args.revision)
+
+    # Fetch remote repository/tarball into local folder and checkout the
+    # requested revision.
+    sub_helper.download(download_config, local_tmp_name)
+
+    # Get local path relative to top level directory
+    # TODO refactor that very ugly code !!!!
+    git_toplevel_path_realpath = os.path.realpath(path_superproject)
+    cwd_local_name_realpath = os.path.realpath(join(os.getcwd(), remote_git_name))
+    assert cwd_local_name_realpath.startswith(git_toplevel_path_realpath.decode("utf8"))
+    path = cwd_local_name_realpath[len(git_toplevel_path_realpath) + 1:]
+
+    path_config = join(path_superproject, b".subpatch")
+
+    try:
+        # TODO read as bytes instead of str type
+        with open(path_config, "r") as f:
+            config_parts = config_parse(split_with_ts(f.read()))
+    except FileNotFoundError:
+        config_parts = []
+
+    # TODO Check if section and subsection already exists!
+    # TODO currently this always uses "\t" for indention. Try to use the style
+    # that is already used in the subpatch file. E.g. four-spaces, two-spaces
+    # or no-spaces.
+    # NOTE: DDX/Design decision: The repository_url is taken as a verbatim copy
+    # of the argument. If there is a trailing slash in the argument, then the
+    # trailing slash is also in the config file. It's not sanitized. It's the
+    # same behavior as 'git submodule' does.
+    subproject_config_parts = [(3, "\turl = %s\n" % (repository_url), "url", repository_url)]
+
+    # TODO if the path is relative to a local folder, it's relative to the current working directory.
+    # Then also the path in the config file is relative.
+    # This can be wired, because it then depends on the cwd of the inovcation!
+    #   NOTE: This is fixed. Relative paths are only allowed if the cwd is
+    #   the top level directory.
+    config_parts_new = config_add_section(config_parts, "subpatch", path, subproject_config_parts)
+
+    with open(path_config, "w") as f:
+        f.write(config_unparse(config_parts_new))
+
+    # Move files into place
+    os.rename(local_tmp_name, remote_git_name)
+
+    # TODO in case of failure, remove download git dir!
+
+    # Add files for committing
+    # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
+    super_helper.add([remote_git_name])
+    with cwd(path_superproject):
+        super_helper.add([".subpatch"])
+
+    print(" Done.")
+
+    # TODO move this into SuperHelper
+    # TODO prepare commit message
+
+    # NOTE: Design decision: The output is relative to the current working dir.
+    # The content of '%s' is the remote git name or the path relative to the
+    # current working dir. It's not relative to the top level dir of the git repo.
+    print("- To inspect the changes, use `git status` and `git diff --staged`.")
+    print("- If you want to keep the changes, commit them with `git commit`.")
+    print("- If you want to revert the changes, execute `git reset --merge`.")
+
+    # TODO Idea "subpatch status" should print the info/help text. The status
+    # command should be command to get help if a user is lost.
+
+    return 0
+
+
+def show_version(args):
+    print("subpatch version %s" % (__version__,))
+    return 0
+
+
+def show_info(args):
+    print("homepage:  https://subpatch.net")
+    print("git repo:  https://github.com/lengfeld/subpatch")
+    print("license:   %s" % (__LICENSE__,))
+    # TODO add GPL license text/note
+    return 0
+
+
+def cmd_status(args, parser):
+    # TODO unify search for superproject with other commands!
+    path_superproject = git_get_toplevel()
+    if path_superproject is None:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+    # Find subpatch file
+    # Design decision:
+    # Having a empty ".subpatch" config file is something different than having
+    # no config file. It means that subpach is not yet configured for the project.
+    path_config = join(path_superproject, b".subpatch")
+    if not os.path.exists(path_config):
+        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+
+    # Just dump the contents of the file for now
+    # TODO read config format  make nice output
+    # TODO use the new config_parse() function here!
+    # TODO add note that it's a pretty printed output for humans. Do
+    # not use in scripts.
+    # TODO add plumbing commands for scripts!
+    print("NOTE: Output format is just a hack. Not the final output format yet!")
+    with open(path_config) as f:
+        print(f.read(), end="")
+
+    return 0
+
+
+def main_wrapped():
+    # TODO maybe add 'epilog' again
+    parser = ArgumentParser(description='Adding subprojects into a git repo, the superproject.')
+    parser.add_argument("--version", "-v", dest="version",
+                        action="store_true", default=False,
+                        help="Show version of program")
+    parser.add_argument("--info", dest="info",
+                        action="store_true", default=False,
+                        help="Show more information, like homepage, repo and license")
+
+    subparsers = parser.add_subparsers()
+
+    parser_add = subparsers.add_parser("add",
+                                       help="Fetch and add a subproject")
+    parser_add.set_defaults(func=cmd_add)
+    parser_add.add_argument(dest="url", type=str,
+                            help="URL or path to git repo")
+    parser_add.add_argument(dest="path", type=str, default=None, nargs='?',
+                            help="folder or path in the local repo")
+    parser_add.add_argument("-r", "--revision", dest="revision", type=str,
+                            help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
+
+    parser_status = subparsers.add_parser("status",
+                                          help="List all subprojects in the superproject")
+    parser_status.set_defaults(func=cmd_status)
+
+    args = parser.parse_args()
+
+    # Just for testing. A bit ugly to have this in the production code.
+    if os.environ.get("HANG_FOR_TEST", "0") == "1":
+        time.sleep(5)
+
+    if args.version:
+        ret = show_version(args)
+    elif args.info:
+        ret = show_info(args)
+    else:
+        # Workaround for help
+        if hasattr(args, "func"):
+            ret = args.func(args, parser)
+        else:
+            ret = nocommand(args, parser)
+
+    return ret
+
+
+def main():
+    try:
+        ret = main_wrapped()
+    except AppException as e:
+        # TODO allow to append a generic error message for all messages, not only for invalid argument.
+        if e._code == ErrorCode.NOT_IMPLEMENTED:
+            # TODO error code should have a message to explain the exact feature
+            # TODO the message should show the github issue url!
+            print("Error: Feature not implemented yet!", file=sys.stderr)
+        elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
+            print("Error: No git repo as superproject found!", file=sys.stderr)
+        elif e._code == ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT:
+            # TODO add steps to resolve the issue. e.g. touching the file
+            print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
+        elif e._code == ErrorCode.INVALID_ARGUMENT:
+            # TODO change structure of errors. It contains two colons now.
+            # Looks ugly.
+            print("Error: Invalid arguments: %s" % (e,), file=sys.stderr)
+        elif e._code == ErrorCode.CUSTOM:
+            print("Error: %s" % (e,), file=sys.stderr)
+        else:
+            assert e._code == ErrorCode.UNKNOWN
+            # TODO find a better name for UNKNOWN
+            # Don't print a message here. The caller has already written the
+            # message.
+            # TODO maybe it still better that the error is printed here and not
+            # printed by the caller!
+            pass
+        ret = 4
+    except KeyboardInterrupt:
+        print("Interrupted!", file=sys.stderr)
+        # TODO What is the correct/best error code?
+        ret = 3
+    sys.exit(ret)
+
+
+if __name__ == '__main__':
+    main()
+    raise Exception("Never reached!")

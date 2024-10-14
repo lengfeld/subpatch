@@ -117,6 +117,12 @@ Make release on github
     Looks like
        https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
 
+Publish release on website
+
+    $ cp subpatch website/downloads/latest/subpatch
+    $ vim website/ref/releases.md
+    # TODO continue here
+
 
 ## Code style
 
@@ -244,3 +250,5 @@ Introduction typing in the code base
 
 Add test cases to verify hat svn and hg also uses the term 'revision' and
 argument `-r`.
+
+Sign the releases with my gpg key.
