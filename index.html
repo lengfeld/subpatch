@@ -42,6 +42,8 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-usecases">subpatch usecases</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatchs-concept">subpatch's concept</a>
@@ -121,8 +123,22 @@ already proven and works!</p>
 <p>If you are currently using
 <a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">git-submodules</a> or
 <a href="https://gerrit.googlesource.com/git-repo/+/HEAD/README.md">repo</a> and you are
-frustrated, <code>subpatch</code>  will be mostly your solution! If you are interested,
+frustrated, subpatch  will be mostly your solution! If you are interested,
 email <a href="mailto:stefan+subpatch@lengfeld.xyz">me</a>.</p>
+<h2 id="quickstart">Quickstart</h2>
+<p>To check out subpatch really quick, do</p>
+<pre><code># First ensure that you are in a git repo, ...
+$ git status
+
+# then download the subpatch python script, ...
+$ wget https://subpatch.net/downloads/latest/subpatch
+$ chmod +x ./subpatch
+
+# and finally add a subproject!
+$ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
+$ git commit -m "adding googletest"
+</code></pre>
+<p>That's all!</p>
 <h2 id="subpatch-usecases">subpatch usecases</h2>
 <p>subpatch is interesting for you if you want to do the following tasks:</p>
 <ul>
@@ -203,5 +219,5 @@ a big superproject.</p>
 
 <!--
 MkDocs version : 1.5.3
-Build Date UTC : 2024-10-10 20:31:19.396103+00:00
+Build Date UTC : 2024-10-14 21:05:54.458251+00:00
 -->

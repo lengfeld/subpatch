@@ -124,14 +124,14 @@ subpatch add &lt;url&gt; --revision &lt;revision&gt;
 <h2 id="subpatch-status">subpatch status</h2>
 <pre><code>subpatch status
 </code></pre>
-<p>Show the current state of all subprojects in the superproject. Much like <code>git
-status</code>.</p>
+<p>Show the current state of all subprojects in the superproject. Much like
+<code>git status</code>.</p>
 <h2 id="subpatch-add">subpatch add</h2>
 <pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [--revision | -r &lt;revision&gt;]
 </code></pre>
 <p>Add the subproject at <code>url</code> at the optional <code>path</code> in the current repository.
 Currently <code>url</code> can only point to a git repository. Other subproject types
-are not yet supported.</p>
+are not supported yet.</p>
 <p>The <code>path</code> is optional. If it's omitted the canonical subproject name is used.
 It's mostly the last folder name in the <code>url</code>. If <code>path</code> is provided it can
 include also sub directories.</p>
