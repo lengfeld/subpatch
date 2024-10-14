@@ -77,4 +77,10 @@ Therefore the chosen decisions are documented and explained here.
 * [+] A single file avoids a search in all sub directories. Can be expensive
   for big projects.
 
+(**DD4**): Published as a standalone and single python script
+
+TODO add [+] points here
+
+
+
 *NOTE:* This list is not completed yet and should grow while supbatch is developed.

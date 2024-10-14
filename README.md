@@ -240,7 +240,7 @@ install instructions are provided as tutorials. But a reader should start very
 very quickly.
 
 Adding a git subprojects that has itself submodules? What should happen?
-* Should the exaxt subproject git tree be adding inclusiv the git commit objects?
+* Should the exact subproject git tree be adding inclusiv the git commit objects?
 * Should the sumodules be downloaded add as plain files?
 * Should it just be ignored?
 
@@ -252,3 +252,5 @@ Add test cases to verify hat svn and hg also uses the term 'revision' and
 argument `-r`.
 
 Sign the releases with my gpg key.
+
+Add checksum to release page and releases
