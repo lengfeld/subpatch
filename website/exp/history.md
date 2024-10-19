@@ -13,7 +13,7 @@ lt;dr: The summary of all learnings is
 * (**L3**) Good documentation with good tooling is the key.
 * (**L4**) Use the right design to minimize the inherent complexity to avoid
    accidental complexity.
-* (**L5**) The build process must not span multiple of your own repositories.
+* (**L5**) The build process must stay inside of a single repository.
 * (**L6**) The only sane way to maintain a downstream fork is a linear patch
   stack (=series of patches).
 * (**L7**) Good development practices, like atomic commits, must still be
@@ -169,15 +169,15 @@ git repos. The documentation
 So Gerrit has the cross repo atomic commit feature. Sadly our continuous
 integration system (CI), Jenkins in this case, did not.  Our project rolled out its
 own implementation based on the `Change-Id` and `Depends-On` fields in the
-commit messages. Writing in a combination of bash and groovy. Also madness.
+commit messages. Written in a combination of bash and groovy. Also madness.
 
 There were a couple of other learnings from this project which I can summarize
 up as:
 
-(**L5**) The build process must not span multiple of your own repositories.
+(**L5**) The build process must stay inside of a single repository.
 
 You can also phrase it differently. When you or your CI system must checkout
-multiple of your own git repos for building the project, you are doing it
+multiple git repos, that you own, for building the project, you are doing it
 wrong.
 
 
