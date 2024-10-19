@@ -174,13 +174,9 @@ Build and test for Windows (Setup windows VM in gnome boxes?)
 The command "subpatch update" (or how it's called) should be able to add the
 changelog or added commits automatically to the commit message.
 
-Sync github release page and website release page.
-
-Add checksum of subpatch script to release page. Maybe sign with gpg key.
+Add checksum of subpatch script to release page. Sign with gpg key.
 
 Improve build process. Last time I released with uncomitted changes.
-
-Use version/tag in example docs/tut/basic-usage.md and remove the explanation.
 
 Add github action to deploy the website automatically
 
@@ -192,7 +188,6 @@ manager". So the same as a "package manager" but for the Yocto layers. Features
   (Core feature of package managers)
 
 For the technical comparisons of the tools add
-* the programming language
 * the start of development
 
 Draw/find a logo. Maybe something like '/sub/patch'.
@@ -236,10 +231,6 @@ These are resolved to the url of the superproject. This allows to mirror a
 superproject and the subprojects without changing the URLs in the
 manifest/config file. Should subpatch also support this feature?
 
-Add a very short and fast getting started guide to the frontpage. More detailed
-install instructions are provided as tutorials. But a reader should start very
-very quickly.
-
 Adding a git subprojects that has itself submodules? What should happen?
 * Should the exact subproject git tree be adding inclusiv the git commit objects?
 * Should the sumodules be downloaded add as plain files?
@@ -252,9 +243,6 @@ Introduction typing in the code base
 Add test cases to verify hat svn and hg also uses the term 'revision' and
 argument `-r`.
 
-Sign the releases with my gpg key.
-
-Add checksum to release page and releases
 
 Additional to latest, also add every version of the subpatch script on the
 download folder on the website. No need to link to github.
