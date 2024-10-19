@@ -10,9 +10,10 @@ frustrated, subpatch  will be mostly your solution! If you are interested,
 email [me](mailto:stefan+subpatch@lengfeld.xyz).
 
 
-## Quickstart
+## Quick start
 
-To check out subpatch really quick, do
+If you want to try out the subpatch tool really quickly, follow the
+instructions:
 
     # First go into the toplevel directory of your project that is using git, ...
     $ git status
@@ -25,7 +26,9 @@ To check out subpatch really quick, do
     $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
     $ git commit -m "adding googletest"
 
-That's all!
+If you are interested in finding out more, please see the menu on the left
+side. The website contains explanations, tutorials and references about
+subpatch.
 
 
 ## subpatch usecases

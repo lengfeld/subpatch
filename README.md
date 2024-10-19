@@ -254,3 +254,8 @@ argument `-r`.
 Sign the releases with my gpg key.
 
 Add checksum to release page and releases
+
+Additional to latest, also add every version of the subpatch script on the
+download folder on the website. No need to link to github.
+
+Add/Do language and grammer checking for content on the website.

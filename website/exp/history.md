@@ -202,15 +202,21 @@ for their packages (=source dependencies). It's a process that has been done
 for decades now.
 
 
-## Conclusion
-
-That is my history and how I came up with the design of subpatch. Hopefully it
-shows that the requirements and design decision are not an ad-hoc idea, but
-instead based on a long period of experience and tackling the multi repository
-problem from different angles.
+## One last thing
 
 One last learning that also feeds into subpatch is
 
 (**L7**) Good development practices, like atomic commits, must still be
 possible with the multi repository management tool. Even across the used
 subprojects.
+
+
+## Conclusion
+
+That is my history of the multi repository problem. Hopefully it
+shows that the requirements and design decision are not an ad-hoc idea, but
+instead based on a long period of experience and tackling the multi repository
+problem from different angles.
+
+If you want to find out more and read about the design decisions and requirements
+for subpatch, you can jump to the [design of subpatch](design.md) page.
