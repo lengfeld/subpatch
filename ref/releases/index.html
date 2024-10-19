@@ -110,9 +110,26 @@ newest/latest releases are at the top, oldest releases are at the bottom.</p>
 <p>To install subpatch, follow the steps in the
 <a href="../../tut/installation/">installation tutorial</a>.</p>
 <h2 id="v01a3">v0.1a3</h2>
-<p>Second release of subpatch. The <code>add</code> command supports the <code>-r | --revision</code>
-command line argument and you can add multiple subprojects to a superproject.
-So some more basic things are covered. It's somehow useful now.</p>
+<p>Second release of subpatch.</p>
+<p>Changes to the tool</p>
+<ul>
+<li>Adding support for the command line argument <code>-r | --revision</code> to the <code>add</code>
+  command. This allows to checkout a specific branch, tag or commit or tag id
+  for the subproject.</li>
+<li>Fix the limitation that only one subproject can be added to the superproject.
+  Now the tool really starts to become usable to management multiple subprojects.</li>
+</ul>
+<p>Changes to the website</p>
+<ul>
+<li>Adding a quick start guide to the <a href="../../">front page of the webpage</a></li>
+<li>Adding a <a href="../../exp/history/">history page</a> to explain the path
+  to subpatch and the learnings from previous attempts and projects</li>
+<li>Adding a reference for the <a href="../command-line/">commandline arguments</a></li>
+<li>Merging the website into the main git repository. This makes it easier to
+  work on subpatch. The old
+  <a href="https://github.com/lengfeld/subpatch-website">subpatch-website repo</a> is archived
+  now.</li>
+</ul>
 <p>Links:</p>
 <ul>
 <li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a3">github release page</a></li>

@@ -63,6 +63,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#git-add-and-linear-patch-stacks-2018">git add and linear patch stacks (2018+)</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#one-last-thing">One last thing</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
     </li>
     </ul>
@@ -129,7 +131,7 @@ the history and what learnings I made along the way. These learnings lead to
 <li>(<strong>L3</strong>) Good documentation with good tooling is the key.</li>
 <li>(<strong>L4</strong>) Use the right design to minimize the inherent complexity to avoid
    accidental complexity.</li>
-<li>(<strong>L5</strong>) The build process must not span multiple of your own repositories.</li>
+<li>(<strong>L5</strong>) The build process must stay inside of a single repository.</li>
 <li>(<strong>L6</strong>) The only sane way to maintain a downstream fork is a linear patch
   stack (=series of patches).</li>
 <li>(<strong>L7</strong>) Good development practices, like atomic commits, must still be
@@ -248,12 +250,12 @@ git repos. The documentation
 <p>So Gerrit has the cross repo atomic commit feature. Sadly our continuous
 integration system (CI), Jenkins in this case, did not.  Our project rolled out its
 own implementation based on the <code>Change-Id</code> and <code>Depends-On</code> fields in the
-commit messages. Writing in a combination of bash and groovy. Also madness.</p>
+commit messages. Written in a combination of bash and groovy. Also madness.</p>
 <p>There were a couple of other learnings from this project which I can summarize
 up as:</p>
-<p>(<strong>L5</strong>) The build process must not span multiple of your own repositories.</p>
+<p>(<strong>L5</strong>) The build process must stay inside of a single repository.</p>
 <p>You can also phrase it differently. When you or your CI system must checkout
-multiple of your own git repos for building the project, you are doing it
+multiple git repos, that you own, for building the project, you are doing it
 wrong.</p>
 <h2 id="git-add-and-linear-patch-stacks-2018">git add and linear patch stacks (2018+)</h2>
 <p>In the same project we used a different solution (not repo or git submodules)
@@ -270,15 +272,18 @@ stack (=series of patches).</p>
 for the desktop but also for embedded devices, maintain a linear patch stack
 for their packages (=source dependencies). It's a process that has been done
 for decades now.</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>That is my history and how I came up with the design of subpatch. Hopefully it
-shows that the requirements and design decision are not an ad-hoc idea, but
-instead based on a long period of experience and tackling the multi repository
-problem from different angles.</p>
+<h2 id="one-last-thing">One last thing</h2>
 <p>One last learning that also feeds into subpatch is</p>
 <p>(<strong>L7</strong>) Good development practices, like atomic commits, must still be
 possible with the multi repository management tool. Even across the used
 subprojects.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>That is my history of the multi repository problem. Hopefully it
+shows that the requirements and design decision are not an ad-hoc idea, but
+instead based on a long period of experience and tackling the multi repository
+problem from different angles.</p>
+<p>If you want to find out more and read about the design decisions and requirements
+for subpatch, you can jump to the <a href="../design/">design of subpatch</a> page.</p>
               
             </div>
           </div><footer>
