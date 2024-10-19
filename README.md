@@ -107,21 +107,22 @@ Make release to real pypi
     # visit website
     #    https://pypi.org/project/subpatch/
 
-Make release on github
-
-    Goto https://github.com/lengfeld/subpatch/releases
-    - Create Release
-    - Add release notes
-    - Add subpatch script as a binary artifact
-    - Marke as pre-release
-    Looks like
-       https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
-
 Publish release on website
 
     $ cp subpatch website/downloads/latest/subpatch
     $ vim website/ref/releases.md
     # TODO continue here
+
+Make release on github
+
+    Goto https://github.com/lengfeld/subpatch/releases
+    - Create release
+    - Add link to release notes on webste
+    - Add subpatch script as a binary artifact
+      TODO remove that
+    - Mark as pre-release
+    Looks like
+       https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
 
 
 ## Code style
