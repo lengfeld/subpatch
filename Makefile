@@ -33,6 +33,10 @@ dist:
 .PHONY: clean
 clean:
 	rm -rf dist
+	# Clean left over temp directories. Can happen when the test scripts
+	# crash.
+	find tests/ -maxdepth 1 -type d -name "Test*" -exec rm -fr "{}" \;
+
 
 # see http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
