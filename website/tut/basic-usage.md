@@ -82,6 +82,7 @@ tutorial the content looks like
 
     [subpatch "external/googletest"]
     	url = https://github.com/google/googletest
+    	revision = v1.15.2
 
 
 ## (optional) Enable and build the tests
