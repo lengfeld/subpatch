@@ -80,7 +80,7 @@ license:   GPL-2.0-or-later
         # This is racy, but we have to wait until the subpatch process
         # is actually started, runs and waits in the sleep function.
         # TODO make it non-racy!
-        sleep(0.10)
+        sleep(0.50)
         from signal import SIGINT
         p.send_signal(SIGINT)
 
@@ -354,6 +354,14 @@ Adding subproject '../subproject' into 'subproject'... Done.
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid arguments: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
                              p.stderr)
+
+    def test_invalid_revision(self):
+        git = Git()
+        git.init()
+        p = self.run_subpatch(["add", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
+        self.assertEqual(4, p.returncode)
+        self.assertEqual(b"Error: Invalid arguments: revision 'refs/heads\nmain' is invalid\n",
+                         p.stderr)
 
     def test_with_revision(self):
         with cwd("subproject", create=True):

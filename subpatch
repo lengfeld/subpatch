@@ -363,6 +363,16 @@ def git_verify(rev):
     return True
 
 
+def is_valid_revision(revision):
+    # TODO add more invalid and strange chars to this list
+    # TODO eval svn, git, ... for allow characters. What about umlauts?
+    strange_chars = ("\t", "\n", "\b")
+    for char in strange_chars:
+        if char in revision:
+            return False
+    return True
+
+
 # parse_sha1_names :: bytes -> dict
 # TODO add example of input
 # TODO add tests
@@ -443,6 +453,7 @@ class CloneConfig:
     ref: str = None
 
 
+# 'revision' can be None
 def git_resolve_to_clone_config(url, revision):
     # Some heuristics to sort out branch, commit/tag id or tag
     if revision is not None:
@@ -479,7 +490,7 @@ class SubHelperGit:
         # TODO handle potential submodules in the subproject correctly
 
         url = download_config.url
-        revision = download_config.revision
+        revision = download_config.revision  # Can be None
 
         clone_config = git_resolve_to_clone_config(url, revision)
 
@@ -548,9 +559,14 @@ def cmd_add(args, parser):
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
 
-    revision = args.revision
+    revision = args.revision  # Can be None
 
     sub_url = args.url
+
+    if revision is not None:
+        if not is_valid_revision(revision):
+            # TODO add reason why it's invalid
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "revision '%s' is invalid" % (revision,))
 
     # Example              ../folder/superproject/dirA/dirB/subproject/
     #

@@ -18,7 +18,8 @@ from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      URLTypes, get_name_from_repository_url, \
                      git_init_and_fetch, is_sha1, ObjectType, git_ls_remote, \
                      git_ls_remote_guess_ref, git_verify, \
-                     config_parse, config_add_section, split_with_ts, config_unparse
+                     config_parse, config_add_section, split_with_ts, config_unparse, \
+                     is_valid_revision
 
 
 class TestConfigParse(unittest.TestCase):
@@ -239,6 +240,15 @@ class TestFuncs(unittest.TestCase):
         self.assertEqual("name", f("/name.git/"))
         self.assertEqual("name", f("sub/name.git/"))
         self.assertEqual("name", f("http://localhost:8000/name/.git/"))
+
+    def test_is_valid_revision(self):
+        self.assertTrue(is_valid_revision("main"))
+        self.assertTrue(is_valid_revision("refs/heads/main"))
+        self.assertTrue(is_valid_revision("v1.1"))
+        self.assertTrue(is_valid_revision("177324cdffb43c57471674a4655a2a513ab158f5"))
+        self.assertFalse(is_valid_revision("main\nxx"))
+        self.assertFalse(is_valid_revision("main\tx"))
+        self.assertFalse(is_valid_revision("\bmain"))
 
 
 if __name__ == '__main__':
