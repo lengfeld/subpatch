@@ -1,0 +1,22 @@
+# Config format
+
+This page is the reference for the subpatch config file, named `.subpatch`.
+It's located at the top level directory of the superproject.  An example is
+
+    [subpatch "external/googletest"]
+    	url = https://github.com/google/googletest
+
+## Sections
+
+TODO explain parts
+TODO maybe this should be also a manpage
+
+Maybe link to
+
+    https://git-scm.com/docs/git-config#EXAMPLES
+
+## subsection keys
+
+### url
+
+It's the subproject's repository URL that was used when you called `subpatch add`.

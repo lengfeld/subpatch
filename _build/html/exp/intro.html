@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction &mdash; subpatch  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=7ab3649f" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="subpatch design" href="design.html" />
+    <link rel="prev" title="subpatch: fearless multi-repository management - stay relaxed!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            subpatch
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Explanation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-1-c-c-library-as-source-dependency">Example 1: C/C++ library as source dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-2-embedded-linux-firmware-based-on-yocto">Example 2: Embedded Linux firmware based on Yocto</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recap">Recap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">subpatch design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison to other tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html#other-multi-repository-management-tools">Other multi repository management tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tut/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tut/basic-usage.html">Basic usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ref/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imprint.html">Imprint</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">subpatch</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/exp/intro.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
+<p>Welcome to the realm of multi-repository management and third-party source
+dependencies. Even if you are an experienced software developer, you may not
+have encountered this issue in your career already.  It only arises when
+working on larger software projects, managing inter-team software dependencies,
+or in the field of embedded software engineering.</p>
+<p>This page explains the issue with two examples:</p>
+<ul class="simple">
+<li><p>Example 1: C/C++ library as source dependency</p></li>
+<li><p>Example 2: multi repository project for linux embedded firmware</p></li>
+</ul>
+<section id="example-1-c-c-library-as-source-dependency">
+<h2>Example 1: C/C++ library as source dependency<a class="headerlink" href="#example-1-c-c-library-as-source-dependency" title="Link to this heading"></a></h2>
+<p>This example illustrates a third party source dependency.</p>
+<p>I maintain a small C/C++ library called
+<a class="reference external" href="https://github.com/lengfeld/aminilog">aminilog</a>. It’s useful when writing
+C/C++ code in an Android Application project that uses the
+<a class="reference external" href="https://developer.android.com/ndk/">Android NDK</a>
+(Native Development toolkit). The library provides ready to use logging macros,
+because the NDK only contains the low level APIs for logging.</p>
+<p>I publish the library as a plain git repository. Since it is really
+simple, there are no release tarballs or tags and no binary artifacts. Also
+binary artifacts would do not make sense, because all of the library content
+are C/C++ macros that must be evaluated at compile time.</p>
+<p>In 2023 I prepared a talk about the
+<a class="reference external" href="https://www.youtube.com/watch?v=NKP4JcVegbY">Glass-To-Glass-Latency in Android</a>.
+For my latency experiments I created a git repository and needed the above
+mentioned C/C++ library as a source dependency.  I develop an Android
+Application that could perform various tests and experiments. The code of the
+application is on github in the repo
+<a class="reference external" href="https://github.com/inovex/android-glass-to-glass-latency/">inovex/android-glass-to-glass-latency</a>.</p>
+<p>In this application I also used the Android NDK to write some C++ code to
+access some libc functions from Java and to trigger the torch light of the
+Pixel2 phone as fast as possible.  And while written and testing the C++ code I
+needed to write some log messages.  Therefore I imported my aminilog library as
+a source dependency into the project. The commands were roughly the following:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir<span class="w"> </span>external/
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>external/
+<span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/lengfeld/aminilog.git
+<span class="gp">$ </span>rm<span class="w"> </span>-rf<span class="w"> </span>aminilog/.git
+<span class="gp">$ </span>git<span class="w"> </span>add<span class="w"> </span>aminilog/
+<span class="gp">$ </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;add aminilog dependency&quot;</span>
+</pre></div>
+</div>
+<p>And then I integrated the library into the cmake build systems by adding the line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>add_subdirectory(../../../../pixeltorch pixeltorch)
+[...]
+target_link_libraries(${PROJECT_NAME} android [...] aminilog)
+</pre></div>
+</div>
+<p>into the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.</p>
+<p>That was all. I added the source files of the <a class="reference external" href="https://github.com/lengfeld/aminilog">aminilog</a>
+library as files to the git repository
+<a class="reference external" href="https://github.com/inovex/android-glass-to-glass-latency/">android-glass-to-glass-latency</a>
+and integrated them to the cmake build system.
+In this example the git repository <em>android-glass-to-glass-latency</em> is the
+superproject and the source dependency <em>aminilog</em> is the subproject.</p>
+</section>
+<section id="example-2-embedded-linux-firmware-based-on-yocto">
+<h2>Example 2: Embedded Linux firmware based on Yocto<a class="headerlink" href="#example-2-embedded-linux-firmware-based-on-yocto" title="Link to this heading"></a></h2>
+<p>This example illustrates a multi repository setup of a Yocto project.</p>
+<p>TODO add example</p>
+</section>
+<section id="recap">
+<h2>Recap<a class="headerlink" href="#recap" title="Link to this heading"></a></h2>
+<p>TODO write recap</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="subpatch: fearless multi-repository management - stay relaxed!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="design.html" class="btn btn-neutral float-right" title="subpatch design" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Stefan Lengfeld.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

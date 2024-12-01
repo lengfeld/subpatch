@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>subpatch design &mdash; subpatch  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=7ab3649f" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Comparison to other tools" href="comparison.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            subpatch
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Explanation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">subpatch design</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#design-decisions">Design decisions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison to other tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html#other-multi-repository-management-tools">Other multi repository management tools</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tut/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tut/basic-usage.html">Basic usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ref/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../imprint.html">Imprint</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">subpatch</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">subpatch design</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/exp/design.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="subpatch-design">
+<h1>subpatch design<a class="headerlink" href="#subpatch-design" title="Link to this heading"></a></h1>
+<p>subpatch is based on my experiences and learnings as a (embedded) software
+engineer. Everything that I have seen and done in the last ten years feeds into
+the following list of requirements. See the <a class="reference internal" href="history.html"><span class="std std-doc">history page</span></a> for
+details.</p>
+<p><em>NOTE</em>: For now the implementation of subpatch not complete. Please read the
+requirement list as a vision for the first major release of subpatch, not as a
+status of the implementation.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<p>The tool …</p>
+<p>(<strong>R1</strong>) should support git, cvs, mercurial, subversion and non-cvs environment
+as superprojects.</p>
+<p>(<strong>R2</strong>) do not interfere with the vcs. The existing workflows
+like checking out, cloning, switching branches, updating, rebasing, tagging,
+forking, bisecting, releasing and … should stay the same.</p>
+<p>(<strong>R3</strong>) should support git, cvs, mercurial, subversion and source
+code archives (like tarballs or zip files) as source dependencies/subprojects.</p>
+<p>(<strong>R4</strong>) should track the original metadata (e.g. url, commit ids,
+checksums, … ) of the source dependency to verify the authenticity of the
+dependency later.</p>
+<p>(<strong>R5</strong>) should help integrating updates of the source dependencies.</p>
+<p>(<strong>R6</strong>) should support local patching of source dependencies.</p>
+<p>(<strong>R7</strong>) If the source dependency is patched locally, it should help
+maintaining a linear patch stack.</p>
+<p>(<strong>R8</strong>) should rebase local patches automatically, when doing an update of a
+source dependency and there are <em>no conflicts</em> with the local patches.</p>
+<p>(<strong>R9</strong>) should help porting the local patches, when doing an update of a
+source dependency and there are <em>conflicts</em> with the local patches.</p>
+<p>(<strong>R10</strong>) should provided an stable command line API (plumbing commands) to
+support other tools to track source dependencies, e.g. to automatically check
+for updates or for CVEs.</p>
+<p>(<strong>R11</strong>) should support every development platform that also supports git and
+python, like Linux, unixes, Windows and MacOS.</p>
+<p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
+</section>
+<section id="design-decisions">
+<h2>Design decisions<a class="headerlink" href="#design-decisions" title="Link to this heading"></a></h2>
+<p>While developing subpatch, the following design decisions were taken. The
+requirement list still gives a lot of freedom for the implementation.
+Therefore the chosen decisions are documented and explained here.</p>
+<p>(<strong>DD1</strong>): written in python3 (but open for a port to another language later if successful)</p>
+<ul class="simple">
+<li><p>[+] faster iteration speed</p></li>
+<li><p>[+] Easier deployment/install for users of subpatch. python runs everywhere.</p></li>
+<li><p>[+] Programming language that I know really good and written a lot of code
+already.</p></li>
+</ul>
+<p>(<strong>DD2</strong>): config file format is <code class="docutils literal notranslate"><span class="pre">git-config</span></code></p>
+<ul class="simple">
+<li><p>[+] the same config format that the main cvs for subpatch (=git) uses.</p></li>
+<li><p>[+] Most developers are already familiar with the config format, e.g. because
+they are modyfing <code class="docutils literal notranslate"><span class="pre">~/.git</span> <span class="pre">config</span></code>.</p></li>
+</ul>
+<p>(<strong>DD3</strong>): The config is a single file and placed at the root of the repository</p>
+<ul class="simple">
+<li><p>[+] The project’s root directory can be found even without scm. E.g. after
+the source code was exported with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">archive</span></code>.</p></li>
+<li><p>[+] A single file avoids a search in all sub directories. Can be expensive
+for big projects.</p></li>
+</ul>
+<p><em>NOTE:</em> This list is not completed yet and should grow while supbatch is developed.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="comparison.html" class="btn btn-neutral float-right" title="Comparison to other tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Stefan Lengfeld.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

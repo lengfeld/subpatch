@@ -137,14 +137,14 @@ subpatch.</p>
 <ul>
 <li>assemble a monorepo from multiple repositories</li>
 <li>integrate third party dependencies into your project as source files</li>
-<li>maintain a local fork (=linear patchstack) of a third party dependency</li>
+<li>maintain a local fork (with a linear patchstack) of an upstream project</li>
 </ul>
 <h2 id="subpatchs-concept">subpatch's concept</h2>
-<p>subpatch will be a subprojects management tool based on the following ideas:</p>
+<p>subpatch is a multi-repository management tool based on the following ideas:</p>
 <ul>
-<li>It's based on the idea of <code>git add</code> and <code>git read-tree</code>. The files of
-  subprojects are added as normal files to the superproject.  In most cases
-  this will be just a git repository.</li>
+<li>It's based on <code>git add</code>. The files of subprojects are added as normal files
+  to the superproject.</li>
+<li>Subprojects are in most cases just other git repositories.</li>
 <li>The metadata of a subproject is saved in a git-config styled configuration file.</li>
 <li>Modifications of the subproject are possible and subpatch helps to maintain
   a linear patch stack of the modifications.</li>
@@ -211,5 +211,5 @@ to deal with a single git repository.</p>
 
 <!--
 MkDocs version : 1.5.3
-Build Date UTC : 2024-10-19 13:41:01.281135+00:00
+Build Date UTC : 2024-12-01 22:00:13.440096+00:00
 -->
