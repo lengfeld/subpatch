@@ -37,16 +37,16 @@ subpatch is interesting for you if you want to do the following tasks:
 
 * assemble a monorepo from multiple repositories
 * integrate third party dependencies into your project as source files
-* maintain a local fork (=linear patchstack) of a third party dependency
+* maintain a local fork (with a linear patchstack) of an upstream project
 
 
 ## subpatch's concept
 
-subpatch will be a subprojects management tool based on the following ideas:
+subpatch is a multi-repository management tool based on the following ideas:
 
-* It's based on the idea of `git add` and `git read-tree`. The files of
-  subprojects are added as normal files to the superproject.  In most cases
-  this will be just a git repository.
+* It's based on `git add`. The files of subprojects are added as normal files
+  to the superproject.
+* Subprojects are in most cases just other git repositories.
 * The metadata of a subproject is saved in a git-config styled configuration file.
 * Modifications of the subproject are possible and subpatch helps to maintain
   a linear patch stack of the modifications.
