@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
 # TODO reduce imports

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
 import sys
@@ -66,7 +66,7 @@ class TestNoCommands(TestCaseHelper, TestSubpatch):
         self.assertEqual(b"""\
 homepage:  https://subpatch.net
 git repo:  https://github.com/lengfeld/subpatch
-license:   GPL-2.0-or-later
+license:   GPL-2.0-only
 """, p.stdout)
 
     def test_control_c(self):

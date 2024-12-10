@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-2.0-or-later
+# SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
 import os
@@ -19,8 +19,8 @@ import contextlib
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
 __version__ = "0.1a3"
 
-# It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-or-later.html
-__LICENSE__ = "GPL-2.0-or-later"
+# It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-only.html
+__LICENSE__ = "GPL-2.0-only"
 
 
 # Name conventions for variables
