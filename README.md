@@ -206,7 +206,7 @@ Common problems (why you should use subpatch)
 Write summary for every tool that stats what feature this tool
 does not implement compared to subpatch.
 
-Write about the benefits of supatch.
+Write about the benefits of subpatch.
 
 Check whether kas and west can support other superprojects than git.
 
@@ -220,6 +220,8 @@ Write about Critic/pitfalls/Bad-stuff of subpatch
 * APM issue again: subpatch does not allow dependency resolution or sharing!
   If multiple subprojects uses itself subpatch, there is no dependency
   sharing!
+"APM" stands (mostly) for application (specific) package manager
+See https://lpc.events/event/18/contributions/1747/attachments/1551/3232/LPC%202024%20-%20APMs.pdf
 
 Add other multi repo management tools to explanation page.
 
@@ -243,8 +245,51 @@ Introduction typing in the code base
 Add test cases to verify hat svn and hg also uses the term 'revision' and
 argument `-r`.
 
-
 Additional to latest, also add every version of the subpatch script on the
 download folder on the website. No need to link to github.
 
-Add/Do language and grammer checking for content on the website.
+Add/Do language and grammar checking for content on the website.
+
+Add command (or at least check) to compare/update seetings in config format
+with the contents of the tree/repo.
+
+Clearify the behavior of `subpatch add <url> <folder>/". Is the subproject then
+downloaded into the folder as-is or a subfolder with the name of the subproject
+created?
+
+Document runtime dependencies. For now it's `git`.
+
+Add site with "Things to be aware of".
+- After using subpatch, you have kind of monorepo. Now you maybe have new problems:
+  - git status maybe slow
+  - Multiple teams working together in one repo
+     - train developers to respect code maintainership/owners.
+     - Shared CI by multiple teams.
+       You can have multiple CI Files, e.g. on github
+     - "I see pull request that I don't care".
+
+Add "move"/mv command to move subprojects.
+
+Add "rm" command to remove them.
+
+Add "foreach" command
+
+Add learning/LX: review of patches of patches is not nice.
+
+Add learning/LX: mixing two different histories (like subtree merge) in a
+single commit history or even a repository is bad.
+
+Prior art. The AOSP uses a 'METADATA' file with a json like format to track
+upstream projects.
+See https://cs.android.com/android/_/android/platform/external/cblas/+/a80d2d48ce556f883aec760e28269087a957801f:METADATA
+
+Avoid reimplementing "git rebase". But maybe neede for other vcs?!??!
+-> Integrating new upstream versions with rebasing location patches is the holy
+grail of this project. It cause some headaces for me.
+-> Mabye first solve the MVP. subproject without changes.
+
+subpatch goals is to help rebasing patches of a subproject to a new version.
+- Write a test that uses "git apply" and works on a single commit to prototype
+  the rebase procedure.
+
+Make license for documentation, e.g. website, more explicit.
