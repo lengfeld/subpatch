@@ -1,12 +1,35 @@
-# subpatch: fearless multi-repository management - stay relaxed!
+# subpatch: internal README file
 
-subpatch is currently only an idea, but based on proven concepts.
-See the website [subpatch.net](https://subpatch.net) for more details.
+## subpatch's wobsite
 
-If you are interested create a github issue or email
-[me](mailto:stefan+subpatch@lengfeld.xyz).
+This is the source of the website [subpatch.net](https://subpatch.net).
+It's generate with [mkdocs](https://www.mkdocs.org/) and uses the
+[material theme](https://squidfunk.github.io/mkdocs-material/).
 
-This project is licensed under the terms of the GPLv2 or later license.
+How to test locally:
+
+    $ mkdocs serve
+
+How to deploy:
+
+    $ mkdocs gh-deploy
+
+
+### Background
+
+The structure of the website/documentation is based on
+[The Grand Unified Theory of Documentation](https://docs.divio.com/documentation-system/).
+It structures documentation into four categories:
+
+* explanations
+* tutorials
+* how-to guides
+* reference
+
+
+### Conventions
+
+The term 'subpatch' is always spelled lowercase. Even at the start of sentence.
 
 
 ## How to develop?
