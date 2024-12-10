@@ -1,297 +1,96 @@
 # subpatch: fearless multi-repository management - stay relaxed!
 
-subpatch is currently only an idea, but based on proven concepts.
-See the website [subpatch.net](https://subpatch.net) for more details.
+Welcome to the website of subpatch. The tool that does multi repository
+management right. Don't worry, stay relaxed!
 
-If you are interested create a github issue or email
-[me](mailto:stefan+subpatch@lengfeld.xyz).
+If you are currently using
+[git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) or
+[repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md) and you are
+frustrated, subpatch  will be mostly your solution! If you are interested,
+email [me](mailto:stefan+subpatch@lengfeld.xyz).
 
-This project is licensed under the terms of the GPLv2 or later license.
 
+## Quick start
 
-## How to develop?
+If you want to try out the subpatch tool really quickly, follow the
+instructions:
 
-Useful makefile targets
+    # First go into the toplevel directory of your project that is using git, ...
+    $ git status
 
-    $ make tests
-    $ make lint
+    # then download the subpatch python script, ...
+    $ wget https://subpatch.net/downloads/latest/subpatch
+    $ chmod +x ./subpatch
 
-How to execute a single tests
+    # and finally add a subproject to your (super)project!
+    $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
+    $ git commit -m "adding googletest"
 
-    $ python3 tests/test_prog.py TestNoCommands.testVersion
-    $ tests/test_prog.py TestNoCommands.testVersion
+If you are interested in finding out more, please see the text below and the
+[website](https://subpatch.net). It contains explanations, tutorials and
+references about subpatch.
 
 
-## License - full disclaimer
+## Usecases
 
-    Copyright (C) 2024 Stefan Lengfeld
+subpatch is interesting for you if you want to do the following tasks:
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; as version 2 of the License.
+* assemble a monorepo from multiple repositories
+* integrate third party dependencies into your project as source files
+* maintain a local fork (with a linear patchstack) of an upstream project
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+## Concept and design
 
+subpatch is a multi-repository management tool based on the following ideas:
 
-## How to release
+* It's based on `git add`. The files of subprojects are added as normal files
+  to the superproject.
+* Subprojects are in most cases just other git repositories.
+* The metadata of a subproject is saved in a git-config styled configuration file.
+* Modifications of the subproject are possible and subpatch helps to maintain
+  a linear patch stack of the modifications.
+* Importing new versions of the subproject is possible and subpatch helps to
+  rebase the local modifications.
 
-*NOTE:* This section is still work-in-progress.
 
-First all tests should be green:
+## Main differences to other tools
 
-    $ make tests
+When you use subpatch the subprojects are not git repository itself. The files
+of the subprojects are added as files to the superproject. You will only have
+to deal with a single git repository.
 
-Increase version number, create commit and tag. Replace `X` with the current
-version number.
+This is in contrast to other tools, e.g.
 
-    $ vim subpatch
-    $ git add -p subpatch
-    $ git commit -m "Release version v0.1aX"
-    $ git show  # check
-    $ git tag -m "subpatch version v0.1aX" v0.1aX
-    $ git show v0.1aX  # check
-    $ git describe     # check
+* [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+* [repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md)
+* [kas](https://kas.readthedocs.io/en/latest/)
+* [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
 
-Build release
+These tools manage multiple git repositories at once. Based on a manifest file
+multiple git repositories are cloned from different upstream sources into your
+local checkout.
 
-    $ make dist
+The page [Comparison to other tools](https://subpatch.net/exp/comparison/)
+describes the differences in more detail.
 
-Test installation locally
 
-    $ pipx install dist/subpatch-*.whl
-    $ subpatch --version
-    # make some tests "status" and "add" command
+## Website, documentation, license and code
 
-    # Remove it for later install with testpypi
-    $ pipx uninstall subpatch
+On the [subpatch website](https://subpatch.net) you find more information, e.g.
+explanations, tutorials and references. New subpatch releases are announced on
+the [release notes](https://subpatch.net/ref/releases/) pages, including the
+release notes and changelog.
 
-Publish release on testpypi website
+The source code of the program and the website can be found in the
+git repository [github.com/lengfeld/subpatch](https://github.com/lengfeld/subpatch).
+I have licensed the source code of subpatch as
+[GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html),
+It's the same license that is also used for the Linux kernel or git itself.
 
-    $ twine upload --repository testpypi dist/*
-    # Check website
-    #   https://test.pypi.org/project/subpatch/0.1a2/
-    # and
-    #   https://test.pypi.org/project/subpatch/
 
-Make test install from test pypi
+## Support
 
-    $ pipx install -i https://test.pypi.org/simple/ subpatch
-
-    # make some tests
-    $ subpatch --version
-
-    $ pipx uninstall subpatch
-
-Publish release commit and tag
-
-    $ git push origin main --follow-tags --dry-run
-    To github.com:lengfeld/subpatch.git
-       479f2d4..9ed50ba  main -> main
-     * [new tag]         v0.1a2 -> v0.1a2
-    $ git push origin main --follow-tags
-
-    # Check tag website on github
-    https://github.com/lengfeld/subpatch/tags
-
-Make release to real pypi
-
-    $ twine upload dist/*
-    # visit website
-    #    https://pypi.org/project/subpatch/
-
-Publish release on website
-
-    $ cp subpatch website/downloads/latest/subpatch
-    $ vim website/ref/releases.md
-    # TODO continue here
-
-Make release on github
-
-    Goto https://github.com/lengfeld/subpatch/releases
-    - Create release
-    - Add link to release notes on webste
-    - Add subpatch script as a binary artifact
-      TODO remove that
-    - Mark as pre-release
-    Looks like
-       https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
-
-
-## Code style
-
-Not much conventions yet. For naming in python stick to the
-[Google Python Style Guide - Naming](https://google.github.io/styleguide/pyguide.html#316-naming).
-
-
-## TODOs and ideas
-
-Start using pylint
-
-Allow to lock subprojects. The CI check should error/warn, when a PR/commit
-introduces changes to a subproject dir!
-If a subroject is not locked, the CI would also error/warn and request the
-contributer to execute a command to create a patch file!
-
-Write test that
-  $ git config -f .subpatch  subpatch."external/repo".url
-works and add documentation.
-This was found while reading some "git submodules" docu
-
-Provide script to convert a
-* kas
-* git submodule (support recursion)
-* repo
-superproject to subpatch
-
-Watch stackoverflow and respone to questions. (When the software is live.)
-
-Text gui frontend for the layer index
-(https://layers.openembedded.org/layerindex/branch/master/layers/)
-to easily select and add layers to your yocto build. Replacement for kas.
-
-Add how-to use subpatch with kas for a Yocto project
-
-Add how-to use subpatch for Yocto project
-
-Add how-to use subpatch for Zeyphr project
-
-Integrated manpage into tool. Otherwise a single file install has no manpage!
-
-Unify slogan/subtitle. fearless vs done-right
-
-Show software/license disclaimer at more locations.
-
-Build and test for Windows (Setup windows VM in gnome boxes?)
-
-The command "subpatch update" (or how it's called) should be able to add the
-changelog or added commits automatically to the commit message.
-
-Add checksum of subpatch script to release page. Sign with gpg key.
-
-Improve build process. Last time I released with uncomitted changes.
-
-Add github action to deploy the website automatically
-
-If subpatch is a toolkit and works nicely as a toolkit, write a "yocto layer
-manager". So the same as a "package manager" but for the Yocto layers. Features
-* seraching for layers
-* selecting, downloading, adding layers and
-* automatically resolve dependencies onto other layers
-  (Core feature of package managers)
-
-For the technical comparisons of the tools add
-* the start of development
-
-Draw/find a logo. Maybe something like '/sub/patch'.
-
-Setup sphinx build for website.
-* find differnces, .e.g sitemap and 404 page.
-
-Common problems (why you should use subpatch)
-* stories/PRs/feature requests span multi repos
-* checkout out a feature for review needs multipe repos
-* dependend commits/atomic commits problem/two commits problem
-* Anti point: devs must be trained to honor code ownership, use tools.
-  (General problem of monorepos)
-* disappearing of upstream recoures
-
-Write summary for every tool that stats what feature this tool
-does not implement compared to subpatch.
-
-Write about the benefits of subpatch.
-
-Check whether kas and west can support other superprojects than git.
-
-Add checker that checks available of out-going links.
-
-Add germany haftungs-stuff in the imprint.
-
-Write about Critic/pitfalls/Bad-stuff of subpatch
-* subpatch is just a generic APM. With the same problems as other APMs
-  for downstream consumers, like embedded build systems.
-* APM issue again: subpatch does not allow dependency resolution or sharing!
-  If multiple subprojects uses itself subpatch, there is no dependency
-  sharing!
-"APM" stands (mostly) for application (specific) package manager
-See https://lpc.events/event/18/contributions/1747/attachments/1551/3232/LPC%202024%20-%20APMs.pdf
-
-Add other multi repo management tools to explanation page.
-
-Add explanation of source/external dependency and there different types like
-internal helper libraries to external projects (To the glossary)
-
-Idea/feature request: repo and git submodules support relative subproject URLs.
-These are resolved to the url of the superproject. This allows to mirror a
-superproject and the subprojects without changing the URLs in the
-manifest/config file. Should subpatch also support this feature?
-
-Adding a git subprojects that has itself submodules? What should happen?
-* Should the exact subproject git tree be adding inclusiv the git commit objects?
-* Should the sumodules be downloaded add as plain files?
-* Should it just be ignored?
-
-Add a generic "-q/--quiet" option. Should only print errors.
-
-Introduction typing in the code base
-
-Add test cases to verify hat svn and hg also uses the term 'revision' and
-argument `-r`.
-
-Additional to latest, also add every version of the subpatch script on the
-download folder on the website. No need to link to github.
-
-Add/Do language and grammar checking for content on the website.
-
-Add command (or at least check) to compare/update seetings in config format
-with the contents of the tree/repo.
-
-Clearify the behavior of `subpatch add <url> <folder>/". Is the subproject then
-downloaded into the folder as-is or a subfolder with the name of the subproject
-created?
-
-Document runtime dependencies. For now it's `git`.
-
-Add site with "Things to be aware of".
-- After using subpatch, you have kind of monorepo. Now you maybe have new problems:
-  - git status maybe slow
-  - Multiple teams working together in one repo
-     - train developers to respect code maintainership/owners.
-     - Shared CI by multiple teams.
-       You can have multiple CI Files, e.g. on github
-     - "I see pull request that I don't care".
-
-Add "move"/mv command to move subprojects.
-
-Add "rm" command to remove them.
-
-Add "foreach" command
-
-Add learning/LX: review of patches of patches is not nice.
-
-Add learning/LX: mixing two different histories (like subtree merge) in a
-single commit history or even a repository is bad.
-
-Prior art. The AOSP uses a 'METADATA' file with a json like format to track
-upstream projects.
-See https://cs.android.com/android/_/android/platform/external/cblas/+/a80d2d48ce556f883aec760e28269087a957801f:METADATA
-
-Avoid reimplementing "git rebase". But maybe neede for other vcs?!??!
--> Integrating new upstream versions with rebasing location patches is the holy
-grail of this project. It cause some headaces for me.
--> Mabye first solve the MVP. subproject without changes.
-
-subpatch goals is to help rebasing patches of a subproject to a new version.
-- Write a test that uses "git apply" and works on a single commit to prototype
-  the rebase procedure.
-
-Make license for documentation, e.g. website, more explicit.
-
-Maybe relicense the source code as "GPL-2.0-or-later". The GPLv3 has some good
-extra text about handling license violations.
+For now there is no dedicated support forum/chat/… . You can either
+email [me](mailto:stefan+subpatch@lengfeld.xyz) or open on issue on
+[github](https://github.com/lengfeld/subpatch/issues).

@@ -1,6 +1,6 @@
 # subpatch: fearless multi-repository management - stay relaxed!
 
-Welcome to the website of subpatch. The tool that does multi-repository
+Welcome to the website of subpatch. The tool that does multi repository
 management right. Don't worry, stay relaxed!
 
 If you are currently using
@@ -26,12 +26,12 @@ instructions:
     $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
     $ git commit -m "adding googletest"
 
-If you are interested in finding out more, please see the menu on the left
-side. The website contains explanations, tutorials and references about
-subpatch.
+If you are interested in finding out more, please see the text below and the
+menu of this website on the left side. It contains explanations, tutorials and
+references about subpatch.
 
 
-## subpatch usecases
+## Usecases
 
 subpatch is interesting for you if you want to do the following tasks:
 
@@ -40,7 +40,7 @@ subpatch is interesting for you if you want to do the following tasks:
 * maintain a local fork (with a linear patchstack) of an upstream project
 
 
-## subpatch's concept
+## Concept and design
 
 subpatch is a multi-repository management tool based on the following ideas:
 
@@ -54,7 +54,7 @@ subpatch is a multi-repository management tool based on the following ideas:
   rebase the local modifications.
 
 
-## subpatch main difference
+## Main differences to other tools
 
 When you use subpatch the subprojects are not git repository itself. The files
 of the subprojects are added as files to the superproject. You will only have
@@ -67,4 +67,30 @@ This is in contrast to other tools, e.g.
 * [kas](https://kas.readthedocs.io/en/latest/)
 * [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
 
-These tools manage multi git repositories at once.
+These tools manage multiple git repositories at once. Based on a manifest file
+multiple git repositories are cloned from different upstream sources into your
+local checkout.
+
+The page [Comparison to other tools](exp/comparison.md)
+describes the differences in more detail.
+
+
+## Website, documentation, license and code
+
+On the website you find more information, e.g.
+explanations, tutorials and references. New subpatch releases are announced on
+the [release notes](ref/releases.md) pages, including the
+release notes and changelog.
+
+The source code of the program and the website can be found in the
+git repository [github.com/lengfeld/subpatch](https://github.com/lengfeld/subpatch).
+I have licensed the source code of subpatch as
+[GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html),
+It's the same license that is also used for the Linux kernel or git itself.
+
+
+## Support
+
+For now there is no dedicated support forum/chat/… . You can either
+email [me](mailto:stefan+subpatch@lengfeld.xyz) or open on issue on
+[github](https://github.com/lengfeld/subpatch/issues).

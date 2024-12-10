@@ -1,0 +1,32 @@
+diff --git a/README.md b/website/index.md
+index 2b0e2db..734dbb0 100644
+--- a/README.md
++++ b/website/index.md
+@@ -27,7 +27,7 @@ instructions:
+     $ git commit -m "adding googletest"
+ 
+ If you are interested in finding out more, please see the text below and the
+-[website](https://subpatch.net). It contains explanations, tutorials and
++menu of this website on the left side. It contains explanations, tutorials and
+ references about subpatch.
+ 
+ 
+@@ -71,15 +71,15 @@ These tools manage multiple git repositories at once. Based on a manifest file
+ multiple git repositories are cloned from different upstream sources into your
+ local checkout.
+ 
+-The page [Comparison to other tools](https://subpatch.net/exp/comparison/)
++The page [Comparison to other tools](exp/comparison.md)
+ describes the differences in more detail.
+ 
+ 
+ ## Website, documentation, license and code
+ 
+-On the [subpatch website](https://subpatch.net) you find more information, e.g.
++On the website you find more information, e.g.
+ explanations, tutorials and references. New subpatch releases are announced on
+-the [release notes](https://subpatch.net/ref/releases/) pages, including the
++the [release notes](ref/releases.md) pages, including the
+ release notes and changelog.
+ 
+ The source code of the program and the website can be found in the

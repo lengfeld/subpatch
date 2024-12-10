@@ -12,6 +12,19 @@ tests:       ### Runs the python unit tests
 	tests/test_submodule.py
 	cd tests && ./test_lib.py && ./test_prog.py && ./test_submodule.py
 
+# The file website/index.md is nearly a one-to-one copy of the README.md file.
+# But there are some differences for links and text. This check should verify
+# that both files are in sync expect the expected references.
+.PHONY: check-index-md
+check-index-md:
+	@# NOTE: "git diff" returns with 1 if there are changes. And changes are expected
+	git diff --no-index README.md website/index.md > index.md.diff || true
+	diff index.md.diff tests/index.md.diff
+	rm index.md.diff
+
+# For now just hook this up to the "lint" target.
+lint: check-index-md
+
 
 # for README.md, TODO.md and CHANGELOG.md
 %.html: %.md
