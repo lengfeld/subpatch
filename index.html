@@ -44,11 +44,15 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick start</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#subpatch-usecases">subpatch usecases</a>
+    <li class="toctree-l2"><a class="reference internal" href="#usecases">Usecases</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#subpatchs-concept">subpatch's concept</a>
+    <li class="toctree-l2"><a class="reference internal" href="#concept-and-design">Concept and design</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#subpatch-main-difference">subpatch main difference</a>
+    <li class="toctree-l2"><a class="reference internal" href="#main-differences-to-other-tools">Main differences to other tools</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#website-documentation-license-and-code">Website, documentation, license and code</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#support">Support</a>
     </li>
     </ul>
                 </li>
@@ -108,7 +112,7 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="subpatch-fearless-multi-repository-management-stay-relaxed">subpatch: fearless multi-repository management - stay relaxed!</h1>
-<p>Welcome to the website of subpatch. The tool that does multi-repository
+<p>Welcome to the website of subpatch. The tool that does multi repository
 management right. Don't worry, stay relaxed!</p>
 <p>If you are currently using
 <a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">git-submodules</a> or
@@ -129,17 +133,17 @@ $ chmod +x ./subpatch
 $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
 $ git commit -m "adding googletest"
 </code></pre>
-<p>If you are interested in finding out more, please see the menu on the left
-side. The website contains explanations, tutorials and references about
-subpatch.</p>
-<h2 id="subpatch-usecases">subpatch usecases</h2>
+<p>If you are interested in finding out more, please see the text below and the
+menu of this website on the left side. It contains explanations, tutorials and
+references about subpatch.</p>
+<h2 id="usecases">Usecases</h2>
 <p>subpatch is interesting for you if you want to do the following tasks:</p>
 <ul>
 <li>assemble a monorepo from multiple repositories</li>
 <li>integrate third party dependencies into your project as source files</li>
 <li>maintain a local fork (with a linear patchstack) of an upstream project</li>
 </ul>
-<h2 id="subpatchs-concept">subpatch's concept</h2>
+<h2 id="concept-and-design">Concept and design</h2>
 <p>subpatch is a multi-repository management tool based on the following ideas:</p>
 <ul>
 <li>It's based on <code>git add</code>. The files of subprojects are added as normal files
@@ -151,7 +155,7 @@ subpatch.</p>
 <li>Importing new versions of the subproject is possible and subpatch helps to
   rebase the local modifications.</li>
 </ul>
-<h2 id="subpatch-main-difference">subpatch main difference</h2>
+<h2 id="main-differences-to-other-tools">Main differences to other tools</h2>
 <p>When you use subpatch the subprojects are not git repository itself. The files
 of the subprojects are added as files to the superproject. You will only have
 to deal with a single git repository.</p>
@@ -162,7 +166,25 @@ to deal with a single git repository.</p>
 <li><a href="https://kas.readthedocs.io/en/latest/">kas</a></li>
 <li><a href="https://docs.zephyrproject.org/latest/develop/west/index.html">west</a></li>
 </ul>
-<p>These tools manage multi git repositories at once.</p>
+<p>These tools manage multiple git repositories at once. Based on a manifest file
+multiple git repositories are cloned from different upstream sources into your
+local checkout.</p>
+<p>The page <a href="exp/comparison/">Comparison to other tools</a>
+describes the differences in more detail.</p>
+<h2 id="website-documentation-license-and-code">Website, documentation, license and code</h2>
+<p>On the website you find more information, e.g.
+explanations, tutorials and references. New subpatch releases are announced on
+the <a href="ref/releases/">release notes</a> pages, including the
+release notes and changelog.</p>
+<p>The source code of the program and the website can be found in the
+git repository <a href="https://github.com/lengfeld/subpatch">github.com/lengfeld/subpatch</a>.
+I have licensed the source code of subpatch as
+<a href="https://spdx.org/licenses/GPL-2.0-only.html">GPL-2.0-only</a>,
+It's the same license that is also used for the Linux kernel or git itself.</p>
+<h2 id="support">Support</h2>
+<p>For now there is no dedicated support forum/chat/… . You can either
+email <a href="mailto:stefan+subpatch@lengfeld.xyz">me</a> or open on issue on
+<a href="https://github.com/lengfeld/subpatch/issues">github</a>.</p>
               
             </div>
           </div><footer>
@@ -211,5 +233,5 @@ to deal with a single git repository.</p>
 
 <!--
 MkDocs version : 1.5.3
-Build Date UTC : 2024-12-01 22:01:17.150093+00:00
+Build Date UTC : 2024-12-10 10:19:26.467600+00:00
 -->
