@@ -242,8 +242,6 @@ Write about Critic/pitfalls/Bad-stuff of subpatch
 * APM issue again: subpatch does not allow dependency resolution or sharing!
   If multiple subprojects uses itself subpatch, there is no dependency
   sharing!
-"APM" stands (mostly) for application (specific) package manager
-See https://lpc.events/event/18/contributions/1747/attachments/1551/3232/LPC%202024%20-%20APMs.pdf
 
 Add other multi repo management tools to explanation page.
 
