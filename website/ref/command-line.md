@@ -7,7 +7,7 @@ arguments and one command. It is the same as other popular tools like `git` or
     subpatch status
     subpatch add <url> -r <revision>
 
-Here `status` and `add` are commands and `-r <revision` is an optional
+Here `status` and `add` are commands and `-r <revision>` is an optional
 argument. 
 
 subpatch uses the [argparse module](https://docs.python.org/3/library/argparse.html) of python.
