@@ -318,3 +318,7 @@ Make license for documentation, e.g. website, more explicit.
 
 Maybe relicense the source code as "GPL-2.0-or-later". The GPLv3 has some good
 extra text about handling license violations.
+
+Write and document the patch structure format. It's the same as 'quilt' uses.
+And therefore also the same as debian/deb/ubuntu uses for packages
+See e.g. https://packages.debian.org/buster/liblivemedia-dev
