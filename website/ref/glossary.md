@@ -46,21 +46,34 @@ given context, but can be used interchangeably. Here is an overview:
 | multi repo problem | superrepo        | subrepos              |
 
 
-## version control system (vcs)
+## version control system (VCS)
 
-A *version control system* is a tool to track changes to a set of files and provides
-auxiliary functional. Sometimes these are also called *source code management* tools.
+A *version control system* is a tool to track changes to a set of files and
+provides auxiliary functional.
 
-Popular version control systems are
+An very old implementation of a version control system is the
+[*revision control system* (RCS)](https://en.wikipedia.org/wiki/Revision_Control_System).
+Current popular version control systems are
 
 * [git](https://git-scm.com/)
 * [subversion (svn)](https://subversion.apache.org/)
 * [mercurial (hg)](https://www.mercurial-scm.org/)
 * [Concurrent Versions System (cvs)](http://savannah.nongnu.org/projects/cvs)
 
-The older name for vcs is *rcs* (*revision control system*). And yet another
-(current) name is *scm* (*source control management*). Then name is used
-on the [git website](https://git-scm.com/).
+Other names for version control system are
+
+* *source control management* (SCM) (used on the [git website](https://git-scm.com/))
+* *source code control system* (SCCS)
+* *source code management*
+
+A non exhaustive list of non so popular version control systems is
+
+* [darcs](https://darcs.net/)
+* [Jujutsu](https://jj-vcs.github.io/jj/latest/)
+* [GNU bazaar](https://en.wikipedia.org/wiki/GNU_Bazaar) [discontinued]
+* [Pijul](https://pijul.org/)
+* [perforce](https://www.perforce.com/products/helix-core)
+* [fossil](https://www.fossil-scm.org/home/doc/trunk/www/index.wiki)
 
 
 ## application-level package manager (APM)
