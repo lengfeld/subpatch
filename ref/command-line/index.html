@@ -69,6 +69,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-add">subpatch add</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
@@ -111,8 +113,8 @@ arguments and one command. It is the same as other popular tools like <code>git<
 <pre><code>subpatch status
 subpatch add &lt;url&gt; -r &lt;revision&gt;
 </code></pre>
-<p>Here <code>status</code> and <code>add</code> are commands and <code>-r &lt;revision</code> is an optional
-argument. </p>
+<p>Here <code>status</code> and <code>add</code> are commands and <code>-r &lt;revision&gt;</code> is an optional
+argument.</p>
 <p>subpatch uses the <a href="https://docs.python.org/3/library/argparse.html">argparse module</a> of python.
 So the following commands are equivalent:</p>
 <pre><code>subpatch add -r=&lt;revision&gt; &lt;url&gt;
@@ -144,6 +146,37 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.</p>
+<h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
+<p>The following list is a draft for additional commands. These are maybe
+implemented in that form or another.</p>
+<ul>
+<li><code>rm &lt;subproject directory&gt;</code>: Remove directory and metadata for the subproject</li>
+<li><code>mv &lt;subproject directory&gt; &lt;new dir&gt;</code>: Move/rename subproject to a new
+  directory and update the metadata.</li>
+<li><code>foreach &lt;command&gt;</code>: Execute a shell command for every subproject.
+   See <code>repo foreach</code> and <code>git submodule foreach</code></li>
+<li><code>update [&lt;subproject&gt;]</code>:<ul>
+<li>Allow to update the url and the revision</li>
+<li>If there are not patches, should be equivilant to <code>rm+add</code></li>
+<li>TODO If the revision is a branch name, what should happend? Integrated the
+  original commit id or the new commit id?</li>
+<li>Idea: maybe use "upgrade", because "update" means something different for
+  "git submodules."</li>
+</ul>
+</li>
+<li><code>check</code>: Verify subproject source code, patches and config/metadata<ul>
+<li>check that subpatch config/subproject metadata is valid/consistent</li>
+<li>check that patches can be reverted to obtain the original source code</li>
+<li>check that a suberproject diff/patch/commit-range does not break the
+  invariants. (This should be used in the CI)</li>
+</ul>
+</li>
+<li><code>reformat</code>: reformat the subpatch config/metadata in a consistent way.</li>
+<li><code>create-patches</code>: from the last or multiple last commits of the subproject,
+  create patches for the subproject, to fullfill the invariant.</li>
+<li><code>root</code>: Show the root path of the (superproject). useful
+  for something like <code>croot</code> in the AOSP. For git it's named '--show-toplevel'.</li>
+</ul>
               
             </div>
           </div><footer>
