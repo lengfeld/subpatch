@@ -78,8 +78,8 @@ A non exhaustive list of non so popular version control systems is
 
 ## application-level package manager (APM)
 
-The term *application-level pakcage managers* (APM) is used to described
-package managers provided in the ecosystem of the programming language. Examples:
+The term *application-level package managers* (APM) describes package managers
+that are integrated into the ecosystem of a programming language. Examples:
 
 * [yarn](https://yarnpkg.com/) for Javascript
 * [cargo](https://crates.io/) for rust
