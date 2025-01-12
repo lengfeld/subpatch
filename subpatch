@@ -559,6 +559,8 @@ def cmd_add(args, parser):
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
 
+    # TODO "Can be None" comment is bad. It should be encoded into the variable name
+    # and/or in the type.
     revision = args.revision  # Can be None
 
     sub_url = args.url
