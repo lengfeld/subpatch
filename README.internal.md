@@ -372,3 +372,7 @@ on the console, the program must also write the resolution!
 
 If there are local changes in a subproject, show in `subpatch status`,
 then print also infos how to create a patch file for it!
+
+Think about subpatch superprojects as subprojects in other repos.  Then the
+subpatch config file is not at the root of the repo. Currently this is not
+supported.
