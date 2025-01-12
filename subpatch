@@ -306,7 +306,7 @@ def find_superproject():
 
         statinfo = os.stat(abs_cur_path)
         if statinfo.st_dev != cwd_st_dev:
-            # The diretory walk leaves the current filesystem. This is a stop
+            # The directory walk leaves the current filesystem. This is a stop
             # condition for now.
             # TODO Maybe implement 'GIT_DISCOVERY_ACROSS_FILESYSTEM'
             # See https://git-scm.com/docs/git.html#Documentation/git.txt-codeGITDISCOVERYACROSSFILESYSTEMcode
@@ -318,7 +318,7 @@ def find_superproject():
                 data.super_path = abs_cur_path
 
         if data.scm_type is None:
-            # NOTE Simple implememtation. Check whether there is a ".git"
+            # NOTE Simple implementation. Check whether there is a ".git"
             # folder next to it.
             # Does not work for worktrees! ... really? TODO check it!
             if os.path.exists(join(abs_cur_path, b".git")):
@@ -767,13 +767,12 @@ def cmd_add(args, parser):
     assert sub_realpath.startswith(super_realpath.decode("utf8"))
     super_to_sub_relpath = sub_realpath[len(super_realpath) + 1:]
 
-
     url_type = get_url_type(sub_url)
 
     if url_type == URLTypes.LOCAL_RELATIVE:
         # Check the current work directory of the call is the top level
         # directory of the repository. If not, a relative path on the
-        # commadline is not relative to the top level directory and must be
+        # command line is not relative to the top level directory and must be
         # converted. This conversion is a bit complex and error prone.  So
         # just enforce (like also git does) that the current work directory
         # is the top level repository in that case.
@@ -877,7 +876,7 @@ def show_info(args):
 def ensure_superproject_is_configured(superx):
     # Design decision:
     # Having a empty ".subpatch" config file is something different than having
-    # no config file. It means that subpach is not yet configured for the project.
+    # no config file. It means that subptach is not yet configured for the project.
     # TODO document this design decision somewhere else!
     if not superx.configured:
         raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
@@ -987,7 +986,7 @@ def git_diff_name_only(staged=False):
 # listing files from the top level directory.
 # TODO fix that
 def git_ls_files_untracked():
-    # TODO refator common code
+    # TODO refactor common code
     # NOTE:
     # - Use "--full-name" to make the paths relative to the toplevel
     #   directory, not the current work directory.
@@ -1061,6 +1060,7 @@ def cmd_status(args, parser):
         for path in ls_files_untrack:
             if path.startswith(subproject_path_bytes):
                 changes.untracked += 1
+
         for path in diff_files_staged:
             if path.startswith(subproject_path_bytes):
                 changes.uncommitted += 1
