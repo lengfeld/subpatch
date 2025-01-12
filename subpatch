@@ -23,11 +23,6 @@ __version__ = "0.1a3"
 __LICENSE__ = "GPL-2.0-only"
 
 
-# Name conventions for variables
-#    super_abspath
-#    config_abspath
-# TODO not finialized yet
-
 # TODO refactor. copyied from helpers
 @contextlib.contextmanager
 def cwd(path, create=False):
@@ -73,6 +68,7 @@ def split_with_ts(s):
 # - not supporting comments at end of line yet.
 # - every line in lines, ends with a "\n" character
 #   Only the last line may not have a trailing "\n" character.
+# TODO add errors on invalid syntax
 def config_parse(lines):
     # result items
     #   (<leading whitespace>, <section>, <subsection>, <name>, <value>, <comment>)
@@ -152,6 +148,47 @@ def config_add_section(parts_list, section_name, subsection_name, section_lines)
     yield from emit()
 
 
+@dataclass
+class Subproject:
+    path: str
+    url: str = None
+    revision: str = None
+
+
+# Read the config file into Subproject objects
+# TODO is it "<object>_<verb>" or "<verb>_<object>"?
+#  "subprojects_parse" vs "parse_subprojects"
+#  ... -> then should should be "parse_config_parts_to_subprojects
+# NOTE
+# - this will not filter out duplicate enries
+# - it will emit elements in the order as they appear in the config file!
+def subprojects_parse(config_parts):
+    subproject = None
+    for line in config_parts:
+        # TODO The type encoding into numbers 1, 2, 3 must go away!!!
+        if line[0] == 1:
+            pass  # ignore empty lines
+        elif line[0] == 2:
+            if subproject is not None:
+                yield subproject
+                subproject = None
+            if line[2] == "subpatch":
+                subproject = Subproject(line[3])
+        elif line[0] == 3:
+            if subproject is not None:
+                name = line[2]
+                if name == "url":
+                    subproject.url = line[3]
+                elif name == "revision":
+                    subproject.revision = line[3]
+                # TODO add warning for unknown value
+        else:
+            raise Exception("here")
+
+    if subproject is not None:
+        yield subproject
+
+
 # TODO Write blogpost about common error categories, e.g. in HTTP and errno
 # E.g. there is also
 #  * invalid argument/Bad request
@@ -161,10 +198,11 @@ def config_add_section(parts_list, section_name, subsection_name, section_lines)
 class ErrorCode(Enum):
     UNKNOWN = 1
     NOT_IMPLEMENTED = 2
+    # TODO 'NOT_IN_A_GIT_REPO' is not generic for other cvs. Should be refactored!
     NOT_IN_A_GIT_REPO = 3
     # Subpatch is not yet configured for superproject
     NOT_CONFIGURED_FOR_SUPERPROJECT = 4
-    # The user has given a invalid argument on the command line
+    # The user has given an invalid argument on the command line
     INVALID_ARGUMENT = 5
     CUSTOM = 6
 
@@ -255,6 +293,9 @@ def git_init_and_fetch(url, ref):
     if p.returncode != 0:
         raise Exception("git failure")
 
+    # TODO use --depth argument to reduce download size
+    # p = Popen(["git", "fetch", "--depth", "1", "-q", url, ref], stderr=DEVNULL)
+    # NOTE If stderr==DEVNULL(no-tty) no progress is showing on the commandline
     p = Popen(["git", "fetch", "-q", url, ref], stderr=DEVNULL)
     p.communicate()
     if p.returncode != 0:
@@ -296,6 +337,13 @@ def git_add(args):
 #      Can be a http, git or file URL. Or just a local path.
 #    Variant:
 #       sub_url: The subproject's URL, e.g. to clone/download
+#
+# Subpatch naming
+#  - "config" or "subpatch config". Is the name of the config in the
+#    ".subpatch" file at the toplevel of the superproject.
+#    TODO add to glossary
+#  - "subproject": Idea: Is only the local directory and config
+#                  Not the remote repository
 
 
 # As of git v2.9.0 these are all valid git objects
@@ -494,6 +542,9 @@ class SubHelperGit:
 
         clone_config = git_resolve_to_clone_config(url, revision)
 
+        # TODO optimization. If it's a local git repo, use --reference to share
+        # object store.
+
         # There are three cases:
         #   - full clone + with object id
         #   - full clone + without object id
@@ -545,6 +596,14 @@ class SuperHelperGit:
         print("- If you want to revert the changes, execute `git reset --merge`.")
 
 
+def is_cwd_toplevel_directory(super_abspath):
+    # TODO this comparision is ugly. Write this nicer!
+    return abspath(os.getcwd().encode(sys.getdefaultencoding())) == abspath(super_abspath)
+
+
+# TODO Implement add without download.
+# Some difference as "clone" == "fetch && pull"
+# -> What is then the other command? "update"
 def cmd_add(args, parser):
     if args.url is None:
         # TODO make error message nicer
@@ -570,10 +629,15 @@ def cmd_add(args, parser):
             # TODO add reason why it's invalid
             raise AppException(ErrorCode.INVALID_ARGUMENT, "revision '%s' is invalid" % (revision,))
 
+    # Paths documentation and naming
+    #
     # Example              ../folder/superproject/dirA/dirB/subproject/
+    #                                             ^^^^cwd
     #
     # super_abspath:       ../folder/superproject
+    #   other name: "top level directory" TODO unify
     # cwd_abspath:         ../folder/superproject/dirA
+    # config_abspath:      ../folder/superproject/.subpatch
     # super_to_sub_relpath:                       dirA/dirB/subproject
     # super_to_cwd_relpath:                       dirA
     # cwd_to_sub_relpath:                              dirB/subproject
@@ -619,8 +683,7 @@ def cmd_add(args, parser):
         # converted. This conversion is a bit complex and error prone.  So
         # just enforce (like also git does) that the current work directory
         # is the top level repository in that case.
-        # TODO this comparision is ugly. Write this nicer!
-        if abspath(os.getcwd().encode(sys.getdefaultencoding())) != abspath(super_abspath):
+        if not is_cwd_toplevel_directory(super_abspath):
             raise AppException(ErrorCode.CUSTOM,
                                "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
     elif url_type == URLTypes.LOCAL_ABSOLUTE:
@@ -715,7 +778,10 @@ def show_info(args):
     return 0
 
 
-def cmd_status(args, parser):
+# TODO add "-z" option to be safe againts any chars in the path
+# TODO add escpaing for "evil" chars in non "-z" output
+# TODO add not about plumbing command
+def cmd_list(args, parser):
     # TODO unify search for superproject with other commands!
     super_abspath = git_get_toplevel()
     if super_abspath is None:
@@ -729,15 +795,201 @@ def cmd_status(args, parser):
     if not os.path.exists(config_abspath):
         raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
 
-    # Just dump the contents of the file for now
-    # TODO read config format  make nice output
-    # TODO use the new config_parse() function here!
-    # TODO add note that it's a pretty printed output for humans. Do
-    # not use in scripts.
-    # TODO add plumbing commands for scripts!
-    print("NOTE: Output format is just a hack. Not the final output format yet!")
     with open(config_abspath) as f:
-        print(f.read(), end="")
+        config_parts = config_parse(split_with_ts(f.read()))
+        subprojects = subprojects_parse(config_parts)
+        for subproject in subprojects:
+            print("%s" % (subproject.path,))
+
+    return 0
+
+
+# Parse the "-z" output of git commands
+# TODO rework as a generator
+def parse_z(b):
+    if b == b"":
+        # Special case. b"".split(b"\0") is [b""], but
+        # we want a list without elements here.
+        return []
+
+    return b.rstrip(b"\0").split(b"\0")
+
+
+def git_diff_name_only(staged=False):
+    # NOTE: "git diff" does not depend on the cwd inside the repo
+    cmd = ["git", "diff", "--name-only", "-z"]
+    if staged:
+        cmd += ["--staged"]
+
+    p = Popen(cmd, stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("error here")
+
+    return parse_z(stdout)
+
+
+# NOTE: This depends on the cwd for now. git ls-files has no option to force
+# listing files from the top level directory.
+# TODO fix that
+def git_ls_files_untracked():
+    # TODO refator common code
+    # NOTE:
+    # - Use "--full-name" to make the paths relative to the toplevel
+    #   directory, not the current work directory.
+    # - Use "--no-empty-directory" to avoid printing dirs that contain only
+    #   ignored files.
+    p = Popen(["git", "ls-files", "--exclude-standard", "-o", "--directory", "-z", "--full-name", "--no-empty-directory"],
+              stdout=PIPE)
+    stdout, _ = p.communicate()
+
+    if p.returncode != 0:
+        raise Exception("error here")
+
+    return parse_z(stdout)
+
+
+# TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
+def cmd_status(args, parser):
+    # TODO unify search for superproject with other commands!
+    super_abspath = git_get_toplevel()
+    if super_abspath is None:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+    # Find subpatch file
+    # Design decision:
+    # Having a empty ".subpatch" config file is something different than having
+    # no config file. It means that subpatch is not yet configured for the project.
+    config_abspath = join(super_abspath, b".subpatch")
+    if not os.path.exists(config_abspath):
+        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+
+    if not is_cwd_toplevel_directory(super_abspath):
+        raise AppException(ErrorCode.NOT_IMPLEMENTED,
+                           "Current work directory must be the toplevel directory of the repo for now!")
+
+    # TODO add plumbing commands for scripts!
+    # TODO add colorscheme for output, e.g. like git status does
+    # TODO handle stdout fd is pipe/file and not tty.
+
+    with open(config_abspath) as f:
+        config_parts = config_parse(split_with_ts(f.read()))
+        subprojects = subprojects_parse(config_parts)
+        # Force the generator before closing the file
+        subprojects = list(subprojects)
+
+    # Get all paths to subprojects
+    # These are relative paths: super_to_sub_relpath
+    # TODO check paths in config file for sanity. Should not contain trialing slash or double slashes!
+    # The paths must be canoncical for comparing
+    subproject_paths = [subproject.path for subproject in subprojects]
+
+    # TODO does the concept of staged and unstaged files als exists in other
+    # cvs systems
+    diff_files_not_staged = git_diff_name_only()
+    diff_files_staged = git_diff_name_only(staged=True)
+
+    # TODO 'git_ls_files_untracked' depends on the cwd for now! Cwd must be the
+    # root of the directory for now.
+    ls_files_untrack = git_ls_files_untracked()
+
+    # TODO refactor this struct and the following code to a function! And make
+    # to interface for other cvs
+    @dataclass
+    class Changes:
+        untracked: int = 0
+        unstaged: int = 0
+        uncommitted: int = 0
+
+    subproject_changes = {}
+    for path in subproject_paths:
+        subproject_changes[path] = Changes()
+
+    for subproject_path in subproject_paths:
+        # TODO str vs bytes mismatch
+        subproject_path_bytes = subproject_path.encode("utf8")
+        changes = subproject_changes[subproject_path]
+
+        for path in ls_files_untrack:
+            if path.startswith(subproject_path_bytes):
+                changes.untracked += 1
+        for path in diff_files_staged:
+            if path.startswith(subproject_path_bytes):
+                changes.uncommitted += 1
+
+        for path in diff_files_not_staged:
+            if path.startswith(subproject_path_bytes):
+                changes.unstaged += 1
+
+    if len(subprojects) == 0:
+        # Early return. Nothing to print!
+        return 0
+
+    print("NOTE: The format of the output is human-readable and unstable. Do not use in scripts!")
+    print("NOTE: The format is markdown currently. Will mostly change in the future.")
+    print("")
+    for i, subproject in enumerate(subprojects):
+        # TODO Idea: make it valid markdown output
+        # TODO Idea: For every cvs superproject (superhelper) make the output
+        # like the cvs styled of console output. Subpach should look like git
+        # for git superprojects. And look like svn for svn superprojects.
+        # NOTE: these two ideas are conflicting!
+
+        # TODO Think about other cvs systems
+        print("# subproject at '%s'" % (subproject.path,))
+        print("")
+        if subproject.url is not None:
+            print("* was integrated from URL: %s" % (subproject.url,))
+        if subproject.revision is not None:
+            print("* has integrated revision: %s" % (subproject.revision,))
+            # TODO Maybe included whether it "tracks a branch" or it was a git tag
+
+        p = subproject.path
+
+        changes = subproject_changes[p]
+
+        # NOTE Listing the modified files seems to much like "git status".
+        # There is already "git status". The output just referneces the git
+        # commands To inspect the changes.
+
+        if changes.untracked > 0:
+            print("""\
+* There are n=%d untracked files and/or directories:
+    - To see them execute:
+        `git status %s`
+        `git ls-files --exclude-standard -o %s`
+    - Use `git add %s` to add all of them
+    - Use `git add %s/<filename>` to just add some of them
+    - Use `rm <filename>` to remove them"""
+                  % (changes.untracked, p, p, p, p))
+
+        if changes.unstaged > 0:
+            print("""\
+* There are n=%d modified files not staged for commit:
+    - To see them execute:
+        `git status %s` or
+        `git diff %s`
+    - Use `git add %s` to update what will be committed
+    - Use `git restore %s` to discard changes in working directory"""
+                  % (changes.unstaged, p, p, p, p))
+
+        if changes.uncommitted > 0:
+            # TODO check git restore
+            print("""\
+* There are n=%d modified files that are staged, but not committed:
+    - To see them execute:
+        `git status %s` or
+        `git diff --staged %s`
+    - Use `git commit %s` to commit the changes
+    - Use `git restore --staged %s` to unstage"""
+                  % (changes.uncommitted, p, p, p, p))
+            # TODO check restore staged
+
+        if i + 1 < len(subprojects):
+            # Add a empty line between the subprojects
+            print("")
+
+        # TODO list amount of patches
 
     return 0
 
@@ -764,9 +1016,14 @@ def main_wrapped():
     parser_add.add_argument("-r", "--revision", dest="revision", type=str,
                             help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
 
+    # TODO add argument <path> to print the status of only a single subproject
     parser_status = subparsers.add_parser("status",
-                                          help="List all subprojects in the superproject")
+                                          help="List all subprojects")
     parser_status.set_defaults(func=cmd_status)
+
+    parser_list = subparsers.add_parser("list",
+                                        help="List all subprojects")
+    parser_list.set_defaults(func=cmd_list)
 
     args = parser.parse_args()
 
@@ -794,9 +1051,8 @@ def main():
     except AppException as e:
         # TODO allow to append a generic error message for all messages, not only for invalid argument.
         if e._code == ErrorCode.NOT_IMPLEMENTED:
-            # TODO error code should have a message to explain the exact feature
             # TODO the message should show the github issue url!
-            print("Error: Feature not implemented yet!", file=sys.stderr)
+            print("Error: Feature not implemented yet: %s" % (e,), file=sys.stderr)
         elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
             print("Error: No git repo as superproject found!", file=sys.stderr)
         elif e._code == ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT:

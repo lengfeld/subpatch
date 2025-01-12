@@ -9,7 +9,7 @@ import tempfile
 from subprocess import Popen, PIPE, DEVNULL, call
 from os.path import join, realpath, dirname, abspath
 from helpers import TestCaseTempFolder, cwd, touch, Git, \
-                    create_git_repo_with_branches_and_tags
+                    create_git_repo_with_branches_and_tags, mkdir
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
@@ -19,7 +19,9 @@ from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      git_init_and_fetch, is_sha1, ObjectType, git_ls_remote, \
                      git_ls_remote_guess_ref, git_verify, \
                      config_parse, config_add_section, split_with_ts, config_unparse, \
-                     is_valid_revision
+                     is_valid_revision, subprojects_parse, Subproject, \
+                     git_diff_name_only, is_cwd_toplevel_directory, git_ls_files_untracked, \
+                     parse_z
 
 
 class TestConfigParse(unittest.TestCase):
@@ -111,6 +113,48 @@ name = value
 name = value
 [b]
 """)
+
+
+class TestSubprojectsParse(unittest.TestCase):
+    def parse_from_string(self, s):
+        # TODO Find better name for "string" and "s"
+        lines = split_with_ts(s)
+        config_parts = config_parse(lines)
+        return list(subprojects_parse(config_parts))
+
+    def test_empty(self):
+        subprojects = self.parse_from_string("")
+        self.assertEqual([], subprojects)
+
+    def test_empty_lines(self):
+        subprojects = self.parse_from_string("\n\n\n")
+        self.assertEqual([], subprojects)
+
+    def test_one(self):
+        subprojects = self.parse_from_string("[subpatch \"test\"]\n")
+        self.assertEqual(1, len(subprojects))
+        self.assertEqual(subprojects[0], Subproject("test"))
+
+    def test_one_with_values(self):
+        subprojects = self.parse_from_string("""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+\trevision = v1
+""")
+        self.assertEqual(1, len(subprojects))
+        self.assertEqual(subprojects[0],
+                         Subproject("subproject", url="../subproject", revision="v1"))
+
+    def test_non_subpatch_subsection(self):
+        subprojects = self.parse_from_string("""\
+[subpatch \"subprojectA\"]
+[configbla \"somestuff\"]
+\turl = ../subproject
+[subpatch \"subprojectB\"]
+""")
+        self.assertEqual(2, len(subprojects))
+        self.assertEqual(subprojects[0], Subproject("subprojectA"))
+        self.assertEqual(subprojects[1], Subproject("subprojectB"))
 
 
 class TestGit(TestCaseTempFolder):
@@ -216,6 +260,92 @@ class TestGit(TestCaseTempFolder):
         self.assertEqual(True, git_verify("refs/tags/v1.1"))
         self.assertEqual(False, git_verify("00" * 20))
 
+    def test_git_diff_name_only(self):
+        git = Git()
+        git.init()
+
+        # NOTE: Only tracked and changed files are shown in "git diff"
+        # Untracked files are not listed in "git diff"
+        touch("a", b"")
+        git.add("a")
+        git.commit("test")
+        touch("a", b"x")
+        self.assertEqual([b"a"], git_diff_name_only())
+        self.assertEqual([], git_diff_name_only(staged=True))
+
+        mkdir("b")
+        touch("b/c", b"")
+        git.add("b/c")
+        git.commit("test")
+        touch("b/c", b"x")
+        # 'a' has committed changes
+        self.assertEqual([b"a", b"b/c"], git_diff_name_only())
+        self.assertEqual([], git_diff_name_only(staged=True))
+
+        git.add("a")
+        self.assertEqual([b"b/c"], git_diff_name_only())
+        self.assertEqual([b"a"], git_diff_name_only(staged=True))
+        git.add("b/c")
+        self.assertEqual([], git_diff_name_only())
+        self.assertEqual([b"a", b"b/c"], git_diff_name_only(staged=True))
+
+    def test_git_ls_files_untracked(self):
+        git = Git()
+        git.init()
+
+        self.assertEqual([], git_ls_files_untracked())
+
+        # TODO add touch without second argument
+        touch("a", b"")
+        self.assertEqual([b"a"], git_ls_files_untracked())
+
+        touch("b", b"")
+        self.assertEqual([b"a", b"b"], git_ls_files_untracked())
+
+        # Make the untracked file a tracked file
+        git.add("a")
+        # Now only one file is untracked
+        self.assertEqual([b"b"], git_ls_files_untracked())
+
+        # Make a untracked file that is ignored with gitignore
+        touch("c", b"")
+        touch(".gitignore", b"c\n")
+        git.add(".gitignore")
+        # It should not show up in the untracked files list!
+        self.assertEqual([b"b"], git_ls_files_untracked())
+
+        # Create a untracked file in a directory
+        with cwd("subdir", create=True):
+            touch("d", b"")
+
+        # NOTE: The config for "ls-files" only shows untracked dirs, not the
+        # untracked files in the dirs.
+        self.assertEqual([b"b", b"subdir/"], git_ls_files_untracked())
+
+        with cwd("subdir"):
+            # TODO: This is bad. It does not show the file "b" that is
+            # untracked in the root of the git repo
+            # "git ls-files" depends on the current work directory
+            self.assertEqual([b"subdir/"], git_ls_files_untracked())
+
+    def test_git_ls_files_untracked_ignore_files_in_di(self):
+        # Special case found in the wild
+        # git_ls_files_untracked() should not print directories that do only
+        # contain ignored files. Happend with "__pycache__" dirs.
+        git = Git()
+        git.init()
+
+        with cwd("__pycache__", create=True):
+            touch("subpatch.cpython-310.pyc", b"something")
+        self.assertEqual([b"__pycache__/"], git_ls_files_untracked())
+
+        # Now make the file in the untracked directory ignored
+        touch(".gitignore", b"*.pyc\n")
+        git.add(".gitignore")
+        git.commit("add gitignore")
+        # And it's not listed anymore. Great!
+        self.assertEqual([], git_ls_files_untracked())
+
 
 class TestFuncs(unittest.TestCase):
     def test_get_url_type(self):
@@ -249,6 +379,24 @@ class TestFuncs(unittest.TestCase):
         self.assertFalse(is_valid_revision("main\nxx"))
         self.assertFalse(is_valid_revision("main\tx"))
         self.assertFalse(is_valid_revision("\bmain"))
+
+    def test_parse_z(self):
+        self.assertEqual([], parse_z(b""))
+        self.assertEqual([b""], parse_z(b"\0"))
+        self.assertEqual([b"xx", b"yy"], parse_z(b"xx\0yy\0"))
+
+
+class TestMisc(TestCaseTempFolder):
+    def test_is_cwd_toplevel_directory(self):
+        git = Git()
+        git.init()
+
+        super_abspath = git_get_toplevel()
+
+        self.assertTrue(is_cwd_toplevel_directory(super_abspath))
+
+        with cwd("subdir", create=True):
+            self.assertFalse(is_cwd_toplevel_directory(super_abspath))
 
 
 if __name__ == '__main__':

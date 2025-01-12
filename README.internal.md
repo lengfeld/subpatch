@@ -320,3 +320,20 @@ extra text about handling license violations.
 Write and document the patch structure format. It's the same as 'quilt' uses.
 And therefore also the same as debian/deb/ubuntu uses for packages
 See e.g. https://packages.debian.org/buster/liblivemedia-dev
+
+Add tests to verify evil chars (speical ASCII, non ASCCI and utf8) chars in
+
+Paths should be correctly escaped in the subpatch config
+
+Add command to check validy of synxtax in config. Even useful for test, where
+it's easer to just drop a ".subpatch" file instead of really "add"ing
+everything.
+
+For "add" print the commit message that is integrated
+
+Add "rm" command
+
+For a potential "update" command list the commits and diffstat that are integrated
+
+Show list of added files in the "add" command. Showing the diffstat is too
+huge. And it also shown when doing "git commit".

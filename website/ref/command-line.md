@@ -20,12 +20,24 @@ So the following commands are equivalent:
     subpatch add <url> --revision <revision>
 
 
+## subpatch list
+
+   subpatch list
+
+Print the path of all subprojects in the repository.
+
+
 ## subpatch status
 
     subpatch status
 
-Show the current state of all subprojects in the superproject. Much like
-`git status`.
+Show the current state of all subprojects in the superproject. It prints the
+URL, integrated revision and whether the files of the subproject are changed.
+E.g. if there are untracked files, unstaged changes or staged, but uncommitted
+changes.
+
+It's similiar to `git status`, but not for the whole repository. Only for the
+subprojects.
 
 
 ## subpatch add

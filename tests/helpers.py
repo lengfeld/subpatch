@@ -70,6 +70,7 @@ class Git():
         self.call(["init", "-q"])
 
     def add(self, filename):
+        # TODO rework argument to be filenames as a list.
         self.call(["add", filename])
 
     def tag(self, name, message):

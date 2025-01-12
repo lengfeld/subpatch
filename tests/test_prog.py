@@ -98,6 +98,7 @@ def create_super_and_subproject():
         git.add("hello")
         git.commit("msg")
         git.tag("vtag", "some tag")
+        # TODO check git commit id
 
     with cwd("superproject", create=True):
         git = Git()
@@ -105,12 +106,59 @@ def create_super_and_subproject():
         touch("hello", b"content")
         git.add("hello")
         git.commit("msg")
+        # TODO check git commit id
+
+
+class TestCmdList(TestCaseHelper, TestSubpatch):
+    def test_not_in_superproject(self):
+        # TODO Refactor to common code. Every tmp dir should be in /tmp!
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with cwd(tmpdirname):
+                p = self.run_subpatch(["list"], stderr=PIPE)
+                self.assertEqual(p.returncode, 4)
+                self.assertEqual(b"Error: No git repo as superproject found!\n",
+                                 p.stderr)
+
+    def test_no_subpatch_config_file(self):
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+            p = self.run_subpatch(["list"], stderr=PIPE)
+            self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
+                             p.stderr)
+            self.assertEqual(p.returncode, 4)
+
+    def test_one_and_two_subproject(self):
+        create_super_and_subproject()
+        with cwd("superproject"):
+            self.run_subpatch_ok(["add", "../subproject", "first"], stdout=DEVNULL)
+
+            p = self.run_subpatch_ok(["list"], stdout=PIPE)
+            self.assertEqual(b"first\n", p.stdout)
+
+            self.run_subpatch_ok(["add", "../subproject", "external/second"], stdout=DEVNULL)
+
+            p = self.run_subpatch_ok(["list"], stdout=PIPE)
+            self.assertEqual(b"external/second\nfirst\n", p.stdout)
+
+    def test_order_is_the_same_as_in_config(self):
+        git = Git()
+        git.init()
+        with open(".subpatch", "bw") as f:
+            f.write(b"""\
+[subpatch "c_not"]
+[subpatch "b_in"]
+[subpatch "a_alphabetical_order"]
+""")
+
+        # TODO add command to check that this handmade config is valid!
+
+        p = self.run_subpatch_ok(["list"], stdout=PIPE)
+        self.assertEqual(b"c_not\nb_in\na_alphabetical_order\n", p.stdout)
 
 
 class TestCmdStatus(TestCaseHelper, TestSubpatch):
     def test_not_in_superproject(self):
-        # NOTE this does not fail, because the tmp folder is in the git folder
-        # of the subpatch project itself.
         # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with tempfile.TemporaryDirectory() as tmpdirname:
             with cwd(tmpdirname):
@@ -128,17 +176,97 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch):
                              p.stderr)
             self.assertEqual(p.returncode, 4)
 
-    def test_no_subpatch_config_file(self):
+    def test_not_in_toplevel_directory(self):
+        git = Git()
+        git.init()
+
+        touch(".subpatch", b"")
+
+        with cwd("subdir", create=True):
+            p = self.run_subpatch(["status"], stderr=PIPE)
+            self.assertEqual(b"Error: Feature not implemented yet: Current work directory must be the toplevel directory of the repo for now!\n",
+                             p.stderr)
+            self.assertEqual(p.returncode, 4)
+
+    def test_two_clean_subprojects(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "../subproject", "subproject1"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "../subproject", "subproject2"], stdout=DEVNULL)
+            git = Git()
+            git.commit("add two subprojects")
 
-            p = self.run_subpatch(["status"], stdout=PIPE)
-            self.assertEqual(p.returncode, 0)
+            p = self.run_subpatch_ok(["status"], stdout=PIPE)
             self.assertEqual(b"""\
-NOTE: Output format is just a hack. Not the final output format yet!
-[subpatch "subproject"]
-\turl = ../subproject
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'subproject1'
+
+* was integrated from URL: ../subproject
+
+# subproject at 'subproject2'
+
+* was integrated from URL: ../subproject
+""",
+                             p.stdout)
+
+    def test_one_subproject_with_modified_files(self):
+        with cwd("subproject", create=True):
+            git = Git()
+            git.init()
+            touch("a", b"")
+            touch("b", b"")
+            touch("c", b"")
+            git.add("a")
+            git.add("b")
+            git.add("c")
+            git.commit("stuff")
+
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+
+            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            git.commit("add subproject")
+
+            with cwd("subproject"):
+                touch("a", b"x")
+                touch("b", b"x")
+                touch("c", b"x")
+                git.add("a")
+                # So files 'b' and 'c' are modified, but not staged
+                # And file "a" is odified and staged
+
+                touch("untracked", b"")
+
+            p = self.run_subpatch_ok(["status"], stdout=PIPE)
+            self.assertEqual(b"""\
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'subproject'
+
+* was integrated from URL: ../subproject
+* There are n=1 untracked files and/or directories:
+    - To see them execute:
+        `git status subproject`
+        `git ls-files --exclude-standard -o subproject`
+    - Use `git add subproject` to add all of them
+    - Use `git add subproject/<filename>` to just add some of them
+    - Use `rm <filename>` to remove them
+* There are n=2 modified files not staged for commit:
+    - To see them execute:
+        `git status subproject` or
+        `git diff subproject`
+    - Use `git add subproject` to update what will be committed
+    - Use `git restore subproject` to discard changes in working directory
+* There are n=1 modified files that are staged, but not committed:
+    - To see them execute:
+        `git status subproject` or
+        `git diff --staged subproject`
+    - Use `git commit subproject` to commit the changes
+    - Use `git restore --staged subproject` to unstage
 """,
                              p.stdout)
 
