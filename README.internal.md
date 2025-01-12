@@ -346,3 +346,18 @@ idea: If "--exclude/remove/strip" arguments are added to "supatch add", to remov
 certain files and dirs from the subproject that is integrated, the argument
 list can be become quite long. Maybe then the "add" argument must be splitted
 into multiple commands to gradually add "--exclude/.." config options.
+
+Implement 'foreach'. See repo and git-submodule
+
+Implement 'rm'. The counterpart of 'add'.
+
+Design principle: Modifiying config files by hand is ok and encouraged. Don't
+add code/commands to do simple things, like adding a version parameter or ...
+- Provide a check/update command to verify and/or apply updates to the working
+  tree.
+
+State of the superproject
+- Not configured
+- configured
+   - no subprojects
+   - some subprojects
