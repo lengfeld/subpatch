@@ -195,16 +195,18 @@ def subprojects_parse(config_parts):
 # E.g. there is also
 #  * invalid argument/Bad request
 #  * (generic) runtime error (maybe the same as IO error)
-#  * permission deined
+#  * permission denied
 #  * NotImplemented/Does not exists
 class ErrorCode(Enum):
     UNKNOWN = 1
-    NOT_IMPLEMENTED = 2
-    # TODO 'NOT_IN_A_GIT_REPO' is not generic for other cvs. Should be refactored!
-    NOT_IN_A_GIT_REPO = 3
+    # TODO distinguish between not implemented and not implemented yet!
+    # Not implemented should mostly be a invalid argument then
+    NOT_IMPLEMENTED_YET = 2
+    WORKS_ONLY_IN_A_GIT_REPO = 3
     SUPERPROJECT_NOT_CONFIGURED = 4
     # The user has given an invalid argument on the command line
     INVALID_ARGUMENT = 5
+    # TODO remove this type. Every ErrorCode should support a message.
     CUSTOM = 6
 
 
@@ -756,7 +758,7 @@ def cmd_add(args, parser):
     if not superx.configured and superx.typex != SuperprojectType.GIT:
         # NOTE: It's ok if the superproject is *not* configured.
         # The 'add' command will auto-configure the superproject if a SCM tool exists!
-        raise AppException(ErrorCode.NOT_IMPLEMENTED, "tbd")
+        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "tbd")
 
     # Get local path relative to top level directory
     # TODO refactor that very ugly code !!!!
@@ -883,7 +885,7 @@ def ensure_superproject_is_configured(superx):
 
 def ensure_superproject_is_git(superx):
     if superx.typex != SuperprojectType.GIT:
-        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+        raise AppException(ErrorCode.WORKS_ONLY_IN_A_GIT_REPO)
 
 
 class SuperprojectType(Enum):
@@ -904,7 +906,7 @@ def check_and_get_superproject_from_data(data):
         if scm_type == SCMType.GIT:
             return SuperprojectType.GIT, SuperHelperGit()
         else:
-            raise AppException(ErrorCode.NOT_IMPLEMENTED, "SCM tool '%s' not implemented yet" % (scm_type,))
+            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (scm_type,))
 
     if data.scm_type is not None:
         # There is a SCM tool
@@ -919,7 +921,7 @@ def check_and_get_superproject_from_data(data):
             # Check if the paths match up:
             if data.super_path != data.scm_path:
                 # TODO add text here!
-                raise AppException(ErrorCode.NOT_IMPLEMENTED, "subpatch config file is not at the root of the SCM repository!")
+                raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subpatch config file is not at the root of the SCM repository!")
 
             super_type, helper = get_helper_from_scm_type(data.scm_type)
             path = data.super_path
@@ -1009,7 +1011,7 @@ def cmd_status(args, parser):
     ensure_superproject_is_git(superx)
 
     if not is_cwd_toplevel_directory(superx.path):
-        raise AppException(ErrorCode.NOT_IMPLEMENTED,
+        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET,
                            "Current work directory must be the toplevel directory of the repo for now!")
 
     config_abspath = join(superx.path, b".subpatch")
@@ -1200,11 +1202,11 @@ def main():
         ret = main_wrapped()
     except AppException as e:
         # TODO allow to append a generic error message for all messages, not only for invalid argument.
-        if e._code == ErrorCode.NOT_IMPLEMENTED:
+        if e._code == ErrorCode.NOT_IMPLEMENTED_YET:
             # TODO the message should show the github issue url!
             print("Error: Feature not implemented yet: %s" % (e,), file=sys.stderr)
-        elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
-            print("Error: No git repo as superproject found!", file=sys.stderr)
+        elif e._code == ErrorCode.WORKS_ONLY_IN_A_GIT_REPO:
+            print("Error: Feature works only inside a git repository!", file=sys.stderr)
         elif e._code == ErrorCode.SUPERPROJECT_NOT_CONFIGURED:
             # TODO add steps to resolve the issue. e.g. touching the file
             print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
