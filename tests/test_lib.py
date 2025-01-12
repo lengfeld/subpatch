@@ -21,7 +21,7 @@ from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      config_parse, config_add_section, split_with_ts, config_unparse, \
                      is_valid_revision, subprojects_parse, Subproject, \
                      git_diff_name_only, is_cwd_toplevel_directory, git_ls_files_untracked, \
-                     parse_z
+                     parse_z, find_superproject, SCMType
 
 
 class TestConfigParse(unittest.TestCase):
@@ -157,6 +157,82 @@ class TestSubprojectsParse(unittest.TestCase):
         self.assertEqual(subprojects[1], Subproject("subprojectB"))
 
 
+class TestFindSuperproject(TestCaseTempFolder):
+    def test_search_ends_on_filesystem_boundary(self):
+        # NOTE: Assumption that "/run/" is a tmpfs and "/" is not!
+        with cwd("/run/"):
+            # TODO find a way to test this. The abort was done because the
+            # filesystem boundary was hit!
+            data = find_superproject()
+            self.assertEqual(data.super_path, None)
+            self.assertEqual(data.scm_type, None)
+            self.assertEqual(data.scm_path, None)
+
+    def test_plain_superproject(self):
+        # Use a temp folder that is not a subdirectory of the subpatch source
+        # tree, since the source tree is a git repo.
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with cwd(tmpdirname):
+                # No configuration file in the path.
+                abs_cwd = abspath(os.getcwdb())
+                data = find_superproject()
+                self.assertEqual(data.super_path, None)
+                self.assertEqual(data.scm_type, None)
+                self.assertEqual(data.scm_path, None)
+
+                # A configuration file at the current work directory
+                touch(".subpatch", b"")
+                data = find_superproject()
+                self.assertEqual(data.super_path, abs_cwd)
+                self.assertEqual(data.scm_type, None)
+                self.assertEqual(data.scm_path, None)
+
+                # A configuration file at a toplevel directory
+                with cwd("a/b/c", create=True):
+                    data = find_superproject()
+                    self.assertEqual(data.super_path, abs_cwd)
+                    self.assertEqual(data.scm_type, None)
+                    self.assertEqual(data.scm_path, None)
+
+    def test_git_superproject(self):
+        abs_cwd = abspath(os.getcwdb())
+        git = Git()
+        git.init()
+        data = find_superproject()
+        self.assertEqual(data.super_path, None)
+        self.assertEqual(data.scm_type, SCMType.GIT)
+        self.assertEqual(data.scm_path, abs_cwd)
+
+        # Now check in a subdirectory
+        with cwd("a/b/c", create=True):
+            data = find_superproject()
+            self.assertEqual(data.super_path, None)
+            self.assertEqual(data.scm_type, SCMType.GIT)
+            self.assertEqual(data.scm_path, abs_cwd)
+
+        # Now check with a configuration file
+        touch(".subpatch", b"")
+        data = find_superproject()
+        self.assertEqual(data.super_path, abs_cwd)
+        self.assertEqual(data.scm_type, SCMType.GIT)
+        self.assertEqual(data.scm_path, abs_cwd)
+
+        with cwd("a/b/c"):
+            data = find_superproject()
+            self.assertEqual(data.super_path, abs_cwd)
+            self.assertEqual(data.scm_type, SCMType.GIT)
+            self.assertEqual(data.scm_path, abs_cwd)
+            # Adding the subpatch config file makes it a PLAIN superproject.
+            # TODO E.g. think about a superproject including a project that
+            # uses subpatch.
+            touch(".subpatch", b"")
+            abs_cwd_sub = abspath(os.getcwdb())
+            data = find_superproject()
+            self.assertEqual(data.super_path, abs_cwd_sub)
+            self.assertEqual(data.scm_type, SCMType.GIT)
+            self.assertEqual(data.scm_path, abs_cwd)
+
+
 class TestGit(TestCaseTempFolder):
     def test_is_sha1(self):
         self.assertTrue(is_sha1(b"32c32dcaa3c7f7024387640a91e98a5201e1f202"))
@@ -191,7 +267,7 @@ class TestGit(TestCaseTempFolder):
             git.add("hello")
             git.commit("msg")
 
-            cur_cwd = os.getcwd().encode("utf8")
+            cur_cwd = os.getcwdb()
             git_path = git_get_toplevel()
             self.assertEqual(git_path, cur_cwd)
             self.assertTrue(git_path.endswith(b"/subproject"))

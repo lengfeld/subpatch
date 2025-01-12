@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import time
+import stat
 from enum import Enum
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, DEVNULL
@@ -69,6 +70,7 @@ def split_with_ts(s):
 # - every line in lines, ends with a "\n" character
 #   Only the last line may not have a trailing "\n" character.
 # TODO add errors on invalid syntax
+# TODO lines should be byte objects, not strings
 def config_parse(lines):
     # result items
     #   (<leading whitespace>, <section>, <subsection>, <name>, <value>, <comment>)
@@ -254,7 +256,88 @@ def cmd_help(args, parser):
     return 0
 
 
+class SCMType(Enum):
+    GIT = b"git"
+
+
+# NOTE: In both cases it's the topdir path!
+@dataclass
+class FindSuperprojectData:
+    super_path: bytes = None
+    scm_type: SCMType = None
+    scm_path: bytes = None
+
+
+# Based on the current work directory search for a subpatch project
+# and scm.
+# Returns: FindSuperprojectData
+# There can be four cases
+#  - no ".subpatch" config and no scm
+#  - ".subpatch" config and no scm
+#  - no ".subpach" config and scm
+#  - ".subpach" config and scm
+# FOr the last cases there are two sub options:
+#   - super_path matches scm_path
+#   - both paths do not match
+#
+# TODO support svn, mercurial and others in the future
+# TODO thinking about symlinks!
+def find_superproject():
+    abs_cwd = abspath(os.getcwdb())
+
+    # TODO refactory this self-made and hacky approach of a directory walk
+    # The first element is empty, because of the absolute path.  But using a
+    # empty element in "join" does not work. It's the reverse operation!
+    assert(abs_cwd[0] == ord("/"))
+    abs_cwd_parts = os.path.normpath(abs_cwd).split(b"/")
+    assert(abs_cwd_parts[0] == b"")
+    abs_cwd_parts.pop(0)
+
+    statinfo = os.stat(abs_cwd)
+    assert stat.S_ISDIR(statinfo.st_mode)
+
+    cwd_st_dev = statinfo.st_dev
+
+    data = FindSuperprojectData()
+
+    while True:
+        abs_cur_path = join(b"/", *abs_cwd_parts)
+
+        statinfo = os.stat(abs_cur_path)
+        if statinfo.st_dev != cwd_st_dev:
+            # The diretory walk leaves the current filesystem. This is a stop
+            # condition for now.
+            # TODO Maybe implement 'GIT_DISCOVERY_ACROSS_FILESYSTEM'
+            # See https://git-scm.com/docs/git.html#Documentation/git.txt-codeGITDISCOVERYACROSSFILESYSTEMcode
+            break
+
+        if data.super_path is None:
+            if os.path.exists(join(abs_cur_path, b".subpatch")):
+                # Configuration file found
+                data.super_path = abs_cur_path
+
+        if data.scm_type is None:
+            # NOTE Simple implememtation. Check whether there is a ".git"
+            # folder next to it.
+            # Does not work for worktrees! ... really? TODO check it!
+            if os.path.exists(join(abs_cur_path, b".git")):
+                data.scm_type = SCMType.GIT
+                data.scm_path = abs_cur_path
+
+        if data.super_path is not None and data.scm_type is not None:
+            # If both is already found, stop the directory walk
+            break
+
+        if len(abs_cwd_parts) == 0:
+            break
+
+        abs_cwd_parts.pop()
+
+    return data
+
+
 # :: void -> None or byte object (or raises an exception)
+# TODO currently unused. Maybe remove this function
 def git_get_toplevel():
     p = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=DEVNULL)
     stdout, _ = p.communicate()
@@ -586,6 +669,10 @@ class SubHelperGit:
         shutil.rmtree(local_repo_git_dir)
 
 
+class SuperHelperPlain:
+    pass
+
+
 class SuperHelperGit:
     # Add the file in 'path' to the index
     # TODO not all version control systems have the notion of a index!
@@ -599,8 +686,9 @@ class SuperHelperGit:
 
 
 def is_cwd_toplevel_directory(super_abspath):
+    assert isinstance(super_abspath, bytes)
     # TODO this comparision is ugly. Write this nicer!
-    return abspath(os.getcwd().encode(sys.getdefaultencoding())) == abspath(super_abspath)
+    return abspath(os.getcwdb()) == abspath(super_abspath)
 
 
 # TODO Implement add without download.
@@ -648,9 +736,6 @@ def cmd_add(args, parser):
     # For now just assume that the subproject is a git repo
     sub_helper = SubHelperGit()
 
-    # For now just assume that the superproject is a git repo
-    super_helper = SuperHelperGit()
-
     # TODO check with ls-remote that remote is accessible
 
     if args.path is None:
@@ -663,18 +748,24 @@ def cmd_add(args, parser):
         # - For now just remove trailing slashes
         cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
-    super_abspath = git_get_toplevel()
-    if super_abspath is None:
-        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+    data = find_superproject()
+    superx = check_and_get_superproject_from_data(data)
+
+    # For now just ensure that the superproject is a git repo
+    ensure_superproject_is_git(superx)
+
+    if not superx.configured and superx.typex != SuperprojectType.GIT:
+        # NOTE: It's ok if the superproject is *not* configured.
+        # The 'add' command will auto-configure the superproject if a SCM tool exists!
+        raise AppException(ErrorCode.NOT_IMPLEMENTED, "tbd")
 
     # Get local path relative to top level directory
     # TODO refactor that very ugly code !!!!
-    super_realpath = os.path.realpath(super_abspath)
+    super_realpath = os.path.realpath(superx.path)
     sub_realpath = os.path.realpath(join(os.getcwd(), cwd_to_sub_relpath))
     assert sub_realpath.startswith(super_realpath.decode("utf8"))
     super_to_sub_relpath = sub_realpath[len(super_realpath) + 1:]
 
-    config_abspath = join(super_abspath, b".subpatch")
 
     url_type = get_url_type(sub_url)
 
@@ -685,7 +776,7 @@ def cmd_add(args, parser):
         # converted. This conversion is a bit complex and error prone.  So
         # just enforce (like also git does) that the current work directory
         # is the top level repository in that case.
-        if not is_cwd_toplevel_directory(super_abspath):
+        if not is_cwd_toplevel_directory(superx.path):
             raise AppException(ErrorCode.CUSTOM,
                                "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
     elif url_type == URLTypes.LOCAL_ABSOLUTE:
@@ -720,6 +811,8 @@ def cmd_add(args, parser):
     # requested revision.
     sub_helper.download(download_config, local_tmp_name)
 
+    config_abspath = join(superx.path, b".subpatch")
+
     try:
         # TODO read as bytes instead of str type
         with open(config_abspath, "r") as f:
@@ -752,15 +845,15 @@ def cmd_add(args, parser):
 
     # Add files for committing
     # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
-    super_helper.add([cwd_to_sub_relpath])
-    with cwd(super_abspath):
-        super_helper.add([".subpatch"])
+    superx.helper.add([cwd_to_sub_relpath])
+    with cwd(superx.path):
+        superx.helper.add([".subpatch"])
 
     print(" Done.")
 
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
-    super_helper.print_add_success()
+    superx.helper.print_add_success()
 
     # TODO Maybe prepare a commit/patch/change message
 
@@ -780,22 +873,80 @@ def show_info(args):
     return 0
 
 
+def ensure_superproject_is_configured(superx):
+    # Design decision:
+    # Having a empty ".subpatch" config file is something different than having
+    # no config file. It means that subpach is not yet configured for the project.
+    # TODO document this design decision somewhere else!
+    if not superx.configured:
+        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+
+
+def ensure_superproject_is_git(superx):
+    if superx.typex != SuperprojectType.GIT:
+        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+
+
+class SuperprojectType(Enum):
+    PLAIN = b"plain"
+    GIT = b"git"
+
+
+@dataclass
+class Superproject:
+    path: bytes
+    helper: object
+    configured: bool
+    typex: SuperprojectType
+
+
+def check_and_get_superproject_from_data(data):
+    def get_helper_from_scm_type(scm_type):
+        if scm_type == SCMType.GIT:
+            return SuperprojectType.GIT, SuperHelperGit()
+        else:
+            raise AppException(ErrorCode.NOT_IMPLEMENTED, "SCM tool '%s' not implemented yet" % (scm_type,))
+
+    if data.scm_type is not None:
+        # There is a SCM tool
+        if data.super_path is None:
+            # And there is no subpatch config file
+            super_type, helper = get_helper_from_scm_type(data.scm_type)
+            path = data.scm_path
+            return Superproject(path, helper, False, super_type)
+        else:
+            # And there is a subpatch config file!
+
+            # Check if the paths match up:
+            if data.super_path != data.scm_path:
+                # TODO add text here!
+                raise AppException(ErrorCode.NOT_IMPLEMENTED, "subpatch config file is not at the root of the SCM repository!")
+
+            super_type, helper = get_helper_from_scm_type(data.scm_type)
+            path = data.super_path
+            return Superproject(path, helper, True, super_type)
+    else:
+        # Current working directory is not in a SCM system
+        if data.super_path is None:
+            # And there is no subpatch config file
+            raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+        else:
+            # And there is a subpatch config file
+            helper = SuperHelperPlain()
+            super_type = SuperprojectType.PLAIN
+            path = data.super_path
+            return Superproject(path, helper, True, super_type)
+
+
 # TODO add "-z" option to be safe againts any chars in the path
 # TODO add escpaing for "evil" chars in non "-z" output
 # TODO add not about plumbing command
 def cmd_list(args, parser):
-    # TODO unify search for superproject with other commands!
-    super_abspath = git_get_toplevel()
-    if super_abspath is None:
-        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+    data = find_superproject()
+    superx = check_and_get_superproject_from_data(data)
+    ensure_superproject_is_configured(superx)
 
-    # Find subpatch file
-    # Design decision:
-    # Having a empty ".subpatch" config file is something different than having
-    # no config file. It means that subpach is not yet configured for the project.
-    config_abspath = join(super_abspath, b".subpatch")
-    if not os.path.exists(config_abspath):
-        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+    config_abspath = join(data.super_path, b".subpatch")
 
     with open(config_abspath) as f:
         config_parts = config_parse(split_with_ts(f.read()))
@@ -853,22 +1004,16 @@ def git_ls_files_untracked():
 
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
 def cmd_status(args, parser):
-    # TODO unify search for superproject with other commands!
-    super_abspath = git_get_toplevel()
-    if super_abspath is None:
-        raise AppException(ErrorCode.NOT_IN_A_GIT_REPO)
+    data = find_superproject()
+    superx = check_and_get_superproject_from_data(data)
+    ensure_superproject_is_configured(superx)
+    ensure_superproject_is_git(superx)
 
-    # Find subpatch file
-    # Design decision:
-    # Having a empty ".subpatch" config file is something different than having
-    # no config file. It means that subpatch is not yet configured for the project.
-    config_abspath = join(super_abspath, b".subpatch")
-    if not os.path.exists(config_abspath):
-        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
-
-    if not is_cwd_toplevel_directory(super_abspath):
+    if not is_cwd_toplevel_directory(superx.path):
         raise AppException(ErrorCode.NOT_IMPLEMENTED,
                            "Current work directory must be the toplevel directory of the repo for now!")
+
+    config_abspath = join(superx.path, b".subpatch")
 
     # TODO add plumbing commands for scripts!
     # TODO add colorscheme for output, e.g. like git status does

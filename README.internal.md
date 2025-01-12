@@ -361,3 +361,14 @@ State of the superproject
 - configured
    - no subprojects
    - some subprojects
+
+Document DD: paths are bytes objects and not strings
+
+Convert all paths to bytes
+
+When the user see the error
+   Error: subpatch not yet configured for superpro
+on the console, the program must also write the resolution!
+
+If there are local changes in a subproject, show in `subpatch status`,
+then print also infos how to create a patch file for it!
