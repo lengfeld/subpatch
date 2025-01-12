@@ -337,3 +337,7 @@ For a potential "update" command list the commits and diffstat that are integrat
 
 Show list of added files in the "add" command. Showing the diffstat is too
 huge. And it also shown when doing "git commit".
+
+Implement implicit "<name>.git" optimization for git repos. If there is a bare
+repository next the subproject use it for cloning, checkout and history
+listing.
