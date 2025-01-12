@@ -249,6 +249,11 @@ def nocommand(args, parser):
     return 2  # TODO why 2?
 
 
+def cmd_help(args, parser):
+    parser.print_help()
+    return 0
+
+
 # :: void -> None or byte object (or raises an exception)
 def git_get_toplevel():
     p = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=DEVNULL)
@@ -1021,6 +1026,10 @@ def main_wrapped():
     parser_list = subparsers.add_parser("list",
                                         help="List all subprojects")
     parser_list.set_defaults(func=cmd_list)
+
+    parser_help = subparsers.add_parser("help",
+                                        help="Also shows the help message")
+    parser_help.set_defaults(func=cmd_help)
 
     args = parser.parse_args()
 

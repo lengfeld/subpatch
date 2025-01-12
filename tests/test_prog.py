@@ -89,6 +89,13 @@ license:   GPL-2.0-only
         self.assertEqual(b"Interrupted!\n", stderr)
 
 
+class TestHelp(TestCaseHelper, TestSubpatch):
+    def test_help(self):
+        p = self.run_subpatch_ok(["help"], stdout=PIPE)
+        self.assertTrue(p.stdout.startswith(b"usage: subpatch"))
+        # TODO compare the outout with "--help". Should be the same.
+
+
 def create_super_and_subproject():
     with cwd("subproject", create=True):
         git = Git()

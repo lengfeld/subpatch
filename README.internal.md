@@ -341,3 +341,8 @@ huge. And it also shown when doing "git commit".
 Implement implicit "<name>.git" optimization for git repos. If there is a bare
 repository next the subproject use it for cloning, checkout and history
 listing.
+
+idea: If "--exclude/remove/strip" arguments are added to "supatch add", to remove
+certain files and dirs from the subproject that is integrated, the argument
+list can be become quite long. Maybe then the "add" argument must be splitted
+into multiple commands to gradually add "--exclude/.." config options.
