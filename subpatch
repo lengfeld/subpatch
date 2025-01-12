@@ -202,8 +202,7 @@ class ErrorCode(Enum):
     NOT_IMPLEMENTED = 2
     # TODO 'NOT_IN_A_GIT_REPO' is not generic for other cvs. Should be refactored!
     NOT_IN_A_GIT_REPO = 3
-    # Subpatch is not yet configured for superproject
-    NOT_CONFIGURED_FOR_SUPERPROJECT = 4
+    SUPERPROJECT_NOT_CONFIGURED = 4
     # The user has given an invalid argument on the command line
     INVALID_ARGUMENT = 5
     CUSTOM = 6
@@ -879,7 +878,7 @@ def ensure_superproject_is_configured(superx):
     # no config file. It means that subpach is not yet configured for the project.
     # TODO document this design decision somewhere else!
     if not superx.configured:
-        raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+        raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
 
 
 def ensure_superproject_is_git(superx):
@@ -929,7 +928,7 @@ def check_and_get_superproject_from_data(data):
         # Current working directory is not in a SCM system
         if data.super_path is None:
             # And there is no subpatch config file
-            raise AppException(ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT)
+            raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
         else:
             # And there is a subpatch config file
             helper = SuperHelperPlain()
@@ -1206,7 +1205,7 @@ def main():
             print("Error: Feature not implemented yet: %s" % (e,), file=sys.stderr)
         elif e._code == ErrorCode.NOT_IN_A_GIT_REPO:
             print("Error: No git repo as superproject found!", file=sys.stderr)
-        elif e._code == ErrorCode.NOT_CONFIGURED_FOR_SUPERPROJECT:
+        elif e._code == ErrorCode.SUPERPROJECT_NOT_CONFIGURED:
             # TODO add steps to resolve the issue. e.g. touching the file
             print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
         elif e._code == ErrorCode.INVALID_ARGUMENT:
