@@ -77,7 +77,11 @@ class Git():
         self.call(["tag", name, "-m", message])
 
     # Returns the SHA1 checksum as a bytes object without trailing newline!
-    def get_sha1(self, rev):
+    def get_sha1(self, rev="HEAD"):
+        # NOTE: Special case for valid SHA1 sums. Even if the object for the
+        # SHA1 does not exist in the repo, it's return as a valid SHA1 If the
+        # rev is a too short SHA1, it's extend to a full SHA1 if a object with
+        # the short SHA1 exists in the repo.
         p = Popen(["git", "rev-parse", "-q", "--verify", rev], stdout=PIPE, env=self._env)
         stdout, _ = p.communicate()
         if p.returncode != 0:
@@ -126,12 +130,31 @@ class Git():
 
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
+        # TODO use call()
         p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE, env=self._env)
         stdout, _ = p.communicate()
         if p.returncode != 0:
             raise Exception("error here")
 
         return stdout.rstrip(b"\n").split(b"\n")
+
+    def cat_file(self, rev):
+        p = Popen(["git", "cat-file", "-p", rev], stdout=PIPE, env=self._env)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("error here")
+
+        return stdout
+
+    def object_exists(self, sha1):
+        # TODO check argument sha1 for a valid sha1. Otherwise the command does
+        # not make sense.
+        p = Popen(["git", "cat-file", "-e", sha1], stderr=DEVNULL, env=self._env)
+        p.communicate()
+        if p.returncode not in [0, 1]:
+            raise Exception("error here")
+
+        return p.returncode == 0
 
 
 def touch(filename, file_content):

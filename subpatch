@@ -160,7 +160,7 @@ class Subproject:
 #  "subprojects_parse" vs "parse_subprojects"
 #  ... -> then should should be "parse_config_parts_to_subprojects
 # NOTE
-# - this will not filter out duplicate enries
+# - this will not filter out duplicate entries
 # - it will emit elements in the order as they appear in the config file!
 def subprojects_parse(config_parts):
     subproject = None
@@ -264,7 +264,6 @@ def git_get_toplevel():
 
 
 # NOTE This is cwd aware
-# TODO add --depth to speed up performance!
 def git_clone(url, directory):
     p = Popen(["git", "clone", "-q", url, directory])
     p.communicate()
@@ -293,10 +292,8 @@ def git_init_and_fetch(url, ref):
     if p.returncode != 0:
         raise Exception("git failure")
 
-    # TODO use --depth argument to reduce download size
-    # p = Popen(["git", "fetch", "--depth", "1", "-q", url, ref], stderr=DEVNULL)
     # NOTE If stderr==DEVNULL(no-tty) no progress is showing on the commandline
-    p = Popen(["git", "fetch", "-q", url, ref], stderr=DEVNULL)
+    p = Popen(["git", "fetch", "--depth", "1", "-q", url, ref], stderr=DEVNULL)
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure: %d" % (p.returncode,))

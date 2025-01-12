@@ -219,6 +219,41 @@ class TestGit(TestCaseTempFolder):
             self.assertRaises(Exception, git_init_and_fetch,
                               "../remote", "refs/heads/does_not_exists")
 
+    def test_depth_for_git_init_and_fetch(self):
+        with cwd("remote", create=True):
+            git = Git()
+            git.init()
+            touch("file", b"a")
+            git.add("file")
+            git.commit("first commit")
+            sha1_first_commit = git.get_sha1()
+            sha1_first_tree = git.get_sha1("HEAD^{tree}")
+            sha1_first_blob = git.get_sha1("HEAD:file")
+
+            touch("file", b"b")
+            git.add("file")
+            git.commit("second commit")
+            sha1_second_commit = git.get_sha1()
+            sha1_second_tree = git.get_sha1("HEAD^{tree}")
+            sha1_second_blob = git.get_sha1("HEAD:file")
+
+        with cwd("local", create=True):
+            git = Git()
+            git.init()
+            sha1 = git_init_and_fetch("../remote", "refs/heads/master")
+            self.assertEqual(sha1, b"b8019be749b96c92c65ae2fdb99753670fd32cf9")
+
+            # The top most (depth=1) objects are exist in the object store.
+            self.assertTrue(git.object_exists(sha1_second_blob))
+            self.assertTrue(git.object_exists(sha1_second_tree))
+            self.assertTrue(git.object_exists(sha1_second_commit))
+
+            # The other objects (depth>=2) objects do not exist in the object
+            # store.
+            self.assertFalse(git.object_exists(sha1_first_blob))
+            self.assertFalse(git.object_exists(sha1_first_tree))
+            self.assertFalse(git.object_exists(sha1_first_commit))
+
     def test_git_ls_remote(self):
         with cwd("remote", create=True):
             create_git_repo_with_branches_and_tags()
