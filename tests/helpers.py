@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import unittest
 import contextlib
+from dataclasses import dataclass
 from subprocess import Popen, PIPE, DEVNULL
 from os.path import isfile, isdir, join, realpath, dirname
 
@@ -100,12 +101,27 @@ class Git():
         # 'allow=always' to fix this.
         self.call(self.SUBMODULE_EXTRA_ARGS + ["submodule"] + args)
 
+    @dataclass
+    class CallData:
+        returncode: int
+        stdout: bytes = None
+
     # TODO maybe name "run", because of "runSubpatch"
-    def call(self, args):
-        p = Popen(["git"] + args, env=self._env)
-        p.communicate()
+    def call(self, args, capture_stdout=False):
+        stdout = None
+        if capture_stdout:
+            stdout = PIPE
+
+        p = Popen(["git"] + args, env=self._env, stdout=stdout)
+        stdout, _ = p.communicate()
         if p.returncode != 0:
             raise Exception("error here")
+
+        data = self.CallData(p.returncode)
+        if capture_stdout:
+            data.stdout = stdout
+
+        return data
 
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
