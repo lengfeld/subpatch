@@ -69,6 +69,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-add">subpatch add</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
@@ -112,7 +114,7 @@ arguments and one command. It is the same as other popular tools like <code>git<
 subpatch add &lt;url&gt; -r &lt;revision&gt;
 </code></pre>
 <p>Here <code>status</code> and <code>add</code> are commands and <code>-r &lt;revision&gt;</code> is an optional
-argument. </p>
+argument.</p>
 <p>subpatch uses the <a href="https://docs.python.org/3/library/argparse.html">argparse module</a> of python.
 So the following commands are equivalent:</p>
 <pre><code>subpatch add -r=&lt;revision&gt; &lt;url&gt;
@@ -144,6 +146,32 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.</p>
+<h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
+<p>The following list is a draft for additional commands. Subpatch will implement
+these in that form or another.</p>
+<ul>
+<li><code>rm &lt;subproject&gt;</code>: Remove subproject code and config data. The reverse of <code>add</code>.</li>
+<li><code>mv &lt;subproject&gt; &lt;new directory for subproject&gt;</code>:
+  Move/rename subproject to a new directory and update the config data</li>
+<li><code>foreach &lt;command&gt;</code>: Execute a shell command for every subproject.
+  All the other multi repository management tools also have such a command.
+  So subpatch also needs it. See <code>repo foreach</code> and <code>git submodule foreach</code></li>
+<li><code>update [&lt;subproject&gt;]</code>: Update the subproject to the newest version</li>
+<li><code>check</code>: Verify subproject source code, patches and config<ul>
+<li>check that subpatch config/subproject config is valid/consistent</li>
+<li>check that patches can be reverted to obtain the original source code</li>
+<li>check that a superproject diff/patch/commit-range does not break the
+  invariants. (This should be used in the CI)</li>
+</ul>
+</li>
+<li><code>reformat</code>: reformat the subpatch config a consistent way. There also will be
+   some sort of <code>--check</code> argument to verify the style in a CI pipeline.</li>
+<li><code>create-patches</code>: from the last or multiple last commits of the subproject,
+  create patches for the subproject, to fullfill the invariant.</li>
+<li><code>root</code>: Show the root path of the superproject. Useful
+  for something like <code>croot</code> in the AOSP. For git the command looks like
+  <code>git rev-parse --show-toplevel</code>.</li>
+</ul>
               
             </div>
           </div><footer>
