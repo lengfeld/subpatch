@@ -172,7 +172,7 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch):
         git = Git()
         git.init()
 
-        touch(".subpatch", b"")
+        touch(".subpatch")
 
         with cwd("subdir", create=True):
             p = self.run_subpatch(["status"], stderr=PIPE)
@@ -207,9 +207,9 @@ NOTE: The format is markdown currently. Will mostly change in the future.
         with cwd("subproject", create=True):
             git = Git()
             git.init()
-            touch("a", b"")
-            touch("b", b"")
-            touch("c", b"")
+            touch("a")
+            touch("b")
+            touch("c")
             git.add("a")
             git.add("b")
             git.add("c")
@@ -230,7 +230,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
                 # So files 'b' and 'c' are modified, but not staged
                 # And file "a" is odified and staged
 
-                touch("untracked", b"")
+                touch("untracked")
 
             p = self.run_subpatch_ok(["status"], stdout=PIPE)
             self.assertEqual(b"""\
@@ -308,7 +308,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
 
         with cwd("superproject"):
             # Just create a file. It should also fail!
-            touch("subproject", b"")
+            touch("subproject")
 
             p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
             self.assertEqual(b"Error: File 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)

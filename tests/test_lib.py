@@ -181,7 +181,7 @@ class TestFindSuperproject(TestCaseTempFolder):
                 self.assertEqual(data.scm_path, None)
 
                 # A configuration file at the current work directory
-                touch(".subpatch", b"")
+                touch(".subpatch")
                 data = find_superproject()
                 self.assertEqual(data.super_path, abs_cwd)
                 self.assertEqual(data.scm_type, None)
@@ -211,7 +211,7 @@ class TestFindSuperproject(TestCaseTempFolder):
             self.assertEqual(data.scm_path, abs_cwd)
 
         # Now check with a configuration file
-        touch(".subpatch", b"")
+        touch(".subpatch")
         data = find_superproject()
         self.assertEqual(data.super_path, abs_cwd)
         self.assertEqual(data.scm_type, SCMType.GIT)
@@ -377,7 +377,7 @@ class TestGit(TestCaseTempFolder):
 
         # NOTE: Only tracked and changed files are shown in "git diff"
         # Untracked files are not listed in "git diff"
-        touch("a", b"")
+        touch("a")
         git.add("a")
         git.commit("test")
         touch("a", b"x")
@@ -385,7 +385,7 @@ class TestGit(TestCaseTempFolder):
         self.assertEqual([], git_diff_name_only(staged=True))
 
         mkdir("b")
-        touch("b/c", b"")
+        touch("b/c")
         git.add("b/c")
         git.commit("test")
         touch("b/c", b"x")
@@ -406,11 +406,10 @@ class TestGit(TestCaseTempFolder):
 
         self.assertEqual([], git_ls_files_untracked())
 
-        # TODO add touch without second argument
-        touch("a", b"")
+        touch("a")
         self.assertEqual([b"a"], git_ls_files_untracked())
 
-        touch("b", b"")
+        touch("b")
         self.assertEqual([b"a", b"b"], git_ls_files_untracked())
 
         # Make the untracked file a tracked file
@@ -419,7 +418,7 @@ class TestGit(TestCaseTempFolder):
         self.assertEqual([b"b"], git_ls_files_untracked())
 
         # Make a untracked file that is ignored with gitignore
-        touch("c", b"")
+        touch("c")
         touch(".gitignore", b"c\n")
         git.add(".gitignore")
         # It should not show up in the untracked files list!
@@ -427,7 +426,7 @@ class TestGit(TestCaseTempFolder):
 
         # Create a untracked file in a directory
         with cwd("subdir", create=True):
-            touch("d", b"")
+            touch("d")
 
         # NOTE: The config for "ls-files" only shows untracked dirs, not the
         # untracked files in the dirs.

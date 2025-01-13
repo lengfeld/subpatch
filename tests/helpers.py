@@ -164,9 +164,9 @@ class Git():
         return p.returncode == 0
 
 
-def touch(filename, file_content):
+def touch(filename, content=b""):
     with open(filename, "bw") as f:
-        f.write(file_content)
+        f.write(content)
 
 
 def mkdir(filename):
