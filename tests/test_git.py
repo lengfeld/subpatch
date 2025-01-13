@@ -35,6 +35,12 @@ class TestGit(TestCaseTempFolder, TestCaseHelper):
             self.assertFileExists("0001-add-fileB.patch")
             self.assertFileExists("0002-change-fileA.patch")
 
+            # NOTE: patch files contain the version number of git. The host
+            # systems that is running the tests, may have a different git
+            # version installed.
+
+            git_version = git.version()
+
             self.assertFileContent("0001-add-fileB.patch", b"""\
 From 201213a1efdce5f80c9813df4150026f5bb885e0 Mon Sep 17 00:00:00 2001
 From: OTHER other <other@example.com>
@@ -54,9 +60,9 @@ index 0000000..223b783
 @@ -0,0 +1 @@
 +B
 -- 
-2.43.0
+X.YY.Z
 
-""")
+""".replace(b"X.YY.Z", git_version))
 
             self.assertFileContent("0002-change-fileA.patch", b"""\
 From fe13031c85d23e297321dbcaf09fc4f3360923e6 Mon Sep 17 00:00:00 2001
@@ -76,9 +82,9 @@ index f70f10e..3cc58df 100644
 -A
 +C
 -- 
-2.43.0
+X.YY.Z
 
-""")
+""".replace(b"X.YY.Z", git_version))
 
         with cwd("superproject", create=True):
             git = Git()

@@ -128,6 +128,13 @@ class Git():
 
         return data
 
+    def version(self):
+        p = self.call(["version"], capture_stdout=True)
+        if not p.stdout.startswith(b"git version "):
+            raise Exception("tbd")
+        # TODO Cache the version
+        return p.stdout[12:].rstrip(b"\n")
+
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
         # TODO use call()
