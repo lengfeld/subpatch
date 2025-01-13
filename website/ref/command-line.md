@@ -8,7 +8,7 @@ arguments and one command. It is the same as other popular tools like `git` or
     subpatch add <url> -r <revision>
 
 Here `status` and `add` are commands and `-r <revision>` is an optional
-argument. 
+argument.
 
 subpatch uses the [argparse module](https://docs.python.org/3/library/argparse.html) of python.
 So the following commands are equivalent:
@@ -18,7 +18,6 @@ So the following commands are equivalent:
     subpatch add -r <revision> <url>
     subpatch add <url> --revision=<revision>
     subpatch add <url> --revision <revision>
-
 
 
 ## subpatch status
@@ -51,3 +50,29 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.
+
+
+## Commands, not implemented yet
+
+The following list is a draft for additional commands. Subpatch will implement
+these in that form or another.
+
+* `rm <subproject>`: Remove subproject code and config data. The reverse of `add`.
+* `mv <subproject> <new directory for subproject>`:
+  Move/rename subproject to a new directory and update the config data
+* `foreach <command>`: Execute a shell command for every subproject.
+  All the other multi repository management tools also have such a command.
+  So subpatch also needs it. See `repo foreach` and `git submodule foreach`
+* `update [<subproject>]`: Update the subproject to the newest version
+* `check`: Verify subproject source code, patches and config
+    - check that subpatch config/subproject config is valid/consistent
+    - check that patches can be reverted to obtain the original source code
+    - check that a superproject diff/patch/commit-range does not break the
+      invariants. (This should be used in the CI)
+* `reformat`: reformat the subpatch config a consistent way. There also will be
+   some sort of `--check` argument to verify the style in a CI pipeline.
+* `create-patches`: from the last or multiple last commits of the subproject,
+  create patches for the subproject, to fullfill the invariant.
+* `root`: Show the root path of the superproject. Useful
+  for something like `croot` in the AOSP. For git the command looks like
+  `git rev-parse --show-toplevel`.
