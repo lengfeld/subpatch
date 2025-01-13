@@ -1,10 +1,12 @@
 # Releases
 
 This page lists all subpatch release with the release notes. The order is:
-newest/latest releases are at the top, oldest releases are at the bottom.
-
-To install subpatch, follow the steps in the
+newest/latest releases are at the top, oldest releases are at the bottom. To
+install subpatch, follow the steps in the
 [installation tutorial](../tut/installation.md).
+
+You always can download the latest standalone python script at the URL:
+[https://subpatch.net/downloads/latest/subpatch](https://subpatch.net/downloads/latest/subpatch)
 
 
 ## v0.1a3
@@ -30,11 +32,11 @@ Changes to the website
   [subpatch-website repo](https://github.com/lengfeld/subpatch-website) is archived
   now.
 
-Links:
+Further links:
 
 * [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a3)
-* [subpatch](https://github.com/lengfeld/subpatch/releases/download/v0.1a3/subpatch)
-  (standalone python script)
+* standalone python script for download:
+  [https://subpatch.net/downloads/v0.1a3/subpatch](https://subpatch.net/downloads/v0.1a3/subpatch)
 
 
 ## v0.1a2
@@ -42,8 +44,8 @@ Links:
 First release of subpatch. For now it supports only two commands: `add` and
 `status` with a very limited amount of functionality.
 
-Links:
+Further links:
 
 * [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a2)
-* [subpatch](https://github.com/lengfeld/subpatch/releases/download/v0.1a2/subpatch)
-  (standalone python script)
+* standalone python script for download:
+  [https://subpatch.net/downloads/v0.1a2/subpatch](https://subpatch.net/downloads/v0.1a2/subpatch)
