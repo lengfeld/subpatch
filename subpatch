@@ -536,7 +536,7 @@ def git_ls_remote(url):
     p = Popen(["git", "ls-remote", url], stdout=PIPE)
     stdout, _ = p.communicate()
     if p.returncode != 0:
-        raise Exception("todo")
+        raise Exception("git ls-remote failed")
 
     # Parse output
     # The output of ls-remote uses the tab character as the separator. The
@@ -654,11 +654,16 @@ class SubHelperGit:
 
                     git_reset_hard(clone_config.object_id)
         else:
+            # TODO This is really ugly!
+            assert not os.path.isabs(folder)
+            assert "//" not in folder  # sanitze path
+            folder_count = folder.rstrip("/").count("/") + 1
+
             with cwd(folder, create=True):
                 # TODO Not work with relative paths, because a subdir is used!
                 if get_url_type(url) == URLTypes.LOCAL_RELATIVE:
                     # This is ugly!
-                    url_tmp = "../" + url
+                    url_tmp = "../" * folder_count + url
                 else:
                     url_tmp = url
                 object_id = git_init_and_fetch(url_tmp, clone_config.ref)

@@ -545,6 +545,18 @@ Adding subproject '../subproject' into 'subproject'... Done.
 """ % (object_id_tag,))
             git.call(["reset", "--merge"])  # Remove all stagged changes
 
+            # Special case: Test revision argument with subdirectory for
+            # subproject. This was broken.
+            p = self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subdir/subproject"], stdout=DEVNULL)
+            self.assertFileExistsAndIsDir("subdir/subproject")
+            self.assertFileContent("subdir/subproject/file", b"initial")
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subdir/subproject\"]
+\turl = ../subproject
+\trevision = v1
+""")
+            git.call(["reset", "--merge"])  # Remove all stagged changes
+
 
 class TestNoGit(TestCaseHelper, TestSubpatch):
     def test_git_archive_export(self):
