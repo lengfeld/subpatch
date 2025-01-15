@@ -454,6 +454,7 @@ Adding subproject '../subproject' into 'subproject'... Done.
             git = Git()
             object_id_file = git.get_sha1("main:file")
             self.assertEqual(ObjectType.BLOB, git_get_object_type(object_id_file))
+            self.assertEqual(b"177324cdffb43c57471674a4655a2a513ab158f5", object_id_file)
 
         with cwd("superproject", create=True):
             git = Git()
