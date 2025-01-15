@@ -475,13 +475,10 @@ Adding subproject '../subproject' into 'subproject'... Done.
             self.assertEqual(b"Error: Invalid arguments: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
                              p.stderr)
 
-    def test_invalid_revision(self):
-        git = Git()
-        git.init()
-        p = self.run_subpatch(["add", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
-        self.assertEqual(4, p.returncode)
-        self.assertEqual(b"Error: Invalid arguments: revision 'refs/heads\nmain' is invalid\n",
-                         p.stderr)
+            p = self.run_subpatch(["add", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
+            self.assertEqual(4, p.returncode)
+            self.assertEqual(b"Error: Invalid arguments: revision 'refs/heads\nmain' is invalid\n",
+                             p.stderr)
 
     def test_with_revision(self):
         with cwd("subproject", create=True):
