@@ -387,7 +387,7 @@ Adding subproject '../subproject' into 'subproject'... Done.
             git = Git()
             p = self.run_subpatch(["add", "../subproject", ""], stdout=DEVNULL, stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid arguments: path is empty\n",
+            self.assertEqual(b"Error: Invalid argument: path is empty\n",
                              p.stderr)
 
     def test_absolute_paths_are_not_supported(self):
@@ -462,23 +462,23 @@ Adding subproject '../subproject' into 'subproject'... Done.
 
             p = self.run_subpatch(["add", "../subproject", "-r", "main-does-not-exists"], stdout=DEVNULL, stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid arguments: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
+            self.assertEqual(b"Error: Invalid argument: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
                              p.stderr)
 
             invalid_object_id = b"0" * 40
             p = self.run_subpatch(["add", "../subproject", "-r", invalid_object_id], stdout=DEVNULL, stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid arguments: Object id '0000000000000000000000000000000000000000' does not point to a valid object!\n",
+            self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' does not point to a valid object!\n",
                              p.stderr)
 
             p = self.run_subpatch(["add", "../subproject", "-r", object_id_file], stdout=DEVNULL, stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid arguments: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
+            self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
                              p.stderr)
 
             p = self.run_subpatch(["add", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid arguments: revision 'refs/heads\nmain' is invalid\n",
+            self.assertEqual(b"Error: Invalid argument: revision 'refs/heads\nmain' is invalid\n",
                              p.stderr)
 
     def test_with_revision(self):

@@ -1218,7 +1218,7 @@ def main():
         elif e._code == ErrorCode.INVALID_ARGUMENT:
             # TODO change structure of errors. It contains two colons now.
             # Looks ugly.
-            print("Error: Invalid arguments: %s" % (e,), file=sys.stderr)
+            print("Error: Invalid argument: %s" % (e,), file=sys.stderr)
         elif e._code == ErrorCode.CUSTOM:
             print("Error: %s" % (e,), file=sys.stderr)
         else:
