@@ -21,7 +21,7 @@ from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      config_parse, config_add_section, split_with_ts, config_unparse, \
                      is_valid_revision, subprojects_parse, Subproject, \
                      git_diff_name_only, is_cwd_toplevel_directory, git_ls_files_untracked, \
-                     parse_z, find_superproject, SCMType
+                     parse_z, find_superproject, SCMType, parse_sha1_names
 
 
 class TestConfigParse(unittest.TestCase):
@@ -345,7 +345,25 @@ class TestGit(TestCaseTempFolder):
         self.assertEqual(b"e85c40dcd26466c0052323eb767d1a44ef0a12c1",
                          refs_sha1[b"refs/tags/v1.1"])
 
-    def test_git_ls_remote(self):
+    def test_parse_sha1_names(self):
+        self.assertEqual(parse_sha1_names(b"""\
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\tHEAD
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\trefs/heads/main
+cccccccccccccccccccccccccccccccccccccccc\trefs/tags/v0.1a2
+dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
+""", sep=b"\t"), {b"HEAD": b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  b"refs/heads/main": b"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  b"refs/tags/v0.1a2": b"cccccccccccccccccccccccccccccccccccccccc",
+                  b"refs/tags/v0.1a2^{}": b"dddddddddddddddddddddddddddddddddddddddd",
+                  })
+
+        # Empty file
+        self.assertEqual(parse_sha1_names(b""), {})
+
+        # With empty lines
+        self.assertEqual(parse_sha1_names(b"\n\n\n"), {})
+
+    def test_git_ls_remote_guess_ref(self):
         with cwd("remote", create=True):
             create_git_repo_with_branches_and_tags()
 

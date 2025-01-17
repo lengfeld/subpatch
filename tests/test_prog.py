@@ -399,6 +399,23 @@ Adding subproject '../subproject' into 'subproject'... Done.
             self.assertEqual(b"Error: Absolute local paths to a remote repository are not supported!\n",
                              p.stderr)
 
+    def test_remote_git_repo_is_empty(self):
+        with cwd("subproject", create=True):
+            git = Git()
+            git.init()
+
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+
+            # TODO Implemented "--quiet"
+            p = self.run_subpatch(["add", "../subproject", "-r", "master"], stdout=PIPE, stderr=PIPE)
+            self.assertEqual(4, p.returncode)
+            self.assertEqual(b"Error: Invalid argument: The reference 'master' cannot be resolved to a branch or tag!\n",
+                             p.stderr)
+
+            # TODO add test without "-r" argument. The internal code behaves differently!
+
     def test_add_with_extra_path(self):
         create_super_and_subproject()
         with cwd("superproject"):

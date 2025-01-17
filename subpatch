@@ -509,21 +509,25 @@ def is_valid_revision(revision):
 
 # parse_sha1_names :: bytes -> dict
 # TODO add example of input
-# TODO add tests
+# TODO add more tests, e.g. with syntax errors or duplicated refs.
 def parse_sha1_names(lines, sep=b' '):
     # remove the last new line character
     # Should only be one character
     lines = lines.rstrip(b'\n')
 
-    lines = [line.split(sep) for line in lines.split(b'\n')]
+    # Ignore empty lines
+    lines = [line.split(sep) for line in lines.split(b'\n') if len(line) != 0]
+
     for line in lines:
         if len(line) != 2:
             raise Exception("Parsing error in line: sep = %s parts = %s" % (sep, line))
     lines = [(name, sha1) for sha1, name in lines]
+
     # checks
     for _, sha1 in lines:
         if not is_sha1(sha1):
             raise ValueError("String is not a SHA1 sum: %s" % (sha1,))
+
     return dict(lines)
 
 
