@@ -55,5 +55,6 @@ list all the other tools I have found so far:
 * [Git X-Modules](https://gitmodules.com/)
 * [GitSlave](https://gitslave.sourceforge.net/)
 * [Combo-layer](https://wiki.yoctoproject.org/wiki/Combo-layer)
+* [Josh](https://github.com/josh-project/josh)
 
 If you know additional tools, please post a pull request or email me.
