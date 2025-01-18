@@ -8,7 +8,8 @@ nav:
   - Explanations:
     - Introduction: 'exp/intro.md'
     - Pre-subpatch history: 'exp/history.md'
-    - subpatch design: 'exp/design.md'
+    - Requirements: 'exp/requirements.md'
+    - Design decisions: 'exp/design.md'
     - Comparison to other tools: 'exp/comparison.md'
 #   - Frequently Asked Questions : 'exp/faq.md'
   - Tutorials:
