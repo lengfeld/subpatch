@@ -14,8 +14,9 @@ status of the implementation.
 
 The tool …
 
-(**R1**) should support git, cvs, mercurial, subversion and non-cvs environment
-as superprojects.
+(**R1**) should support git as the primary scm tool for the superproject and
+cvs, mercurial, subversion and non-scm environment as functional but limited
+superprojects.
 
 (**R2**) do not interfere with the vcs. The existing workflows
 like checking out, cloning, switching branches, updating, rebasing, tagging,
@@ -58,3 +59,22 @@ users.
 
 If you want to find more about the development and implementation, you can
 continue reading on the page [design decisions](design.md).
+
+
+## Change history
+
+Update to *R1* on 2025-01-12: subpatch only supports git as a superproject with
+all features.
+
+Background: The requirement R1 was modified. Not all scm tools are supported
+fully anymore.  The full functionality will only be available if the
+superproject is a git repository.
+
+Reasons: Avoid rewriting existing functionality, e.g. applying patches,
+calculating a tree checksum, maintaining and listing tracked (and non-tracked)
+files. If the superproject is not git or not a scm at all, these functions need
+to be implemented in subpatch. Why reimplementing existing functionality?
+
+This learning I had already in the past. See learning L1 on
+[history](history.md): The solution is inside a scm tool. subpatch should not
+try or need to reimplementing existing functionality.
