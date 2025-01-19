@@ -29,4 +29,4 @@ here.
 
 TODO add [+] points here
 
-*NOTE*: This list is not completed yet and should grow while supbatch is developed.
+*Note*: This list is not completed yet and should grow while supbatch is developed.

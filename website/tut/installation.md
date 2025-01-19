@@ -37,7 +37,7 @@ To install pipx on Ubuntu, execute
 
     $ sudo apt install pipx
 
-*NOTE*: For other distributions use the distro specific package manager.
+*Note*: For other distributions use the distro specific package manager.
 
 To check if pipx works, you can execute the `list` command. An example:
 
@@ -98,7 +98,7 @@ The change will only be active in new shells that are spawned now. So start a ne
 
     $ bash
 
-*NOTE*: This tutorial assumes that you are using bash. If you use another
+*Note*: This tutorial assumes that you are using bash. If you use another
 shell, like zsh or fish, you mostly already know everything in the tutorial and
 can adapt it yourself :-)
 

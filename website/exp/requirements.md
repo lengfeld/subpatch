@@ -5,7 +5,7 @@ engineer. Everything that I have seen and done in the last ten years feeds into
 the following list of requirements. See the [history page](history.md) for
 details.
 
-*NOTE*: For now the implementation of subpatch not complete. Please read the
+*Note*: For now the implementation of subpatch not complete. Please read the
 requirement list as a vision for the first major release of subpatch, not as a
 status of the implementation.
 
@@ -50,6 +50,7 @@ for updates or for CVEs.
 python, like Linux, unixes, Windows and MacOS.
 
 (**R12**) should scale to the size of the AOSP (Android Open Source Project).
+
 
 ## Conclusion
 
