@@ -8,6 +8,10 @@ install subpatch, follow the steps in the
 You always can download the latest standalone python script at the URL:
 [https://subpatch.net/downloads/latest/subpatch](https://subpatch.net/downloads/latest/subpatch)
 
+**Warning**: subpatch is in a very *very* early stage. Do not use it in
+production environments! E.g. the config format will change. Nevertheless
+please try it out. Any feedback is welcome.
+
 
 ## v0.1a3
 

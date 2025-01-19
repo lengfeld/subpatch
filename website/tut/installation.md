@@ -6,8 +6,9 @@ there are two ways to install subpatch:
 1. With [pipx](https://pipx.pypa.io/stable/) into your HOME directory
 2. As a standalone script into the PATH
 
-**NOTE**: subpatch is currently in a very *very* early stage. Do not use it in
-production environments!
+**Warning**: subpatch is in a very *very* early stage. Do not use it in
+production environments! E.g. the config format will change. Nevertheless
+please try it out. Any feedback is welcome.
 
 
 ## Prerequisites
