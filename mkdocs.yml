@@ -15,6 +15,8 @@ nav:
   - Tutorials:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'
+  - How-Tos:
+    - Project based on Yocto: 'howto/yocto.md'
   - Reference:
     - Command line arguments: 'ref/command-line.md'
     - Glossary: 'ref/glossary.md'
