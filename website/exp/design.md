@@ -14,7 +14,7 @@ here.
 
 **DD2**: config file format is `git-config`
 
-* [+] the same config format that the main cvs for subpatch (=git) uses.
+* [+] the same config format that the main scm tool for subpatch (=git) uses.
 * [+] Most developers are already familiar with the config format, e.g. because
   they are modyfing `~/.git config`.
 
