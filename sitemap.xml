@@ -41,6 +41,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://subpatch.net/howto/yocto/</loc>
+         <lastmod>2025-01-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://subpatch.net/ref/command-line/</loc>
          <lastmod>2025-01-19</lastmod>
          <changefreq>daily</changefreq>
