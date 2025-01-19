@@ -1,0 +1,59 @@
+From 61b3e5fbd82dd0d486a2c5b261e3f3195db80314 Mon Sep 17 00:00:00 2001
+From: Stefan Lengfeld <stefan@lengfeld.xyz>
+Date: Sun, 12 Jan 2025 01:26:30 +0100
+Subject: [PATCH] website: rewrite R1
+
+---
+ website/exp/design.md | 22 +++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/website/exp/design.md b/website/exp/design.md
+index c1ffd57..b05f891 100644
+--- a/website/exp/design.md
++++ b/website/exp/design.md
+@@ -14,8 +14,9 @@ status of the implementation.
+ 
+ The tool …
+ 
+-(**R1**) should support git, cvs, mercurial, subversion and non-cvs environment
+-as superprojects.
++(**R1**) should support git as the primary scm tool for the superprojects and
++cvs, mercurial, subversion and non-scm environment as functional but limited
++superprojects.
+ 
+ (**R2**) do not interfere with the vcs. The existing workflows
+ like checking out, cloning, switching branches, updating, rebasing, tagging,
+@@ -66,7 +67,7 @@ Therefore the chosen decisions are documented and explained here.
+ 
+ **DD2**: config file format is `git-config`
+ 
+-* [+] the same config format that the main cvs for subpatch (=git) uses.
++* [+] the same config format that the main scm tool for subpatch (=git) uses.
+ * [+] Most developers are already familiar with the config format, e.g. because
+   they are modyfing `~/.git config`.
+ 
+@@ -81,6 +82,21 @@ Therefore the chosen decisions are documented and explained here.
+ 
+ TODO add [+] points here
+ 
++**DD5**: subpatch only supports git as a superproject with all features.
+ 
++Background: The requirement R1 was modified. Not all scm tools are fully
++supported anymore.  The full functionality will only be available if the
++superproject is a git repository.
++
++Reasons: Avoid rewriting existing functionality, e.g. applying patches,
++calculating a tree checksum, maintaining and listing tracked (and non-tracked)
++files. If the superproject is not git or not a scm at all, these functions need
++to be implemented in subpatch. Why reimplementing existing functionality?
++
++This learning I had already in the past. See learning L1 on
++[history](history.md): The solution is inside a scm tool. subpatch should not
++try or need to reimplementing existing functionality.
++
++--
+ 
+ *NOTE:* This list is not completed yet and should grow while supbatch is developed.
+-- 
+2.34.1
+

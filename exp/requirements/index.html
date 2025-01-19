@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/design/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/requirements/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Design decisions - subpatch</title>
+    <title>Requirements - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Design decisions";
-        var mkdocs_page_input_path = "exp/design.md";
-        var mkdocs_page_url = "/exp/design/";
+        var mkdocs_page_name = "Requirements";
+        var mkdocs_page_input_path = "exp/requirements.md";
+        var mkdocs_page_url = "/exp/requirements/";
       </script>
     
     <!--[if lt IE 9]>
@@ -49,11 +49,17 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
-                  </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Design decisions</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Requirements</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#list-of-requirements">List of requirements</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#change-history">Change history</a>
+    </li>
     </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
@@ -93,7 +99,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Explanations</li>
-      <li class="breadcrumb-item active">Design decisions</li>
+      <li class="breadcrumb-item active">Requirements</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -102,40 +108,66 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h2 id="design-decisions">Design decisions</h2>
-<p>While developing subpatch, I took the following design decisions. The
-<a href="../requirements/">requirement list</a> still gives a lot of freedom for the
-implementation. Therefore this page documents and explains the chosen decisions
-here.</p>
-<p><strong>DD1</strong>: written in python3 (but open for a port to another language later if successful)</p>
-<ul>
-<li>[+] faster iteration speed</li>
-<li>[+] Easier deployment/install for users of subpatch. python runs everywhere.</li>
-<li>[+] Programming language that I know really good and written a lot of code
-  already.</li>
-</ul>
-<p><strong>DD2</strong>: config file format is <code>git-config</code></p>
-<ul>
-<li>[+] the same config format that the main scm tool for subpatch (=git) uses.</li>
-<li>[+] Most developers are already familiar with the config format, e.g. because
-  they are modyfing <code>~/.git config</code>.</li>
-</ul>
-<p><strong>DD3</strong>: The config is a single file and placed at the root of the repository</p>
-<ul>
-<li>[+] The project's root directory can be found even without scm. E.g. after
-  the source code was exported with <code>git archive</code>.</li>
-<li>[+] A single file avoids a search in all sub directories. Can be expensive
-  for big projects.</li>
-</ul>
-<p><strong>DD4</strong>: Published as a standalone and single python script</p>
-<p>TODO add [+] points here</p>
-<p><em>NOTE</em>: This list is not completed yet and should grow while supbatch is developed.</p>
+                <h1 id="requirements">Requirements</h1>
+<p>I based subpatch on my experiences and learnings as a (embedded) software
+engineer. Everything that I have seen and done in the last ten years feeds into
+the following list of requirements. See the <a href="../history/">history page</a> for
+details.</p>
+<p><em>NOTE</em>: For now the implementation of subpatch not complete. Please read the
+requirement list as a vision for the first major release of subpatch, not as a
+status of the implementation.</p>
+<h2 id="list-of-requirements">List of requirements</h2>
+<p>The tool …</p>
+<p>(<strong>R1</strong>) should support git as the primary scm tool for the superproject and
+cvs, mercurial, subversion and non-scm environment as functional but limited
+superprojects.</p>
+<p>(<strong>R2</strong>) do not interfere with the vcs. The existing workflows
+like checking out, cloning, switching branches, updating, rebasing, tagging,
+forking, bisecting, releasing and ... should stay the same.</p>
+<p>(<strong>R3</strong>) should support git, cvs, mercurial, subversion and source
+code archives (like tarballs or zip files) as source dependencies/subprojects.</p>
+<p>(<strong>R4</strong>) should track the original metadata (e.g. url, commit ids,
+checksums, ... ) of the source dependency to verify the authenticity of the
+dependency later.</p>
+<p>(<strong>R5</strong>) should help integrating updates of the source dependencies.</p>
+<p>(<strong>R6</strong>) should support local patching of source dependencies.</p>
+<p>(<strong>R7</strong>) If the source dependency is patched locally, it should help
+maintaining a linear patch stack.</p>
+<p>(<strong>R8</strong>) should rebase local patches automatically, when doing an update of a
+source dependency and there are <em>no conflicts</em> with the local patches.</p>
+<p>(<strong>R9</strong>) should help porting the local patches, when doing an update of a
+source dependency and there are <em>conflicts</em> with the local patches.</p>
+<p>(<strong>R10</strong>) should provided an stable command line API (plumbing commands) to
+support other tools to track source dependencies, e.g. to automatically check
+for updates or for CVEs.</p>
+<p>(<strong>R11</strong>) should support every development platform that also supports git and
+python, like Linux, unixes, Windows and MacOS.</p>
+<p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The list of requirements is the design goal of subpatch. It describes the
+properties and capabilities an implementation should fulfil and provide for its
+users.</p>
+<p>If you want to find more about the development and implementation, you can
+continue reading on the page <a href="../design/">design decisions</a>.</p>
+<h2 id="change-history">Change history</h2>
+<p>Update to <em>R1</em> on 2025-01-12: subpatch only supports git as a superproject with
+all features.</p>
+<p>Background: The requirement R1 was modified. Not all scm tools are supported
+fully anymore.  The full functionality will only be available if the
+superproject is a git repository.</p>
+<p>Reasons: Avoid rewriting existing functionality, e.g. applying patches,
+calculating a tree checksum, maintaining and listing tracked (and non-tracked)
+files. If the superproject is not git or not a scm at all, these functions need
+to be implemented in subpatch. Why reimplementing existing functionality?</p>
+<p>This learning I had already in the past. See learning L1 on
+<a href="../history/">history</a>: The solution is inside a scm tool. subpatch should not
+try or need to reimplementing existing functionality.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../requirements/" class="btn btn-neutral float-left" title="Requirements"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../comparison/" class="btn btn-neutral float-right" title="Comparison to other tools">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../history/" class="btn btn-neutral float-left" title="Pre-subpatch history"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../design/" class="btn btn-neutral float-right" title="Design decisions">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -158,10 +190,10 @@ here.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../requirements/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../history/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../comparison/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../design/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
