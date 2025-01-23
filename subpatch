@@ -435,8 +435,8 @@ def git_add(args):
 # TODO clarify naming: path, filename, url
 # TODO clairfy name for remote git name and path/url
 
-# Namings:
-# Git namings
+# Naming:
+# Git naming
 #  - object: something in the object store that has a SHA1
 #  - object type: type of the object. Can be blob, tree, commit or tag.
 #  - object id: the hash of the object (taken from the git source code)
@@ -788,12 +788,12 @@ def cmd_update(args, parser):
 
     # TODO Download new version
     if args.url is not None:
-        # TODO verify url
+        # TODO verify URL
         sub_url = args.url
     else:
         sub_url = subproject.url
     if args.revision is not None:
-        # TODO verify reivison
+        # TODO verify revision
         revision = args.revision
     else:
         revision = subproject.revision  # Can also be None!
@@ -848,6 +848,7 @@ def cmd_update(args, parser):
             self._args.clear()
 
     # Just quick and try remove and copy!
+    # TODO convert this code to "superhelper" implementation
     with cwd(superx.path):
         git_rm = GitCommandBachter(["git", "rm", "-q"])
         for path in git_ls_tree_in_dir(paths.super_to_sub_relpath):
@@ -855,6 +856,7 @@ def cmd_update(args, parser):
         git_rm.exec_force()
 
     # and copy
+    # TODO convert this code to "superhelper" implementation
     os.makedirs(paths.cwd_to_sub_relpath, exist_ok=True)
     with cwd(local_tmp_abspath):
         git_add = GitCommandBachter(["git", "add", "-f"])
@@ -1181,7 +1183,7 @@ class Paths:
     super_to_cwd_relpath: bytes
     super_to_sub_relpath: bytes
     cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
-    sub_name: bytes  # Can be b"" when subproject is a the toplevel directory
+    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory
 
 
 # Paths documentation and naming
@@ -1191,7 +1193,6 @@ class Paths:
 #
 #     super_abspath:       ../folder/superproject
 #       other name: "top level directory" TODO unify
-#     cwd_abspath:         ../folder/superproject/dirA
 #     config_abspath:      ../folder/superproject/.subpatch
 #     super_to_sub_relpath:                       dirA/dirB/subproject
 #     super_to_cwd_relpath:                       dirA
@@ -1217,6 +1218,7 @@ def do_paths(super_abspath, cwd_to_sub_relpath):
     assert is_relpath(cwd_to_sub_relpath)
     # TODO test and ensure that paths are normalized!!
 
+    # Sanitize input path
     if cwd_to_sub_relpath != b"":
         cwd_to_sub_relpath = os.path.relpath(cwd_to_sub_relpath)
         if cwd_to_sub_relpath == b".":
@@ -1356,7 +1358,7 @@ def cmd_status(args, parser):
 
     # TODO add argument for a path to a single subproject and then only list
     # the status of this subproject
-    # TODO allow th cwd to select the subproject
+    # TODO allow the cwd to select the subproject
     paths = do_paths(superx.path, b"")
 
     if not is_cwd_toplevel_directory(paths):
