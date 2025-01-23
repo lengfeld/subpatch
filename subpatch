@@ -167,8 +167,8 @@ def config_remove_section(parts_list, section_name, subsection_name):
 class Subproject:
     # TODO Document with fields can be None
     path: str
-    url: str = None
-    revision: str = None
+    url: str | None = None
+    revision: str | None = None
 
 
 # Read the config file into Subproject objects
@@ -278,9 +278,9 @@ class SCMType(Enum):
 # NOTE: In both cases it's the topdir path!
 @dataclass
 class FindSuperprojectData:
-    super_path: bytes = None
-    scm_type: SCMType = None
-    scm_path: bytes = None
+    super_path: bytes | None = None
+    scm_type: SCMType | None = None
+    scm_path: bytes | None = None
 
 
 # Based on the current work directory search for a subpatch project
@@ -381,7 +381,7 @@ def git_reset_hard(sha1):
         raise Exception("git failure")
 
 
-def is_sha1(sha1):
+def is_sha1(sha1: bytes):
     assert isinstance(sha1, bytes)
     if len(sha1) != 40:
         return False
@@ -607,17 +607,17 @@ def git_ls_remote_guess_ref(url, ref):
     return None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DownloadConfig:
     url: Any
     revision: Any = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class CloneConfig:
     full_clone: bool
-    object_id: str = None
-    ref: str = None
+    object_id: str | None = None
+    ref: str | None = None
 
 
 # 'revision' can be None
@@ -656,7 +656,7 @@ class SubHelperGit:
 
     # Download remote repository, checkout the request revision, remove
     # repository metadata and leave the plan files in the dir 'local_tmp_name'.
-    def download(self, download_config, folder):
+    def download(self, download_config: DownloadConfig, folder):
         # NOTE "git submodule init" creates a bare repository in ".git/modules"
         # TODO maybe also use that folder as a scrat pad.
         # TODO clone only a single branch and maybe use --depth 1
@@ -1272,7 +1272,7 @@ def cmd_list(args, parser):
 
 # Parse the "-z" output of git commands
 # TODO rework as a generator
-def parse_z(b):
+def parse_z(b: bytes) -> list[bytes]:
     if b == b"":
         # Special case. b"".split(b"\0") is [b""], but
         # we want a list without elements here.
