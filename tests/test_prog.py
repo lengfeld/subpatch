@@ -309,6 +309,29 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
                               b"A\tdirA/hello",
                               b"A\tdirB/hello"])
 
+    def test_gitignore_in_subproject(self):
+        # Testing for a bug. There was a "-f" missing for "git add".
+        with cwd("subproject", create=True):
+            git = Git()
+            git.init()
+            touch("a")
+            touch(".gitignore", b"a\n")
+            git.add(".gitignore")
+            git.call(["add", "-f", "a"])
+            git.commit("first commit")
+
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+
+            self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
+            self.assertFileContent("subproject/a", b"")
+            self.assertFileContent("subproject/.gitignore", b"a\n")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tsubproject/.gitignore",
+                              b"A\tsubproject/a"])
+
     def test_subproject_directory_already_exists(self):
         create_super_and_subproject()
 
