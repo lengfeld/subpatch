@@ -45,6 +45,16 @@ def create_git_repo_with_branches_and_tags():
     git.call(["switch", "-q", "main"])
 
 
+# TODO copied from subpatch. Unify again
+def parse_z(b):
+    if b == b"":
+        # Special case. b"".split(b"\0") is [b""], but
+        # we want a list without elements here.
+        return []
+
+    return b.rstrip(b"\0").split(b"\0")
+
+
 # TODO Make this to GitExtra or GitTests and also have a Git class in
 # subpatch.py.
 class Git():
@@ -138,12 +148,27 @@ class Git():
     def diff_staged_files(self):
         # TODO use '\0' delimeter instead of '\n'
         # TODO use call()
+        # TODO merge with code in "subpatch.py"
         p = Popen(["git", "diff", "--name-status", "--staged"], stdout=PIPE, env=self._env)
         stdout, _ = p.communicate()
         if p.returncode != 0:
             raise Exception("error here")
 
-        return stdout.rstrip(b"\n").split(b"\n")
+        if stdout == b"":
+            return []
+        else:
+            return stdout.rstrip(b"\n").split(b"\n")
+
+    def diff(self, staged=False):
+        cmd = ["git", "diff"]
+        if staged:
+            cmd.append("--staged")
+        p = Popen(cmd, stdout=PIPE, env=self._env)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("error here")
+
+        return stdout
 
     def cat_file(self, rev):
         p = Popen(["git", "cat-file", "-p", rev], stdout=PIPE, env=self._env)

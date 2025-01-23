@@ -36,7 +36,7 @@ URL, integrated revision and whether the files of the subproject are changed.
 E.g. if there are untracked files, unstaged changes or staged, but uncommitted
 changes.
 
-It's similiar to `git status`, but not for the whole repository. Only for the
+It's similar to `git status`, but not for the whole repository. Only for the
 subprojects.
 
 
@@ -44,9 +44,9 @@ subprojects.
 
     subpatch add <url> [<path>] [--revision | -r <revision>]
 
-Add the subproject at `url` at the optional `path` in the current repository.
-Currently `url` can only point to a git repository. Other subproject types
-are not supported yet.
+Add the remote project specified by `url` as a subproject at the optional
+`path` in the current repository.  Currently `url` can only point to a git
+repository. Other subproject types are not supported yet.
 
 The `path` is optional. If it's omitted the canonical subproject name is used.
 It's mostly the last folder name in the `url`. If `path` is provided it can
@@ -62,6 +62,24 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.
+
+
+## subpatch update
+
+    subpatch update <path> [--revision | -r <revision>] [--url | -r <url>]
+
+Update the subproject at `path`. subpatch downloads the remote repository at
+`url` and unpacks the source files specified by the `revision`. All existing
+and tracked files of the subproject are removed and replaced by the downloaded
+files.
+
+If no `--revision` argument is given, subpatch uses the value from the config.
+Otherwise subpatch uses the new `revision` from the command line and updates
+the value in the config.
+
+If no `--url` argument is given, subpatch uses the value from the config.
+Otherwise subpatch uses the new `url` from the command line and updates the
+value in the config.
 
 
 ## Commands, not implemented yet

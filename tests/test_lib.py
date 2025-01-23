@@ -20,8 +20,9 @@ from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
                      git_ls_remote_guess_ref, git_verify, \
                      config_parse, config_add_section, split_with_ts, config_unparse, \
                      is_valid_revision, subprojects_parse, Subproject, \
-                     git_diff_name_only, is_cwd_toplevel_directory, git_ls_files_untracked, \
-                     parse_z, find_superproject, SCMType, parse_sha1_names
+                     git_diff_name_only, git_ls_files_untracked, \
+                     parse_z, find_superproject, SCMType, parse_sha1_names, \
+                     git_diff_in_dir, do_paths, git_ls_tree_in_dir, config_remove_section
 
 
 class TestConfigParse(unittest.TestCase):
@@ -112,6 +113,46 @@ name = value
 [a "b"]
 name = value
 [b]
+""")
+
+    def test_remove_section(self):
+        def test(config, section_name, subsection_name, result_ok_as_str):
+            parts_list = config_parse(split_with_ts(config))
+            result_actual = config_remove_section(parts_list, section_name, subsection_name)
+            result_ok = config_parse(split_with_ts(result_ok_as_str))
+            self.assertEqual(list(result_actual), list(result_ok))
+
+        # TODO actual this should be seperate test functions!
+        # Section is removed
+        test("""\
+[a "a"]
+x = y
+[a "c"]
+x = y
+""", "a", "a", """\
+[a "c"]
+x = y
+""")
+
+        # Nothing is removed
+        test("""\
+[a "a"]
+[a "c"]
+""", "a", "x", """\
+[a "a"]
+[a "c"]
+""")
+        # Two times the second is removed!
+        test("""\
+[a "a"]
+x = y
+[a "c"]
+x = y
+[a "a"]
+x = y
+""", "a", "a", """\
+[a "c"]
+x = y
 """)
 
 
@@ -474,6 +515,80 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         # And it's not listed anymore. Great!
         self.assertEqual([], git_ls_files_untracked())
 
+    def test_git_diff_in_dir(self):
+        git = Git()
+        git.init()
+        top_dir = os.getcwdb()
+
+        mkdir("dir")
+        touch("dir/a")
+        touch("b")
+        git.add("dir/a")
+        git.add("b")
+        git.commit("add a and b")
+
+        # Without any changes
+        self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+        self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+        with cwd("dir"):
+            self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+            self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+
+        # With unstaged changes in other part of the repo
+        touch("b", b"changes")
+        self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+        self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+        with cwd("dir"):
+            self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+            self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+
+        # With staged changes in other part of the repo
+        git.add("b")
+        self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+        self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+        with cwd("dir"):
+            self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+            self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+
+        # With unstaged changes in the subdir
+        touch("dir/a", b"changes")
+        self.assertTrue(git_diff_in_dir(top_dir, "dir"))
+        self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+        with cwd("dir"):
+            self.assertTrue(git_diff_in_dir(top_dir, "dir"))
+            self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
+
+        # With staged changes in the subdir
+        git.add("dir/a")
+        self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+        self.assertTrue(git_diff_in_dir(top_dir, "dir", staged=True))
+        with cwd("dir"):
+            self.assertFalse(git_diff_in_dir(top_dir, "dir"))
+            self.assertTrue(git_diff_in_dir(top_dir, "dir", staged=True))
+
+    def test_git_ls_tree_in_dir(self):
+        git = Git()
+        git.init()
+        top_dir = os.getcwdb()
+
+        mkdir("dir")
+        touch("dir/a")
+        touch("b")
+        git.add("dir/a")
+        git.add("b")
+        git.commit("add a and b")
+
+        self.assertEqual([b"b", b"dir/a"], git_ls_tree_in_dir(b""))
+        self.assertEqual([b"dir/a"], git_ls_tree_in_dir(b"dir"))
+        self.assertEqual([], git_ls_tree_in_dir(b"does-not-exists-dir"))
+
+        # If the cwd is a subdirectory, the output and the argument are still
+        # relative to the toplevel of the repository.
+        with cwd("dir"):
+            self.assertEqual([b"b", b"dir/a"], git_ls_tree_in_dir(b""))
+            self.assertEqual([b"dir/a"], git_ls_tree_in_dir(b"dir"))
+            self.assertEqual([], git_ls_tree_in_dir(b"does-not-exists-dir"))
+
 
 class TestFuncs(unittest.TestCase):
     def test_get_url_type(self):
@@ -514,17 +629,67 @@ class TestFuncs(unittest.TestCase):
         self.assertEqual([b"xx", b"yy"], parse_z(b"xx\0yy\0"))
 
 
-class TestMisc(TestCaseTempFolder):
-    def test_is_cwd_toplevel_directory(self):
-        git = Git()
-        git.init()
+class TestDoPaths(TestCaseTempFolder):
+    def test_multiple_level_of_subdirectories(self):
+        super_abspath = os.getcwdb()
+        paths = do_paths(super_abspath, b"sub1/sub2")
+        self.assertEqual(paths.super_abspath, super_abspath)
+        self.assertEqual(paths.super_to_cwd_relpath, b"")
+        self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(paths.cwd_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(paths.sub_name, b"sub2")
 
-        super_abspath = git_get_toplevel()
+        with cwd("sub1", create=True):
+            paths = do_paths(super_abspath, b"sub2")
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"sub2")
+            self.assertEqual(paths.sub_name, b"sub2")
 
-        self.assertTrue(is_cwd_toplevel_directory(super_abspath))
+        with cwd("sub1/sub2", create=True):
+            paths = do_paths(super_abspath, b"")
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"")
+            self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("subdir", create=True):
-            self.assertFalse(is_cwd_toplevel_directory(super_abspath))
+        with cwd("sub1/sub2/sub3", create=True):
+            paths = do_paths(super_abspath, b"..")
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"..")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        with cwd("sub1/sub2/sub3/sub4", create=True):
+            paths = do_paths(super_abspath, b"../..")
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3/sub4")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"../..")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        # Special case for sub_name: superproject at the toplevel directory
+        paths = do_paths(super_abspath, b"")
+        self.assertEqual(paths.super_abspath, super_abspath)
+        self.assertEqual(paths.super_to_cwd_relpath, b"")
+        self.assertEqual(paths.super_to_sub_relpath, b"")
+        self.assertEqual(paths.cwd_to_sub_relpath, b"")
+        self.assertEqual(paths.sub_name, b"")
+
+    def test_argument_is_normalized(self):
+        super_abspath = os.getcwdb()
+        with cwd("sub1/sub2/", create=True):
+            paths = do_paths(super_abspath, b"..")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"..")
+
+            paths = do_paths(super_abspath, b"../.")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"..")
+
+            paths = do_paths(super_abspath, b".")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"")
 
 
 if __name__ == '__main__':
