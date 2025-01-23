@@ -816,6 +816,9 @@ def cmd_update(args, parser):
     # current git and let git of the superproject check it out.
     local_tmp_name = paths.cwd_to_sub_relpath + b"-tmp"
 
+    # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
+    # download!
+
     # subpatch download
     download_config = DownloadConfig(url=sub_url, revision=revision)
     # Fetch remote repository/tarball into local folder and checkout the
@@ -916,6 +919,15 @@ def cmd_update(args, parser):
     # TODO reapply patches
 
     print(" Done.")
+
+    # TODO think about this case. Maybe add an argument to make this an error.
+    if not git_diff_in_dir(superx.path, paths.super_to_sub_relpath, staged=True):
+        # There are no changes in the subproject directory and in the metadata.
+        # Nothing has changed! And so there is nothing to commit!
+        # NOTE: So also don't show the commands to commit and inspect the
+        # changes.
+        print("Note: There are no changes in the subproject. Nothing to commit!")
+        return 0
 
     # TODO show diff state
 

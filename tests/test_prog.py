@@ -868,6 +868,20 @@ Updating subproject 'subproject' from URL 'http://localhost:8000/subproject/.git
             self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(), [b"A\tsubproject/b"])
 
+    def test_update_has_no_changes(self):
+        self.create_subproject()
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subproject"], stdout=PIPE)
+            git.commit("add subproject")
+
+            p = self.run_subpatch_ok(["update", "-r", "v1", "subproject"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"""\
+Updating subproject 'subproject' from URL '../subproject' to revision 'v1'... Done.
+Note: There are no changes in the subproject. Nothing to commit!
+""")
+
 
 class TestNoGit(TestCaseHelper, TestSubpatch):
     def test_git_archive_export(self):
