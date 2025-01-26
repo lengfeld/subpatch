@@ -376,3 +376,31 @@ then print also infos how to create a patch file for it!
 Think about subpatch superprojects as subprojects in other repos.  Then the
 subpatch config file is not at the root of the repo. Currently this is not
 supported.
+
+Implement `git rev-parse --show-toplevel` for subpatch
+
+There is a common confusion about relative paths in the output (and on the
+commandline) of subpatch or other commands: Are the paths relative to the
+current working directory or to the toplevel dir of the repository.
+E.g.
+- the output and arguments of "git status" are relative to the cwd.
+- the output of "git diff" is relative to the toplevel dir.
+Think about a consistent concept and implement it.
+E.g. implement an argument "-t" for toplevel of subproject or
+"-T" for toplevel of superproject.
+
+Start to use the forzen attribute for dataclasses
+https://docs.python.org/3/library/dataclasses.html#frozen-instances
+Make the structs/dataclasses immutable!
+
+Naming ideas
+- the superproject is "configured" or "not configured"
+- the subproject is "init(ialized)" or "not initialized"
+Even it's the same thing. Just a file, use diffferent names to allow the
+documentation be clearer.
+Another example
+- It's the superproject "configuration"
+- and the subproject "metadata"
+Also actual synomous. So be consistent and use it for one and the other.
+
+Add Parsing Error for subpatch config
