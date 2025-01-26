@@ -213,10 +213,11 @@ subprojects.
 
 ## Conclusion
 
-That is my history of the multi repository problem. Hopefully it
-shows that the requirements and design decision are not an ad-hoc idea, but
-instead based on a long period of experience and tackling the multi repository
-problem from different angles.
+That is my history of the multi repository problem. Hopefully it shows that the
+following requirements and design decision are not an ad-hoc idea, but instead
+based on a long period of experience and tackling the multi repository problem
+from different angles.
 
-If you want to find out more and read about the design decisions and requirements
-for subpatch, you can jump to the [design of subpatch](design.md) page.
+If you want to find out more now, you can jump to the
+[requirements page](requirements.md). Based on the learnings above it sketches
+out the design of a new tool.
