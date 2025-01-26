@@ -65,11 +65,15 @@ How to execute a single tests
 
 ## How to release
 
-*NOTE:* This section is still work-in-progress.
+*Note*: This section has still some rough edges.
 
 First all tests should be green:
 
     $ make tests
+
+Second the necessary tools must be installed:
+
+    $ sudo apt-get install python3-build twine
 
 Increase version number, create commit and tag. Replace `X` with the current
 version number.
@@ -97,10 +101,9 @@ Test installation locally
 
 Publish release on testpypi website
 
+    # TODO ensure API token in ~/.pypirc
     $ twine upload --repository testpypi dist/*
     # Check website
-    #   https://test.pypi.org/project/subpatch/0.1a2/
-    # and
     #   https://test.pypi.org/project/subpatch/
 
 Make test install from test pypi
@@ -129,22 +132,39 @@ Make release to real pypi
     # visit website
     #    https://pypi.org/project/subpatch/
 
-Publish release on website
+    # Install with pipx
+    $ pipx install subpatch
+
+    # Check with
+    $ subpatch --version
+
+Make release on github:
+
+* Goto https://github.com/lengfeld/subpatch/releases
+* Create release
+* Title `subpatch version v0.1aX`
+* Add text:
+
+      See the [release notes webpage](https://subpatch.net/ref/releases/#v01aX)
+
+* Mark as pre-release
+
+Should look like the other releases.
+
+Publish release on website:
 
     $ cp subpatch website/downloads/latest/subpatch
-    $ vim website/ref/releases.md
-    # TODO continue here
-
-Make release on github
-
-    Goto https://github.com/lengfeld/subpatch/releases
-    - Create release
-    - Add link to release notes on webste
-    - Add subpatch script as a binary artifact
-      TODO remove that
-    - Mark as pre-release
-    Looks like
-       https://github.com/lengfeld/subpatch/releases/tag/v0.1a2
+    $ mkdir website/downloads/v0.1aX
+    $ cp subpatch website/downloads/v0.1aX/subpatch
+    $ vim website/ref/releases.md   # write release notes and changelog
+    $ git add website/downloads/ website/ref/releases.md
+    $ git diff --cached
+    $ git commit
+    $ git commit -m "add v0.1aX release to website"
+    $ mkdocs serve
+    $ git push origin main --dry-run
+    $ git push origin main
+    $ mkdocs gh-deploy
 
 
 ## Code style
