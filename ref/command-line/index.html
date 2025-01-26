@@ -72,9 +72,13 @@
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Command line arguments</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-list">subpatch list</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-status">subpatch status</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-add">subpatch add</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-update">subpatch update</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
     </li>
@@ -130,17 +134,24 @@ subpatch add -r &lt;revision&gt; &lt;url&gt;
 subpatch add &lt;url&gt; --revision=&lt;revision&gt;
 subpatch add &lt;url&gt; --revision &lt;revision&gt;
 </code></pre>
+<h2 id="subpatch-list">subpatch list</h2>
+<p>subpatch list</p>
+<p>Print the path of all subprojects in the repository.</p>
 <h2 id="subpatch-status">subpatch status</h2>
 <pre><code>subpatch status
 </code></pre>
-<p>Show the current state of all subprojects in the superproject. Much like
-<code>git status</code>.</p>
+<p>Show the current state of all subprojects in the superproject. It prints the
+URL, integrated revision and whether the files of the subproject are changed.
+E.g. if there are untracked files, unstaged changes or staged, but uncommitted
+changes.</p>
+<p>It's similar to <code>git status</code>, but not for the whole repository. Only for the
+subprojects.</p>
 <h2 id="subpatch-add">subpatch add</h2>
 <pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [--revision | -r &lt;revision&gt;]
 </code></pre>
-<p>Add the subproject at <code>url</code> at the optional <code>path</code> in the current repository.
-Currently <code>url</code> can only point to a git repository. Other subproject types
-are not supported yet.</p>
+<p>Add the remote project specified by <code>url</code> as a subproject at the optional
+<code>path</code> in the current repository.  Currently <code>url</code> can only point to a git
+repository. Other subproject types are not supported yet.</p>
 <p>The <code>path</code> is optional. If it's omitted the canonical subproject name is used.
 It's mostly the last folder name in the <code>url</code>. If <code>path</code> is provided it can
 include also sub directories.</p>
@@ -153,6 +164,19 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.</p>
+<h2 id="subpatch-update">subpatch update</h2>
+<pre><code>subpatch update &lt;path&gt; [--revision | -r &lt;revision&gt;] [--url | -r &lt;url&gt;]
+</code></pre>
+<p>Update the subproject at <code>path</code>. subpatch downloads the remote repository at
+<code>url</code> and unpacks the source files specified by the <code>revision</code>. All existing
+and tracked files of the subproject are removed and replaced by the downloaded
+files.</p>
+<p>If no <code>--revision</code> argument is given, subpatch uses the value from the config.
+Otherwise subpatch uses the new <code>revision</code> from the command line and updates
+the value in the config.</p>
+<p>If no <code>--url</code> argument is given, subpatch uses the value from the config.
+Otherwise subpatch uses the new <code>url</code> from the command line and updates the
+value in the config.</p>
 <h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
 <p>The following list is a draft for additional commands. Subpatch will implement
 these in that form or another.</p>
