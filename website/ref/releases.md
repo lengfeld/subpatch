@@ -12,6 +12,7 @@ You always can download the latest standalone python script at the URL:
 production environments! E.g. the config format will change. Nevertheless
 please try it out. Any feedback is welcome.
 
+
 ## v0.1a4
 
 Third release of subpatch.
@@ -29,6 +30,8 @@ Further links:
 * [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a4)
 * standalone python script for download:
   [https://subpatch.net/downloads/v0.1a4/subpatch](https://subpatch.net/downloads/v0.1a4/subpatch)
+
+Date: 2025-01-26
 
 
 ## v0.1a3
@@ -60,6 +63,8 @@ Further links:
 * standalone python script for download:
   [https://subpatch.net/downloads/v0.1a3/subpatch](https://subpatch.net/downloads/v0.1a3/subpatch)
 
+Date: 2024-10-10
+
 
 ## v0.1a2
 
@@ -71,3 +76,5 @@ Further links:
 * [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a2)
 * standalone python script for download:
   [https://subpatch.net/downloads/v0.1a2/subpatch](https://subpatch.net/downloads/v0.1a2/subpatch)
+
+Date: 2024-08-26
