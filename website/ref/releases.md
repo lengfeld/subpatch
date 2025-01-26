@@ -19,11 +19,18 @@ Third release of subpatch.
 
 Changes to the tool
 
-* tbd
+* Add command `update`
+* Add command `help`
+* Implement `--depth=1` download optimization for subprojects using git
+* Fix some bugs
+* Rework `status` and `list` command
+* Relicense as GPL-2.0-only to make it 1to1 compatible with the git and the
+  Linux kernel source code
+* Store revision argument in subproject metadata
 
 Changes to the website
 
-* tbd
+* A lot of stuff.
 
 Further links:
 
