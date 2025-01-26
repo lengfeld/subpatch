@@ -93,7 +93,6 @@ these in that form or another.
 * `foreach <command>`: Execute a shell command for every subproject.
   All the other multi repository management tools also have such a command.
   So subpatch also needs it. See `repo foreach` and `git submodule foreach`
-* `update [<subproject>]`: Update the subproject to the newest version
 * `check`: Verify subproject source code, patches and config
     - check that subpatch config/subproject config is valid/consistent
     - check that patches can be reverted to obtain the original source code
