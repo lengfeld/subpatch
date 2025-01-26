@@ -21,6 +21,7 @@ check-index-md:
 	git diff --no-index README.md website/index.md > index.md.diff || true
 	diff index.md.diff tests/index.md.diff
 	rm index.md.diff
+	@echo Everything is fine!
 
 # For now just hook this up to the "lint" target.
 lint: check-index-md
