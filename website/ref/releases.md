@@ -12,6 +12,24 @@ You always can download the latest standalone python script at the URL:
 production environments! E.g. the config format will change. Nevertheless
 please try it out. Any feedback is welcome.
 
+## v0.1a4
+
+Third release of subpatch.
+
+Changes to the tool
+
+* tbd
+
+Changes to the website
+
+* tbd
+
+Further links:
+
+* [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a4)
+* standalone python script for download:
+  [https://subpatch.net/downloads/v0.1a4/subpatch](https://subpatch.net/downloads/v0.1a4/subpatch)
+
 
 ## v0.1a3
 
