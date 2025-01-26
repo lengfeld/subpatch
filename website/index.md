@@ -27,8 +27,9 @@ instructions:
     $ git commit -m "adding googletest"
 
 If you are interested in finding out more, please see the text below and the
-menu of this website on the left side. It contains explanations, tutorials and
-references about subpatch.
+menu of this website on the left side.
+It contains explanations, tutorials, how-to guides and references about
+subpatch.
 
 
 ## Usecases
@@ -75,22 +76,59 @@ The page [Comparison to other tools](exp/comparison.md)
 describes the differences in more detail.
 
 
-## Website, documentation, license and code
+## Website, documentation and support
 
-On the website you find more information, e.g.
-explanations, tutorials and references. New subpatch releases are announced on
-the [release notes](ref/releases.md) pages, including the
-release notes and changelog.
-
-The source code of the program and the website can be found in the
-git repository [github.com/lengfeld/subpatch](https://github.com/lengfeld/subpatch).
-I have licensed the source code of subpatch as
-[GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html),
-It's the same license that is also used for the Linux kernel or git itself.
-
-
-## Support
+On this website you find more information, e.g.
+you find more information and the documentation, e.g. explanations, tutorials,
+how-to guides and references. New subpatch releases are announced on the
+[release notes page](ref/releases.md),
+including the release notes and changelog.
 
 For now there is no dedicated support forum/chat/… . You can either
 email [me](mailto:stefan+subpatch@lengfeld.xyz) or open on issue on
 [github](https://github.com/lengfeld/subpatch/issues).
+
+
+## Code, licenses and contributions
+
+The source code of the program and the website can be found in the
+git repository [github.com/lengfeld/subpatch](https://github.com/lengfeld/subpatch).
+
+I have licensed the source code of subpatch as
+[GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html),
+It's the same license that is also used for the Linux kernel or git itself.
+
+I licensed the content of the website as
+[Creative Commons Attribution-ShareAlike 4.0 International / CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1).
+In short this means: you can use the work, must give attribution, can use it
+commercially, too, and you must release derived work under the same license.
+
+When you contribute, please add your sign-off. See [Developer's Certificate of
+Origin](https://developercertificate.org/) for details. It's used in the Linux
+kernel and other projects.
+
+**Note**: For now the project does *not* welcome code contributions __yet__.
+The code is in a very rough state (in average one TODO comment per 10 lines of
+code). So don't waste our time trying to implement features. I want to get the
+internal architecture right first. Nevertheless, feedback and comments to the
+tool and concepts is very welcome.
+
+
+## Warranty disclaimer
+
+The standard license header and warranty disclaimer of the GPLv2 is:
+
+    Copyright (C) 2024 Stefan Lengfeld
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; as version 2 of the License.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
