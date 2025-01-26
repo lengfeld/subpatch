@@ -29,4 +29,8 @@ here.
 
 TODO add [+] points here
 
+**DD5**: Filenames and file system paths are python bytes objects, not strings
+
+TODO add [+] points here
+
 *Note*: This list is not completed yet and should grow while supbatch is developed.

@@ -382,8 +382,6 @@ State of the superproject
    - no subprojects
    - some subprojects
 
-Document DD: paths are bytes objects and not strings
-
 Convert all paths to bytes
 
 When the user see the error
