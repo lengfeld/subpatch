@@ -235,7 +235,7 @@ For the technical comparisons of the tools add
 Draw/find a logo. Maybe something like '/sub/patch'.
 
 Setup sphinx build for website.
-* find differnces, .e.g sitemap and 404 page.
+* find differences, .e.g sitemap and 404 page.
 
 Common problems (why you should use subpatch)
 * stories/PRs/feature requests span multi repos
@@ -243,7 +243,7 @@ Common problems (why you should use subpatch)
 * dependend commits/atomic commits problem/two commits problem
 * Anti point: devs must be trained to honor code ownership, use tools.
   (General problem of monorepos)
-* disappearing of upstream recoures
+* disappearing of upstream recourses
 
 Write summary for every tool that stats what feature this tool
 does not implement compared to subpatch.
@@ -290,7 +290,7 @@ download folder on the website. No need to link to github.
 
 Add/Do language and grammar checking for content on the website.
 
-Add command (or at least check) to compare/update seetings in config format
+Add command (or at least check) to compare/update settings in config format
 with the contents of the tree/repo.
 
 Clearify the behavior of `subpatch add <url> <folder>/". Is the subproject then
