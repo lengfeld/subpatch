@@ -303,9 +303,9 @@ def find_superproject():
     # TODO refactory this self-made and hacky approach of a directory walk
     # The first element is empty, because of the absolute path.  But using a
     # empty element in "join" does not work. It's the reverse operation!
-    assert(abs_cwd[0] == ord("/"))
+    assert abs_cwd[0] == ord("/")
     abs_cwd_parts = os.path.normpath(abs_cwd).split(b"/")
-    assert(abs_cwd_parts[0] == b"")
+    assert abs_cwd_parts[0] == b""
     abs_cwd_parts.pop(0)
 
     statinfo = os.stat(abs_cwd)
