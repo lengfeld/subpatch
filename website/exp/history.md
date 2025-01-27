@@ -72,8 +72,10 @@ for git repositories. And git is itself a version control system. That is
 duplicate and useless work. This brought me to the first learning:
 
 (**L1**) The solution to the multi repository problem is **inside** of git (or
-generally inside any version control system). The solution is **not** writing a
-new version control system to manage version control systems.
+generally inside any version control system).
+
+The solution is **not** writing a new version control system to manage version
+control systems.
 
 So I abandoned the rap project and looked at existing solutions that allow me
 to manage multiple repositories inside a git repo. Most people know *git
