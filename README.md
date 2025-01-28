@@ -80,13 +80,16 @@ describes the differences in more detail.
 
 On the [subpatch website](https://subpatch.net)
 you find more information and the documentation, e.g. explanations, tutorials,
-how-to guides and references. New subpatch releases are announced on the
+how-to guides and references. New software releases are announced on the
 [release notes page](https://subpatch.net/ref/releases/),
 including the release notes and changelog.
 
-For now there is no dedicated support forum/chat/… . You can either
-email [me](mailto:stefan+subpatch@lengfeld.xyz) or open on issue on
-[github](https://github.com/lengfeld/subpatch/issues).
+For support, dicussions and feature requests you can
+
+* join the [matrix](https://matrix.org/) room
+  [#subpatch:matrix.org](https://matrix.to/#/#subpatch:matrix.org),
+* open an issue on [github](https://github.com/lengfeld/subpatch/issues) or
+* [email me](mailto:stefan+subpatch@lengfeld.xyz).
 
 
 ## Code, licenses and contributions
