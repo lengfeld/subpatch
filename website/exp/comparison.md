@@ -46,7 +46,7 @@ Legend:
   checked out. It does not sit at the top level of the superproject.
 
 
-# Other multi repository management tools
+## Other multi repository management tools
 
 Apart from the above already mentioned tools there exits a long list of other
 attempts to solve the multi repository problem. The following list should
