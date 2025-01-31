@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/releases/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/fosdem25/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Releases - subpatch</title>
+    <title>FOSDEM 25 - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Releases";
-        var mkdocs_page_input_path = "ref/releases.md";
-        var mkdocs_page_url = "/ref/releases/";
+        var mkdocs_page_name = "FOSDEM 25";
+        var mkdocs_page_input_path = "ref/fosdem25.md";
+        var mkdocs_page_url = "/ref/fosdem25/";
       </script>
     
     <!--[if lt IE 9]>
@@ -74,17 +74,15 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Releases</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">FOSDEM 25</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#v01a4">v0.1a4</a>
+    <li class="toctree-l2"><a class="reference internal" href="#call-to-action">Call to action</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#v01a3">v0.1a3</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#v01a2">v0.1a2</a>
+    <li class="toctree-l2"><a class="reference internal" href="#lighting-talk">Lighting Talk</a>
     </li>
     </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../fosdem25/">FOSDEM 25</a>
                   </li>
               </ul>
               <ul>
@@ -106,7 +104,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Reference</li>
-      <li class="breadcrumb-item active">Releases</li>
+      <li class="breadcrumb-item active">FOSDEM 25</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -115,84 +113,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="releases">Releases</h1>
-<p>This page lists all subpatch release with the release notes. The order is:
-newest/latest releases are at the top, oldest releases are at the bottom. To
-install subpatch, follow the steps in the
-<a href="../../tut/installation/">installation tutorial</a>.</p>
-<p>You always can download the latest standalone python script at the URL:
-<a href="https://subpatch.net/downloads/latest/subpatch">https://subpatch.net/downloads/latest/subpatch</a></p>
-<p><strong>Warning</strong>: subpatch is in a very <em>very</em> early stage. Do not use it in
-production environments! E.g. the config format will change. Nevertheless
-please try it out. Any feedback is welcome.</p>
-<h2 id="v01a4">v0.1a4</h2>
-<p>Third release of subpatch.</p>
-<p>Changes to the tool</p>
+                <h1 id="fosdem-25">FOSDEM 25</h1>
+<p>This page is for my
+<a href="https://fosdem.org/2025/schedule/event/fosdem-2025-6461-subpatch-fearless-multi-repository-management-stay-relaxed/">lighting talk at the FOSDEM 25</a>.</p>
+<h2 id="call-to-action">Call to action</h2>
+<p>Please read the website, try out the prototype and provide feedback, you can</p>
 <ul>
-<li>Add command <code>update</code></li>
-<li>Add command <code>help</code></li>
-<li>Implement <code>--depth=1</code> download optimization for subprojects using git</li>
-<li>Fix some bugs</li>
-<li>Rework <code>status</code> and <code>list</code> command</li>
-<li>Relicense as GPL-2.0-only to make it 1to1 compatible with the git and the
-  Linux kernel source code</li>
-<li>Store revision argument in subproject metadata</li>
+<li>join the <a href="https://matrix.org/">matrix</a> room
+  <a href="https://matrix.to/#/#subpatch:matrix.org">#subpatch:matrix.org</a>,</li>
+<li>open an issue on <a href="https://github.com/lengfeld/subpatch/issues">github</a> or</li>
+<li><a href="mailto:stefan+subpatch@lengfeld.xyz">email me</a>.</li>
 </ul>
-<p>Changes to the website</p>
-<ul>
-<li>A lot of stuff.</li>
-</ul>
-<p>Further links:</p>
-<ul>
-<li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a4">github release page</a></li>
-<li>standalone python script for download:
-  <a href="https://subpatch.net/downloads/v0.1a4/subpatch">https://subpatch.net/downloads/v0.1a4/subpatch</a></li>
-</ul>
-<p>Date: 2025-01-26</p>
-<h2 id="v01a3">v0.1a3</h2>
-<p>Second release of subpatch.</p>
-<p>Changes to the tool</p>
-<ul>
-<li>Adding support for the command line argument <code>-r | --revision</code> to the <code>add</code>
-  command. This allows to checkout a specific branch, tag or commit or tag id
-  for the subproject.</li>
-<li>Fix the limitation that only one subproject can be added to the superproject.
-  Now the tool really starts to become usable to management multiple subprojects.</li>
-</ul>
-<p>Changes to the website</p>
-<ul>
-<li>Adding a quick start guide to the <a href="../../">front page of the webpage</a></li>
-<li>Adding a <a href="../../exp/history/">history page</a> to explain the path
-  to subpatch and the learnings from previous attempts and projects</li>
-<li>Adding a reference for the <a href="../command-line/">commandline arguments</a></li>
-<li>Merging the website into the main git repository. This makes it easier to
-  work on subpatch. The old
-  <a href="https://github.com/lengfeld/subpatch-website">subpatch-website repo</a> is archived
-  now.</li>
-</ul>
-<p>Further links:</p>
-<ul>
-<li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a3">github release page</a></li>
-<li>standalone python script for download:
-  <a href="https://subpatch.net/downloads/v0.1a3/subpatch">https://subpatch.net/downloads/v0.1a3/subpatch</a></li>
-</ul>
-<p>Date: 2024-10-10</p>
-<h2 id="v01a2">v0.1a2</h2>
-<p>First release of subpatch. For now it supports only two commands: <code>add</code> and
-<code>status</code> with a very limited amount of functionality.</p>
-<p>Further links:</p>
-<ul>
-<li><a href="https://github.com/lengfeld/subpatch/releases/tag/v0.1a2">github release page</a></li>
-<li>standalone python script for download:
-  <a href="https://subpatch.net/downloads/v0.1a2/subpatch">https://subpatch.net/downloads/v0.1a2/subpatch</a></li>
-</ul>
-<p>Date: 2024-08-26</p>
+<p>Thanks!</p>
+<h2 id="lighting-talk">Lighting Talk</h2>
+<p>Content:</p>
+<ol>
+<li>Present <a href="/">homepage of subpatch</a></li>
+<li>Repeat call to action :-)</li>
+</ol>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../glossary/" class="btn btn-neutral float-left" title="Glossary"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../fosdem25/" class="btn btn-neutral float-right" title="FOSDEM 25">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../releases/" class="btn btn-neutral float-left" title="Releases"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../imprint/" class="btn btn-neutral float-right" title="Imprint">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -216,10 +160,10 @@ please try it out. Any feedback is welcome.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../glossary/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../releases/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../fosdem25/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../imprint/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
