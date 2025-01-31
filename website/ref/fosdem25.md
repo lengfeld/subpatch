@@ -1,0 +1,23 @@
+# FOSDEM 25
+
+This page is for my
+[lighting talk at the FOSDEM 25](https://fosdem.org/2025/schedule/event/fosdem-2025-6461-subpatch-fearless-multi-repository-management-stay-relaxed/).
+
+## Call to action
+
+Please read the website, try out the prototype and provide feedback, you can
+
+* join the [matrix](https://matrix.org/) room
+  [#subpatch:matrix.org](https://matrix.to/#/#subpatch:matrix.org),
+* open an issue on [github](https://github.com/lengfeld/subpatch/issues) or
+* [email me](mailto:stefan+subpatch@lengfeld.xyz).
+
+Thanks!
+
+
+## Lighting Talk
+
+Content:
+
+1. Present [homepage of subpatch](/)
+2. Repeat call to action :-)

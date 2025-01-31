@@ -20,6 +20,7 @@ nav:
     - Command line arguments: 'ref/command-line.md'
     - Glossary: 'ref/glossary.md'
     - Releases: 'ref/releases.md'
+    - FOSDEM 25: 'ref/fosdem25.md'
   - Imprint: 'imprint.md'
 extra:
   social:
