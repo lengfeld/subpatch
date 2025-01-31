@@ -33,4 +33,12 @@ TODO add [+] points here
 
 TODO add [+] points here
 
+**DD6**: The subproject's history is not include in the superproject's history.
+
+TODO E.g. git-subtree and combo-layers are doing this
+
+TODO This is against learing L4 (minimize accidentally complexity)
+
+TODO add [+],[-] points here
+
 *Note*: This list is not completed yet and should grow while supbatch is developed.
