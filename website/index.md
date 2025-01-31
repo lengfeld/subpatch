@@ -9,6 +9,9 @@ If you are currently using
 frustrated, subpatch  will be mostly your solution! If you are interested,
 email [me](mailto:stefan+subpatch@lengfeld.xyz).
 
+**Note**: subpatch is not production ready. It's currently a prototype.
+Nevertheless please try it out and give feedback. I will incorperate it.
+
 
 ## Quick start
 

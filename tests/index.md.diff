@@ -1,8 +1,8 @@
 diff --git a/README.md b/website/index.md
-index 63ca970..7c587ea 100644
+index 7c522e0..d636060 100644
 --- a/README.md
 +++ b/website/index.md
-@@ -27,7 +27,7 @@ instructions:
+@@ -30,7 +30,7 @@ instructions:
      $ git commit -m "adding googletest"
  
  If you are interested in finding out more, please see the text below and the
@@ -11,7 +11,7 @@ index 63ca970..7c587ea 100644
  It contains explanations, tutorials, how-to guides and references about
  subpatch.
  
-@@ -72,16 +72,16 @@ These tools manage multiple git repositories at once. Based on a manifest file
+@@ -75,16 +75,16 @@ These tools manage multiple git repositories at once. Based on a manifest file
  multiple git repositories are cloned from different upstream sources into your
  local checkout.
  
