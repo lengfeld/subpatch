@@ -19,5 +19,6 @@ Thanks!
 
 Content:
 
-1. Present [homepage of subpatch](/)
-2. Repeat call to action :-)
+1. Present call to action
+2. Present [homepage of subpatch](/)
+3. Repeat call to action :-)
