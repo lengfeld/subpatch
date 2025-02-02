@@ -614,7 +614,7 @@ class TestFuncs(unittest.TestCase):
         self.assertEqual("name", f("/name.git"))
         self.assertEqual("name", f("/name.git/"))
         self.assertEqual("name", f("sub/name.git/"))
-        self.assertEqual("name", f("http://localhost:8000/name/.git/"))
+        self.assertEqual("name", f("http://localhost:7000/name/.git/"))
 
     def test_is_valid_revision(self):
         self.assertTrue(is_valid_revision("main"))

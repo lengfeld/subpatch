@@ -107,22 +107,22 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
             git = Git()
             git.call(["update-server-info"])
 
-        with LocalWebserver(8000, FileRequestHandler), cwd("superproject", create=True):
+        with LocalWebserver(7000, FileRequestHandler), cwd("superproject", create=True):
             create_git_repo_with_single_commit()
             git = Git()
 
-            git.submodule(["-q", "add", "http://localhost:8000/subproject/.git/", "subproject1"])
-            git.submodule(["-q", "add", "http://localhost:8000/subproject/.git", "subproject2"])
+            git.submodule(["-q", "add", "http://localhost:7000/subproject/.git/", "subproject1"])
+            git.submodule(["-q", "add", "http://localhost:7000/subproject/.git", "subproject2"])
             # NOTE: The URL is taken verbatim. The leading slash is not changed
             # by 'git' before writing it in to config file.
             self.assertFileContent(".gitmodules",
                                    b"""\
 [submodule "subproject1"]
 \tpath = subproject1
-\turl = http://localhost:8000/subproject/.git/
+\turl = http://localhost:7000/subproject/.git/
 [submodule "subproject2"]
 \tpath = subproject2
-\turl = http://localhost:8000/subproject/.git
+\turl = http://localhost:7000/subproject/.git
 """)
 
 

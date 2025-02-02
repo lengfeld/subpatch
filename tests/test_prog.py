@@ -365,13 +365,13 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
             git = Git()
             git.call(["update-server-info"])
 
-        with LocalWebserver(8000, FileRequestHandler), cwd("superproject"):
+        with LocalWebserver(7000, FileRequestHandler), cwd("superproject"):
             git = Git()
             with cwd("subdir", create=True):
                 # NOTE: This also tests that "/.git/" is not used as the local
                 # directory name.
-                p = self.run_subpatch_ok(["add", "http://localhost:8000/subproject/.git/"], stdout=PIPE)
-                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:8000/subproject/.git/' at revision 'HEAD'... Done",
+                p = self.run_subpatch_ok(["add", "http://localhost:7000/subproject/.git/"], stdout=PIPE)
+                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' at revision 'HEAD'... Done",
                               p.stdout)
                 self.assertTrue(os.path.isdir("subproject"))
 
@@ -382,7 +382,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch):
             self.assertFileContent(".subpatch",
                                    b"""\
 [subpatch \"subdir/subproject\"]
-\turl = http://localhost:8000/subproject/.git/
+\turl = http://localhost:7000/subproject/.git/
 """)
 
     def test_add_with_stdout_output_and_index_updates(self):
@@ -809,10 +809,10 @@ Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Do
             git = Git()
             git.call(["update-server-info"])
 
-        with LocalWebserver(8000, FileRequestHandler), cwd("superproject", create=True):
+        with LocalWebserver(7000, FileRequestHandler), cwd("superproject", create=True):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-r", "v1", "http://localhost:8000/subproject/.git/", "dir/subproject"], stdout=DEVNULL, hack=True)
+            p = self.run_subpatch(["add", "-r", "v1", "http://localhost:7000/subproject/.git/", "dir/subproject"], stdout=DEVNULL, hack=True)
             self.assertEqual(p.returncode, 0)
             git.commit("add subproject")
 
@@ -828,7 +828,7 @@ Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Do
                 self.assertEqual(p.returncode, 0)
                 # NOTE: Path in output is relative to the current work directory!
                 self.assertEqual(p.stdout, b"""\
-Updating subproject 'subproject' from URL 'http://localhost:8000/subproject/.git/' to revision 'v2'... Done.
+Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' to revision 'v2'... Done.
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
