@@ -27,7 +27,10 @@ instructions:
 
     # and finally add a subproject to your (super)project!
     $ ./subpatch add https://github.com/google/googletest external/googletest -r v1.15.2
+    $ ./subpatch status
+
     $ git commit -m "adding googletest"
+    $ ./subpatch status
 
 If you are interested in finding out more, please see the text below and the
 [website](https://subpatch.net).

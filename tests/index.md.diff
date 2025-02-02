@@ -1,9 +1,9 @@
 diff --git a/README.md b/website/index.md
-index 7c522e0..d636060 100644
+index e3aa377..be792b8 100644
 --- a/README.md
 +++ b/website/index.md
-@@ -30,7 +30,7 @@ instructions:
-     $ git commit -m "adding googletest"
+@@ -33,7 +33,7 @@ instructions:
+     $ ./subpatch status
  
  If you are interested in finding out more, please see the text below and the
 -[website](https://subpatch.net).
@@ -11,7 +11,7 @@ index 7c522e0..d636060 100644
  It contains explanations, tutorials, how-to guides and references about
  subpatch.
  
-@@ -75,16 +75,16 @@ These tools manage multiple git repositories at once. Based on a manifest file
+@@ -78,16 +78,16 @@ These tools manage multiple git repositories at once. Based on a manifest file
  multiple git repositories are cloned from different upstream sources into your
  local checkout.
  
