@@ -56,5 +56,6 @@ list all the other tools I have found so far:
 * [GitSlave](https://gitslave.sourceforge.net/)
 * [Combo-layer](https://wiki.yoctoproject.org/wiki/Combo-layer)
 * [Josh](https://github.com/josh-project/josh)
+* [git-toprepo](https://github.com/meroton/git-toprepo)
 
 If you know additional tools, please post a pull request or email me.
