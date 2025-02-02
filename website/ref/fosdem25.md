@@ -21,4 +21,5 @@ Content:
 
 1. Present call to action
 2. Present [homepage of subpatch](/)
-3. Repeat call to action :-)
+3. (Maybe) Do a showcase
+4. Repeat call to action :-)
