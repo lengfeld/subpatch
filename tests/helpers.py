@@ -187,6 +187,9 @@ class Git():
 
         return p.returncode == 0
 
+    def remove_staged_changes(self):
+        self.call(["reset", "--merge"])
+
 
 def touch(filename, content=b""):
     with open(filename, "bw") as f:

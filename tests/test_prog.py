@@ -458,8 +458,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
                               b"A\tfolder/hello"])
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"folder\"]\n\turl = ../subproject\n")
-            # Remove all stagged changes
-            git.call(["reset", "--merge"])
+            git.remove_staged_changes()
 
             # Add same subproject but in a subfolder
             p = self.run_subpatch_ok(["add", "../subproject", "sub/folder"], stdout=DEVNULL)
@@ -469,9 +468,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
                               b"A\tsub/folder/hello"])
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"sub/folder\"]\n\turl = ../subproject\n")
-
-            # Remove all stagged changes
-            git.call(["reset", "--merge"])
+            git.remove_staged_changes()
 
             # Add subproject with trailing slash in path
             p = self.run_subpatch_ok(["add", "../subproject", "folder/"], stdout=DEVNULL)
@@ -483,8 +480,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             # NOTE: The trailing slash is removed
             self.assertFileContent(".subpatch",
                                    b"[subpatch \"folder\"]\n\turl = ../subproject\n")
-            # Remove all stagged changes
-            git.call(["reset", "--merge"])
+            git.remove_staged_changes()
 
     def test_add_in_subdirectory_with_relative_path_fails(self):
         create_super_and_subproject()
@@ -557,7 +553,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 \turl = ../subproject
 \trevision = refs/heads/main
 """)
-            git.call(["reset", "--merge"])  # Remove all stagged changes
+            git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", "v1"], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
@@ -567,7 +563,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 \turl = ../subproject
 \trevision = v1
 """)
-            git.call(["reset", "--merge"])  # Remove all stagged changes
+            git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_commit], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
@@ -577,7 +573,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 \turl = ../subproject
 \trevision = %s
 """ % (object_id_commit,))
-            git.call(["reset", "--merge"])  # Remove all stagged changes
+            git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_tag], stdout=DEVNULL)
             self.assertFileExistsAndIsDir("subproject")
@@ -587,7 +583,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 \turl = ../subproject
 \trevision = %s
 """ % (object_id_tag,))
-            git.call(["reset", "--merge"])  # Remove all stagged changes
+            git.remove_staged_changes()
 
             # Special case: Test revision argument with subdirectory for
             # subproject. This was broken.
@@ -599,7 +595,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 \turl = ../subproject
 \trevision = v1
 """)
-            git.call(["reset", "--merge"])  # Remove all stagged changes
+            git.remove_staged_changes()
 
 
 class TestCmdUpdate(TestCaseHelper, TestSubpatch):
@@ -633,8 +629,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch):
             self.assertEqual(b"Error: Invalid argument: There are staged changes in the subproject.\n",
                              p.stderr)
 
-            # Revert changes
-            git.call(["reset", "--merge"])
+            git.remove_staged_changes()
 
     def create_subproject(self):
         with cwd("subproject", create=True):
@@ -821,7 +816,7 @@ Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Do
             self.assertEqual(p.returncode, 0)
 
             diff_ok = git.diff(staged=True)
-            git.call(["reset", "--merge"])  # Cleanup
+            git.remove_staged_changes()
 
             with cwd("dir"):
                 p = self.run_subpatch(["update", "subproject", "-r", "v2"], stdout=PIPE, hack=True)
