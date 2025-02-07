@@ -26,6 +26,6 @@ Thanks!
 Content:
 
 1. Present call to action
-2. Present [homepage of subpatch](/)
+2. Present [homepage of subpatch](../index.md)
 3. (Maybe) Do a showcase
 4. Repeat call to action :-)
