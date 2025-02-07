@@ -3,6 +3,12 @@
 This page is for my
 [lighting talk at the FOSDEM 25](https://fosdem.org/2025/schedule/event/fosdem-2025-6461-subpatch-fearless-multi-repository-management-stay-relaxed/).
 
+The recordings are available here:
+
+* [video in webm format](https://video.fosdem.org/2025/h2215/fosdem-2025-6461-subpatch-fearless-multi-repository-management-stay-relaxed.av1.webm)
+* [video in mp4 format](https://video.fosdem.org/2025/h2215/fosdem-2025-6461-subpatch-fearless-multi-repository-management-stay-relaxed.mp4)
+
+
 ## Call to action
 
 Please read the website, try out the prototype and provide feedback, you can
