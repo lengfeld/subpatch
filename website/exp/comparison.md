@@ -58,6 +58,7 @@ list all the other tools I have found so far:
 * [Josh](https://github.com/josh-project/josh)
 * [git-toprepo](https://github.com/meroton/git-toprepo)
 * [dfetch](https://dfetch.readthedocs.io/en/latest/)
+* [git-vendor](https://brettlangdon.github.io/git-vendor/)
 
 If you know additional tools, please post a pull request or email me. If you
 want to see a even longer list of other tools, checkout out the
