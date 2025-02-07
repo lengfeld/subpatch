@@ -2,16 +2,15 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
+import contextlib
 import os
-import sys
 import shutil
+import sys
 import tempfile
 import unittest
-import contextlib
 from dataclasses import dataclass
-from subprocess import Popen, PIPE, DEVNULL
-from os.path import isfile, isdir, join, realpath, dirname
-
+from os.path import dirname, isdir, isfile, join, realpath
+from subprocess import DEVNULL, PIPE, Popen
 
 # TODO unify
 # NOTES

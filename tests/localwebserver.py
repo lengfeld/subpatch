@@ -2,16 +2,16 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
+import _thread
 import os
-import sys
 import socket
 import socketserver
-import _thread
+import sys
 import threading
-from urllib.parse import urlparse
-from os.path import join
-from http.server import SimpleHTTPRequestHandler
 from http import HTTPStatus
+from http.server import SimpleHTTPRequestHandler
+from os.path import join
+from urllib.parse import urlparse
 
 # TODO import tests from my other project
 

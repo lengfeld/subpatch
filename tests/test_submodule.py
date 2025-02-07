@@ -5,11 +5,12 @@
 # TODO reduce imports
 import sys
 import unittest
-from subprocess import Popen, PIPE, DEVNULL, call
-from os.path import join, realpath, dirname, abspath
-from localwebserver import LocalWebserver, FileRequestHandler
-from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper, \
-                    create_git_repo_with_branches_and_tags
+from os.path import abspath, dirname, join, realpath
+from subprocess import DEVNULL, PIPE, Popen, call
+
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
+                     create_git_repo_with_branches_and_tags, cwd, touch)
+from localwebserver import FileRequestHandler, LocalWebserver
 
 
 def create_git_repo_with_single_commit():

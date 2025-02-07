@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
-import sys
 import os
-import unittest
+import sys
 import tempfile
+import unittest
 from copy import deepcopy
+from os.path import abspath, dirname, join, realpath
+from subprocess import DEVNULL, PIPE, Popen, call, run
 from time import sleep
-from subprocess import Popen, PIPE, DEVNULL, call, run
-from os.path import join, realpath, dirname, abspath
-from localwebserver import LocalWebserver, FileRequestHandler
-from helpers import TestCaseTempFolder, cwd, touch, Git, TestCaseHelper, \
-                    create_git_repo_with_branches_and_tags
 
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
+                     create_git_repo_with_branches_and_tags, cwd, touch)
+from localwebserver import FileRequestHandler, LocalWebserver
 
 path = realpath(__file__)
 SUBPATCH_PATH = join(dirname(path), "..", "subpatch")

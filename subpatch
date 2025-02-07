@@ -2,20 +2,20 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
+import contextlib
 import os
-import sys
 import shutil
-import time
 import stat
 import subprocess
-from enum import Enum
+import sys
+import time
 from argparse import ArgumentParser
-from subprocess import Popen, PIPE, DEVNULL
-from os.path import join, abspath
-from os import mkdir
 from dataclasses import dataclass
+from enum import Enum
+from os import mkdir
+from os.path import abspath, join
+from subprocess import DEVNULL, PIPE, Popen
 from typing import Any
-import contextlib
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.

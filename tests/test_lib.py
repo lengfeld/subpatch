@@ -2,27 +2,29 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
-import sys
 import os
-import unittest
+import sys
 import tempfile
-from subprocess import Popen, PIPE, DEVNULL, call
-from os.path import join, realpath, dirname, abspath
-from helpers import TestCaseTempFolder, cwd, touch, Git, \
-                    create_git_repo_with_branches_and_tags, mkdir
+import unittest
+from os.path import abspath, dirname, join, realpath
+from subprocess import DEVNULL, PIPE, Popen, call
+
+from helpers import (Git, TestCaseTempFolder,
+                     create_git_repo_with_branches_and_tags, cwd, mkdir, touch)
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from subpatch import git_get_toplevel, git_get_object_type, get_url_type, \
-                     URLTypes, get_name_from_repository_url, \
-                     git_init_and_fetch, is_sha1, ObjectType, git_ls_remote, \
-                     git_ls_remote_guess_ref, git_verify, \
-                     config_parse, config_add_section, split_with_ts, config_unparse, \
-                     is_valid_revision, subprojects_parse, Subproject, \
-                     git_diff_name_only, git_ls_files_untracked, \
-                     parse_z, find_superproject, SCMType, parse_sha1_names, \
-                     git_diff_in_dir, do_paths, git_ls_tree_in_dir, config_remove_section
+from subpatch import (ObjectType, SCMType, Subproject, URLTypes,
+                      config_add_section, config_parse, config_remove_section,
+                      config_unparse, do_paths, find_superproject,
+                      get_name_from_repository_url, get_url_type,
+                      git_diff_in_dir, git_diff_name_only, git_get_object_type,
+                      git_get_toplevel, git_init_and_fetch,
+                      git_ls_files_untracked, git_ls_remote,
+                      git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
+                      is_sha1, is_valid_revision, parse_sha1_names, parse_z,
+                      split_with_ts, subprojects_parse)
 
 
 class TestConfigParse(unittest.TestCase):
