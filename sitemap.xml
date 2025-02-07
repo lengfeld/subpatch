@@ -2,82 +2,77 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://subpatch.net/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/imprint/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/exp/comparison/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/exp/design/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://subpatch.net/exp/faq/</loc>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/exp/history/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/exp/intro/</loc>
-         <lastmod>2025-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://subpatch.net/exp/learnings/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/exp/requirements/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/howto/yocto/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/ref/command-line/</loc>
-         <lastmod>2025-02-02</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://subpatch.net/ref/config-format/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/ref/fosdem25/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/ref/glossary/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/ref/releases/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/tut/basic-usage/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://subpatch.net/tut/installation/</loc>
-         <lastmod>2025-02-02</lastmod>
+         <lastmod>2025-02-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
