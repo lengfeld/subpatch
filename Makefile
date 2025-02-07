@@ -38,6 +38,9 @@ lint:                 ### Runs the pycodestyle on source code
 	@# I don't have 80 column terminals anymore.
 	pycodestyle *.py tests/*.py --max-line-length=100
 
+.PHONY: reformat
+reformat:
+	isort *.py tests/*.py
 
 .PHONY: dist
 dist:
