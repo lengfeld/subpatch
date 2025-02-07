@@ -57,5 +57,8 @@ list all the other tools I have found so far:
 * [Combo-layer](https://wiki.yoctoproject.org/wiki/Combo-layer)
 * [Josh](https://github.com/josh-project/josh)
 * [git-toprepo](https://github.com/meroton/git-toprepo)
+* [dfetch](https://dfetch.readthedocs.io/en/latest/)
 
-If you know additional tools, please post a pull request or email me.
+If you know additional tools, please post a pull request or email me. If you
+want to see a even longer list of other tools, checkout out the
+[alternatives page from dfetch](https://dfetch.readthedocs.io/en/latest/alternatives.html).
