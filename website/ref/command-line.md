@@ -42,7 +42,7 @@ subprojects.
 
 ## subpatch add
 
-    subpatch add <url> [<path>] [--revision | -r <revision>]
+    subpatch add <url> [<path>] [-r | --revision <revision>] [-q | --quiet]
 
 Add the remote project specified by `url` as a subproject at the optional
 `path` in the current repository.  Currently `url` can only point to a git
@@ -62,6 +62,8 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.
+
+`-q,--quiet`: Suppress any output to stdout.
 
 
 ## subpatch update

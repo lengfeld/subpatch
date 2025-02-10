@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
+import argparse
 import contextlib
 import os
 import shutil
@@ -9,7 +10,6 @@ import stat
 import subprocess
 import sys
 import time
-from argparse import ArgumentParser
 from dataclasses import dataclass
 from enum import Enum
 from os import mkdir
@@ -1030,62 +1030,73 @@ def cmd_add(args, parser):
     # The content of '%s' is the remote git name or the path relative to the
     # current working dir. It's not relative to the top level dir of the git repo.
     # TODO move this design decision to the website
-    print("Adding subproject '%s' from URL '%s' at revision '%s'..." %
-          (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
-          end="")
-    sys.stdout.flush()
-
-    download_config = DownloadConfig(url=sub_url, revision=revision)
-
-    # Fetch remote repository/tarball into local folder and checkout the
-    # requested revision.
-    sub_helper.download(download_config, local_tmp_name)
-
-    config_abspath = join(superx.path, b".subpatch")
-
+    if not args.quiet:
+        print("Adding subproject '%s' from URL '%s' at revision '%s'..." %
+              (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
+              end="")
+        sys.stdout.flush()
     try:
-        # TODO read as bytes instead of str type
-        with open(config_abspath, "r") as f:
-            config_parts = config_parse(split_with_ts(f.read()))
-    except FileNotFoundError:
-        config_parts = []
+        download_config = DownloadConfig(url=sub_url, revision=revision)
 
-    # TODO Check if section and subsection already exists!
-    # TODO currently this always uses "\t" for indention. Try to use the style
-    # that is already used in the subpatch file. E.g. four-spaces, two-spaces
-    # or no-spaces.
-    # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
-    # of the argument. If there is a trailing slash in the argument, then the
-    # trailing slash is also in the config file. It's not sanitized. It's the
-    # same behavior as 'git submodule' does.
-    subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
-    if revision is not None:
-        subproject_config_parts.append((3, "\trevision = %s\n" % (revision,), "revision", revision))
+        # Fetch remote repository/tarball into local folder and checkout the
+        # requested revision.
+        sub_helper.download(download_config, local_tmp_name)
 
-    config_parts_new = config_add_section(config_parts,
-                                          "subpatch",
-                                          paths.super_to_sub_relpath.decode("utf8"),
-                                          subproject_config_parts)
+        config_abspath = join(superx.path, b".subpatch")
 
-    with open(config_abspath, "w") as f:
-        f.write(config_unparse(config_parts_new))
+        try:
+            # TODO read as bytes instead of str type
+            with open(config_abspath, "r") as f:
+                config_parts = config_parse(split_with_ts(f.read()))
+        except FileNotFoundError:
+            config_parts = []
 
-    # Move files into place
-    os.rename(local_tmp_name, paths.cwd_to_sub_relpath)
+        # TODO Check if section and subsection already exists!
+        # TODO currently this always uses "\t" for indention. Try to use the style
+        # that is already used in the subpatch file. E.g. four-spaces, two-spaces
+        # or no-spaces.
+        # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
+        # of the argument. If there is a trailing slash in the argument, then the
+        # trailing slash is also in the config file. It's not sanitized. It's the
+        # same behavior as 'git submodule' does.
+        subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
+        if revision is not None:
+            subproject_config_parts.append((3, "\trevision = %s\n" % (revision,), "revision", revision))
 
-    # TODO in case of failure, remove download git dir!
+        config_parts_new = config_add_section(config_parts,
+                                              "subpatch",
+                                              paths.super_to_sub_relpath.decode("utf8"),
+                                              subproject_config_parts)
 
-    # Add files for committing
-    # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
-    superx.helper.add([paths.cwd_to_sub_relpath])
-    with cwd(superx.path):
-        superx.helper.add([b".subpatch"])
+        with open(config_abspath, "w") as f:
+            f.write(config_unparse(config_parts_new))
 
-    print(" Done.")
+        # Move files into place
+        os.rename(local_tmp_name, paths.cwd_to_sub_relpath)
+
+        # TODO in case of failure, remove download git dir!
+
+        # Add files for committing
+        # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
+        superx.helper.add([paths.cwd_to_sub_relpath])
+        with cwd(superx.path):
+            superx.helper.add([b".subpatch"])
+    except:
+        # If there is any exception, still print the final new line character.
+        # Otherwise the error message that is printed is not beginning at the
+        # start of the line.
+        if not args.quiet:
+            print(" Failed.")
+            sys.stdout.flush()
+        raise
+    else:
+        if not args.quiet:
+            print(" Done.")
 
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
-    superx.helper.print_add_success()
+    if not args.quiet:
+        superx.helper.print_add_success()
 
     # TODO Maybe prepare a commit/patch/change message
 
@@ -1519,7 +1530,7 @@ def cmd_status(args, parser):
 
 def main_wrapped() -> int:
     # TODO maybe add 'epilog' again
-    parser = ArgumentParser(description='Adding subprojects into a git repo, the superproject.')
+    parser = argparse.ArgumentParser(description='Adding subprojects into a git repo, the superproject.')
     parser.add_argument("--version", "-v", dest="version",
                         action="store_true", default=False,
                         help="Show version of program")
@@ -1538,6 +1549,8 @@ def main_wrapped() -> int:
                             help="folder or path in the local repo")
     parser_add.add_argument("-r", "--revision", dest="revision", type=str,
                             help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
+    parser_add.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                            help="Suppress output to stdout")
 
     parser_update = subparsers.add_parser("update",
                                           help="Fetch and update a subproject")

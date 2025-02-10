@@ -289,9 +289,9 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         create_super_and_subproject()
 
         with cwd("superproject"):
-            p = self.run_subpatch(["add", "../subproject", "dirB"], stdout=DEVNULL)
+            p = self.run_subpatch(["add", "-q", "../subproject", "dirB"])
             self.assertEqual(0, p.returncode)
-            p = self.run_subpatch(["add", "../subproject", "dirA"], stdout=DEVNULL)
+            p = self.run_subpatch(["add", "-q", "../subproject", "dirA"])
             self.assertEqual(0, p.returncode)
 
             self.assertFileContent(".subpatch",
@@ -323,7 +323,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git = Git()
             git.init()
 
-            self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
             self.assertFileContent("subproject/a", b"")
             self.assertFileContent("subproject/.gitignore", b"a\n")
             self.assertEqual(git.diff_staged_files(),
@@ -390,14 +390,12 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with cwd("superproject"):
             git = Git()
             p = self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
-            stdout = p.stdout
             self.assertEqual(b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Done.
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
-""",
-                             stdout)
+""", p.stdout)
 
             # Check working tree
             self.assertFileExistsAndIsDir("subproject")
@@ -413,7 +411,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
         create_super_and_subproject()
         with cwd("superproject"):
             git = Git()
-            p = self.run_subpatch(["add", "../subproject", ""], stdout=DEVNULL, stderr=PIPE)
+            p = self.run_subpatch(["add", "../subproject", ""], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: path is empty\n",
                              p.stderr)
@@ -422,7 +420,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
         create_super_and_subproject()
         with cwd("superproject"):
             git = Git()
-            p = self.run_subpatch(["add", "/tmp/subproject"], stdout=DEVNULL, stderr=PIPE)
+            p = self.run_subpatch(["add", "/tmp/subproject"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Absolute local paths to a remote repository are not supported!\n",
                              p.stderr)
@@ -436,12 +434,12 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git = Git()
             git.init()
 
-            # TODO Implemented "--quiet"
-            p = self.run_subpatch(["add", "../subproject", "-r", "master"], stdout=PIPE, stderr=PIPE)
+            p = self.run_subpatch(["add", "../subproject", "-r", "master"], stderr=PIPE, stdout=PIPE)
             self.assertEqual(4, p.returncode)
+            self.assertEqual(b"Adding subproject 'subproject' from URL '../subproject' at revision 'master'... Failed.\n",
+                             p.stdout)
             self.assertEqual(b"Error: Invalid argument: The reference 'master' cannot be resolved to a branch or tag!\n",
                              p.stderr)
-
             # TODO add test without "-r" argument. The internal code behaves differently!
 
     def test_add_with_extra_path(self):
@@ -449,8 +447,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
         with cwd("superproject"):
             git = Git()
 
-            # TODO add "-q" argument
-            p = self.run_subpatch_ok(["add", "../subproject", "folder"], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "folder"])
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -460,7 +457,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git.remove_staged_changes()
 
             # Add same subproject but in a subfolder
-            p = self.run_subpatch_ok(["add", "../subproject", "sub/folder"], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "sub/folder"])
             self.assertFileExistsAndIsDir("sub/folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -470,7 +467,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git.remove_staged_changes()
 
             # Add subproject with trailing slash in path
-            p = self.run_subpatch_ok(["add", "../subproject", "folder/"], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "folder/"])
 
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
@@ -501,23 +498,23 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git = Git()
             git.init()
 
-            p = self.run_subpatch(["add", "../subproject", "-r", "main-does-not-exists"], stdout=DEVNULL, stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../subproject", "-r", "main-does-not-exists"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
                              p.stderr)
 
             invalid_object_id = b"0" * 40
-            p = self.run_subpatch(["add", "../subproject", "-r", invalid_object_id], stdout=DEVNULL, stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../subproject", "-r", invalid_object_id], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' does not point to a valid object!\n",
                              p.stderr)
 
-            p = self.run_subpatch(["add", "../subproject", "-r", object_id_file], stdout=DEVNULL, stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../subproject", "-r", object_id_file], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
                              p.stderr)
 
-            p = self.run_subpatch(["add", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: revision 'refs/heads\nmain' is invalid\n",
                              p.stderr)
@@ -554,7 +551,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 """)
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "../subproject", "-r", "v1"], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", "v1"])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"initial")
             self.assertFileContent(".subpatch", b"""\
@@ -564,7 +561,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 """)
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_commit], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_commit])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on stable")
             self.assertFileContent(".subpatch", b"""\
@@ -574,7 +571,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 """ % (object_id_commit,))
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "../subproject", "-r", object_id_tag], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_tag])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent(".subpatch", b"""\
@@ -586,7 +583,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
 
             # Special case: Test revision argument with subdirectory for
             # subproject. This was broken.
-            p = self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subdir/subproject"], stdout=DEVNULL)
+            p = self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subdir/subproject"])
             self.assertFileExistsAndIsDir("subdir/subproject")
             self.assertFileContent("subdir/subproject/file", b"initial")
             self.assertFileContent(".subpatch", b"""\
@@ -882,8 +879,7 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         create_super_and_subproject()
         with cwd("superproject"):
             git = Git()
-            # TODO Use "-q/--quiet" argumnetk
-            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
             git.commit("add subproject")
 
             git.call(["archive", "-o", "archive.tar", "HEAD"])
