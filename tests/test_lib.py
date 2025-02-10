@@ -4,7 +4,6 @@
 
 import os
 import sys
-import tempfile
 import unittest
 from os.path import abspath, dirname, join, realpath
 from subprocess import DEVNULL, PIPE, Popen, call
@@ -212,30 +211,26 @@ class TestFindSuperproject(TestCaseTempFolder):
             self.assertEqual(data.scm_path, None)
 
     def test_plain_superproject(self):
-        # Use a temp folder that is not a subdirectory of the subpatch source
-        # tree, since the source tree is a git repo.
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                # No configuration file in the path.
-                abs_cwd = abspath(os.getcwdb())
-                data = find_superproject()
-                self.assertEqual(data.super_path, None)
-                self.assertEqual(data.scm_type, None)
-                self.assertEqual(data.scm_path, None)
+        # No configuration file in the path.
+        abs_cwd = abspath(os.getcwdb())
+        data = find_superproject()
+        self.assertEqual(data.super_path, None)
+        self.assertEqual(data.scm_type, None)
+        self.assertEqual(data.scm_path, None)
 
-                # A configuration file at the current work directory
-                touch(".subpatch")
-                data = find_superproject()
-                self.assertEqual(data.super_path, abs_cwd)
-                self.assertEqual(data.scm_type, None)
-                self.assertEqual(data.scm_path, None)
+        # A configuration file at the current work directory
+        touch(".subpatch")
+        data = find_superproject()
+        self.assertEqual(data.super_path, abs_cwd)
+        self.assertEqual(data.scm_type, None)
+        self.assertEqual(data.scm_path, None)
 
-                # A configuration file at a toplevel directory
-                with cwd("a/b/c", create=True):
-                    data = find_superproject()
-                    self.assertEqual(data.super_path, abs_cwd)
-                    self.assertEqual(data.scm_type, None)
-                    self.assertEqual(data.scm_path, None)
+        # A configuration file at a toplevel directory
+        with cwd("a/b/c", create=True):
+            data = find_superproject()
+            self.assertEqual(data.super_path, abs_cwd)
+            self.assertEqual(data.scm_type, None)
+            self.assertEqual(data.scm_path, None)
 
     def test_git_superproject(self):
         abs_cwd = abspath(os.getcwdb())
@@ -298,9 +293,7 @@ class TestGit(TestCaseTempFolder):
         self.assertRaises(Exception, git_get_object_type, b"vdoes-not-exists")
 
     def test_git_get_toplevel_not_in_git_folder(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                self.assertIsNone(git_get_toplevel())
+        self.assertIsNone(git_get_toplevel())
 
     def test_git_get_toplevel(self):
         with cwd("subproject", create=True):
@@ -419,11 +412,8 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
             self.assertEqual(None, git_ls_remote_guess_ref(".", "v3"))
 
     def test_git_verify(self):
-        # TODO Refactor to common code. Every tmp dir should be in /tmp!
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                # TODO Exception should be replaced with a git specifc exception
-                self.assertRaises(Exception, git_verify, "main")
+        # TODO Exception should be replaced with a git specifc exception
+        self.assertRaises(Exception, git_verify, "main")
 
         create_git_repo_with_branches_and_tags()
         self.assertEqual(True, git_verify("main"))

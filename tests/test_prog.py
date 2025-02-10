@@ -4,7 +4,6 @@
 
 import os
 import sys
-import tempfile
 import unittest
 from copy import deepcopy
 from os.path import abspath, dirname, join, realpath
@@ -124,15 +123,13 @@ def create_super_and_subproject():
 
 class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
-        # TODO Refactor to common code. Every tmp dir should be in /tmp!
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd("superproject", create=True):
-                git = Git()
-                git.init()
-                p = self.run_subpatch(["list"], stderr=PIPE)
-                self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
-                                 p.stderr)
-                self.assertEqual(p.returncode, 4)
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+            p = self.run_subpatch(["list"], stderr=PIPE)
+            self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
+                             p.stderr)
+            self.assertEqual(p.returncode, 4)
 
     def test_one_and_two_subproject(self):
         create_super_and_subproject()
@@ -271,15 +268,10 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_not_in_superproject(self):
-        # NOTE this does not fail, because the tmp folder is in the git folder
-        # of the subpatch project itself.
-        # TODO Refactor to common code. Every tmp dir should be in /tmp!
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                p = self.run_subpatch(["add", "../ignore"], stderr=PIPE)
-                self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
-                                 p.stderr)
-                self.assertEqual(p.returncode, 4)
+        p = self.run_subpatch(["add", "../ignore"], stderr=PIPE)
+        self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
+                         p.stderr)
+        self.assertEqual(p.returncode, 4)
 
     def test_without_url_arg(self):
         p = self.run_subpatch(["add"], stderr=PIPE)
@@ -880,44 +872,41 @@ Note: There are no changes in the subproject. Nothing to commit!
 
 class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_git_archive_export(self):
-        # TODO combine tmpdir and cwd!
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with cwd(tmpdirname):
-                create_super_and_subproject()
-                with cwd("superproject"):
-                    git = Git()
-                    # TODO Use "-q/--quiet" argumnetk
-                    self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
-                    git.commit("add subproject")
+        create_super_and_subproject()
+        with cwd("superproject"):
+            git = Git()
+            # TODO Use "-q/--quiet" argumnetk
+            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            git.commit("add subproject")
 
-                    git.call(["archive", "-o", "archive.tar", "HEAD"])
+            git.call(["archive", "-o", "archive.tar", "HEAD"])
 
-                    # check archiv:
-                    p = run(["tar", "tvf", "archive.tar"], stdout=PIPE)
-                    self.assertEqual(p.returncode, 0)
-                    self.assertEqual(p.stdout, b"""\
+            # check archiv:
+            p = run(["tar", "tvf", "archive.tar"], stdout=PIPE)
+            self.assertEqual(p.returncode, 0)
+            self.assertEqual(p.stdout, b"""\
 -rw-rw-r-- root/root        45 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
-                with cwd("unpack-dir", create=True):
-                    # Unpack archive
-                    p = run(["tar", "xf", "../superproject/archive.tar"])
-                    self.assertEqual(p.returncode, 0)
+        with cwd("unpack-dir", create=True):
+            # Unpack archive
+            p = run(["tar", "xf", "../superproject/archive.tar"])
+            self.assertEqual(p.returncode, 0)
 
-                    # Check files in working directory
-                    self.assertFileContent("hello", b"content")
-                    self.assertFileContent("subproject/hello", b"content")
-                    self.assertFileContent(".subpatch", b"""\
+            # Check files in working directory
+            self.assertFileContent("hello", b"content")
+            self.assertFileContent("subproject/hello", b"content")
+            self.assertFileContent(".subpatch", b"""\
 [subpatch \"subproject\"]
 \turl = ../subproject
 """)
 
-                    # And now the final test. Check subpatch commands!
-                    p = self.run_subpatch_ok(["list"], stdout=PIPE)
-                    self.assertEqual(p.stdout, b"subproject\n")
+            # And now the final test. Check subpatch commands!
+            p = self.run_subpatch_ok(["list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"subproject\n")
 
 
 if __name__ == '__main__':
