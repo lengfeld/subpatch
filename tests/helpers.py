@@ -211,8 +211,15 @@ class TestCaseTempFolder(unittest.TestCase):
     @classmethod
     def setUp(cls):
         # cls.__name__ will be the name of the lower class.
-        cls.tmpdir = tempfile.mkdtemp(prefix=cls.__name__,
-                                      dir=os.path.dirname(__file__))
+        prefix = "subpatch-" + cls.__name__
+        # NOTE: argument dir is not used, os it's 'None'
+        # So the platform dependend directory is used. See
+        # https://docs.python.org/3/library/tempfile.html#tempfile.mkstemp
+        # Important: The ecpectation is that this directory is not inside a
+        # SCM, e.g. git. subpatch relys on the fact! Otherwise a lot of tests
+        # will fail.
+        # TODO Try to use: tempfile.TemporaryDirectory context
+        cls.tmpdir = tempfile.mkdtemp(prefix=prefix)
         cls.old_cwd = os.getcwd()
         os.chdir(cls.tmpdir)
 

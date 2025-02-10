@@ -25,7 +25,7 @@ sys.path.append(join(dirname(path), "../"))
 from subpatch import ObjectType, git_get_object_type, git_ls_files_untracked
 
 
-class TestSubpatch(TestCaseTempFolder):
+class TestSubpatch():
     def run_subpatch(self, args, stderr=None, stdout=None, hack=False):
         if os.environ.get("DEBUG", "0") == "1":
             print("Running subpatch command: %s" % (args,), file=sys.stderr)
@@ -56,7 +56,7 @@ class TestSubpatch(TestCaseTempFolder):
         return p
 
 
-class TestNoCommands(TestCaseHelper, TestSubpatch):
+class TestNoCommands(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_start_without_args(self):
         p = self.run_subpatch([], stderr=DEVNULL)
         self.assertEqual(p.returncode, 2)
@@ -95,7 +95,7 @@ license:   GPL-2.0-only
         self.assertEqual(b"Interrupted!\n", stderr)
 
 
-class TestHelp(TestCaseHelper, TestSubpatch):
+class TestHelp(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_help(self):
         p = self.run_subpatch_ok(["help"], stdout=PIPE)
         self.assertTrue(p.stdout.startswith(b"usage: subpatch"))
@@ -122,7 +122,7 @@ def create_super_and_subproject():
         # TODO check git commit id
 
 
-class TestCmdList(TestCaseHelper, TestSubpatch):
+class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
         # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -163,7 +163,7 @@ class TestCmdList(TestCaseHelper, TestSubpatch):
         self.assertEqual(b"c_not\nb_in\na_alphabetical_order\n", p.stdout)
 
 
-class TestCmdStatus(TestCaseHelper, TestSubpatch):
+class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
         # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with cwd("superproject", create=True):
@@ -269,7 +269,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
                              p.stdout)
 
 
-class TestCmdAdd(TestCaseHelper, TestSubpatch):
+class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_not_in_superproject(self):
         # NOTE this does not fail, because the tmp folder is in the git folder
         # of the subpatch project itself.
@@ -598,7 +598,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             git.remove_staged_changes()
 
 
-class TestCmdUpdate(TestCaseHelper, TestSubpatch):
+class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_some_errors_cases(self):
         with cwd("subproject", create=True):
             create_git_repo_with_branches_and_tags()
@@ -878,7 +878,7 @@ Note: There are no changes in the subproject. Nothing to commit!
 """)
 
 
-class TestNoGit(TestCaseHelper, TestSubpatch):
+class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_git_archive_export(self):
         # TODO combine tmpdir and cwd!
         with tempfile.TemporaryDirectory() as tmpdirname:
