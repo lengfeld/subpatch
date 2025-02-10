@@ -1565,8 +1565,11 @@ def main_wrapped() -> int:
     args = parser.parse_args()
 
     # Just for testing. A bit ugly to have this in the production code.
-    if os.environ.get("HANG_FOR_TEST", "0") == "1":
-        time.sleep(5)
+    signal_file_path = os.environ.get("HANG_FOR_TEST", "")
+    if len(signal_file_path) > 0:
+        with open(signal_file_path, "bw") as f:
+            f.write(b"")
+        time.sleep(100)
 
     if args.version:
         ret = show_version(args)

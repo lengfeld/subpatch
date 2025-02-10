@@ -75,23 +75,30 @@ license:   GPL-2.0-only
 """, p.stdout)
 
     def test_control_c(self):
+        signal_file_path = "/tmp/x"
+        try:
+            os.remove(signal_file_path)
+        except FileNotFoundError:
+            pass
         # NOTE Using "deepcopy" or "copy" for 'os.environ' does not work.  It
         # does not make a copy. The original _global_ instance is changed.
         # Rework the code to use 'dict(os.environ)'. This makes a realy copy!.
         env = dict(os.environ)
-        env["HANG_FOR_TEST"] = "1"
+        env["HANG_FOR_TEST"] = signal_file_path
         p = Popen([SUBPATCH_PATH, "-v"], stderr=PIPE, env=env)
 
-        # This is racy, but we have to wait until the subpatch process
-        # is actually started, runs and waits in the sleep function.
-        # TODO make it non-racy!
-        sleep(0.50)
+        # Very simple/handmade signalig from subpatch back to the test code.
+        while True:
+            if os.path.exists(signal_file_path):
+                break
+            sleep(0.10)
         from signal import SIGINT
         p.send_signal(SIGINT)
+        os.remove(signal_file_path)
 
         _, stderr = p.communicate()
-        self.assertEqual(3, p.returncode)
         self.assertEqual(b"Interrupted!\n", stderr)
+        self.assertEqual(3, p.returncode)
 
 
 class TestHelp(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
