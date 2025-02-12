@@ -17,6 +17,7 @@ from subprocess import DEVNULL, PIPE, Popen
 # - Paths/filenames are python <string> objects/types
 # - file content is python <bytes> object
 
+
 # In the current directory, create a git repo with two branches and a tag
 # TODO Add self argument and checks for stable commit ids
 # Some users depend on stable commit ids already.

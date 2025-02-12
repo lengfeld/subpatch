@@ -23,7 +23,8 @@ from subpatch import (ObjectType, SCMType, Subproject, URLTypes,
                       git_ls_files_untracked, git_ls_remote,
                       git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                       is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                      split_with_ts, subprojects_parse)
+                      split_with_ts, subprojects_parse, check_superproject_data,
+                      CheckedSuperprojectData, FindSuperprojectData, AppException, ErrorCode)
 
 
 class TestConfigParse(unittest.TestCase):
@@ -269,6 +270,39 @@ class TestFindSuperproject(TestCaseTempFolder):
             self.assertEqual(data.super_path, abs_cwd_sub)
             self.assertEqual(data.scm_type, SCMType.GIT)
             self.assertEqual(data.scm_path, abs_cwd)
+
+
+class TestCheckSuperprojectData(TestCaseTempFolder):
+    def test_ok(self):
+        # TODO split
+        data = FindSuperprojectData(b"/super", None, None)
+        checked_data = check_superproject_data(data)
+        self.assertEqual(checked_data.super_path, b"/super")
+        self.assertEqual(checked_data.configured, True)
+        self.assertEqual(checked_data.scm_type, None)
+
+        data = FindSuperprojectData(b"/super", SCMType.GIT, b"/super")
+        checked_data = check_superproject_data(data)
+        self.assertEqual(checked_data.super_path, b"/super")
+        self.assertEqual(checked_data.configured, True)
+        self.assertEqual(checked_data.scm_type, SCMType.GIT)
+
+        data = FindSuperprojectData(None, SCMType.GIT, b"/super")
+        checked_data = check_superproject_data(data)
+        self.assertEqual(checked_data.super_path, b"/super")
+        self.assertEqual(checked_data.configured, False)
+        self.assertEqual(checked_data.scm_type, SCMType.GIT)
+
+    def test_missmatch_path(self):
+        with self.assertRaises(AppException) as context:
+            data = FindSuperprojectData(b"/a", SCMType.GIT, b"/b")
+            check_superproject_data(data)
+        self.assertEqual(context.exception.get_code(), ErrorCode.NOT_IMPLEMENTED_YET)
+
+    def test_no_scm_and_no_config(self):
+        data = FindSuperprojectData(None, None, None)
+        checked_data = check_superproject_data(data)
+        self.assertIsNone(checked_data)
 
 
 class TestGit(TestCaseTempFolder):

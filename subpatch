@@ -232,6 +232,9 @@ class AppException(Exception):
         else:
             super().__init__()
 
+    def get_code(self):
+        return self._code
+
 
 class URLTypes(Enum):
     LOCAL_RELATIVE = 1
@@ -275,7 +278,8 @@ class SCMType(Enum):
     GIT = b"git"
 
 
-# NOTE: In both cases it's the topdir path!
+# NOTE: In both cases it's the path to the toplevel directory!
+# TODO Use Optional[T]
 @dataclass
 class FindSuperprojectData:
     super_path: bytes | None = None
@@ -284,20 +288,12 @@ class FindSuperprojectData:
 
 
 # Based on the current work directory search for a subpatch project
-# and scm.
+# and SCM system.
 # Returns: FindSuperprojectData
-# There can be four cases
-#  - no ".subpatch" config and no scm
-#  - ".subpatch" config and no scm
-#  - no ".subpach" config and scm
-#  - ".subpach" config and scm
-# For the last cases there are two sub-cases:
-#  - super_path matches scm_path
-#  - both paths do not match
 #
 # TODO support svn, mercurial and others in the future
 # TODO thinking about symlinks!
-def find_superproject():
+def find_superproject() -> FindSuperprojectData:
     abs_cwd = abspath(os.getcwdb())
 
     # TODO refactory this self-made and hacky approach of a directory walk
@@ -349,6 +345,96 @@ def find_superproject():
         abs_cwd_parts.pop()
 
     return data
+
+
+# TODO There is still reduance in the structure!
+@dataclass(frozen=True)
+class CheckedSuperprojectData:
+    super_path: bytes
+    configured: bool
+    scm_type: Optional[SCMType]
+
+
+# There can be four cases
+#  - no ".subpatch" config and no SCM
+#     -> function returns None
+#  - ".subpatch" config and no SCM
+#  - no ".subpach" config and SCM
+#  - ".subpach" config and SCM
+# For the last cases there are two sub-cases:
+#  - super_path matches scm_path
+#  - both paths do not match
+def check_superproject_data(data: FindSuperprojectData) -> Optional[CheckedSuperprojectData]:
+    if data.scm_type is not None:
+        # There is a SCM tool
+        if data.super_path is None:
+            # And there is no subpatch config file
+            assert data.scm_path is not None
+            return CheckedSuperprojectData(data.scm_path, False, data.scm_type)
+        else:
+            # And there is a subpatch config file!
+
+            # Check if the paths match up:
+            if data.super_path != data.scm_path:
+                # TODO add text here!
+                # TODO rename "root" to "toplevel" to be consistent.
+                raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subpatch config file is not at the root of the SCM repository!")
+
+            return CheckedSuperprojectData(data.super_path, True, data.scm_type)
+    else:
+        # Current working directory is not in a SCM system
+        if data.super_path is None:
+            # And there is no subpatch config file
+            # TODO This message is wrong. The problem is also that there is no
+            # .subpatch config data. E.g. a git repo would also be valid
+            # TODO Cleanup
+            # raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
+            return None
+        else:
+            # And there is a subpatch config file
+            return CheckedSuperprojectData(data.super_path, True, data.scm_type)
+
+
+class SuperprojectType(Enum):
+    PLAIN = b"plain"
+    GIT = b"git"
+
+
+# TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor
+@dataclass(frozen=True)
+class Superproject:
+    path: bytes
+    helper: object
+    configured: bool
+    typex: SuperprojectType
+
+
+def check_and_get_superproject_from_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
+    def get_helper_from_scm_type(scm_type):
+        if scm_type == SCMType.GIT:
+            return SuperprojectType.GIT, SuperHelperGit()
+        else:
+            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (scm_type,))
+
+    # TODO maybe move outside of this function
+    if checked_data is None:
+        # And there is no subpatch config file and no SCM
+        raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
+
+    if checked_data.scm_type is not None:
+        # There is a SCM tool
+        super_type, helper = get_helper_from_scm_type(checked_data.scm_type)
+        # And there is either a subpatch config file or not: See value of 'configured'
+        configured = checked_data.configured
+        return Superproject(checked_data.super_path, helper, configured, super_type)
+    else:
+        # Current working directory is not in a SCM system
+        # But there is a config file
+        assert checked_data.configured
+        helper = SuperHelperPlain()
+        super_type = SuperprojectType.PLAIN
+        path = checked_data.super_path
+        return Superproject(path, helper, True, super_type)
 
 
 # :: void -> None or byte object (or raises an exception)
@@ -756,7 +842,8 @@ def cmd_update(args, parser):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "Must give path to subproject")
 
     data = find_superproject()
-    superx = check_and_get_superproject_from_data(data)
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
     sub_helper = SubHelperGit()
@@ -978,7 +1065,8 @@ def cmd_add(args, parser):
         cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
     data = find_superproject()
-    superx = check_and_get_superproject_from_data(data)
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_data(checked_data)
 
     if not superx.configured and superx.typex != SuperprojectType.GIT:
         # NOTE: It's ok if the superproject is *not* configured.
@@ -1130,57 +1218,6 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.WORKS_ONLY_IN_A_GIT_REPO)
 
 
-class SuperprojectType(Enum):
-    PLAIN = b"plain"
-    GIT = b"git"
-
-
-@dataclass(frozen=True)
-class Superproject:
-    path: bytes
-    helper: Union[SuperHelperGit, SuperHelperPlain]
-    configured: bool
-    typex: SuperprojectType
-
-
-def check_and_get_superproject_from_data(data):
-    def get_helper_from_scm_type(scm_type):
-        if scm_type == SCMType.GIT:
-            return SuperprojectType.GIT, SuperHelperGit()
-        else:
-            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (scm_type,))
-
-    if data.scm_type is not None:
-        # There is a SCM tool
-        if data.super_path is None:
-            # And there is no subpatch config file
-            super_type, helper = get_helper_from_scm_type(data.scm_type)
-            path = data.scm_path
-            return Superproject(path, helper, False, super_type)
-        else:
-            # And there is a subpatch config file!
-
-            # Check if the paths match up:
-            if data.super_path != data.scm_path:
-                # TODO add text here!
-                raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subpatch config file is not at the root of the SCM repository!")
-
-            super_type, helper = get_helper_from_scm_type(data.scm_type)
-            path = data.super_path
-            return Superproject(path, helper, True, super_type)
-    else:
-        # Current working directory is not in a SCM system
-        if data.super_path is None:
-            # And there is no subpatch config file
-            raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
-        else:
-            # And there is a subpatch config file
-            helper = SuperHelperPlain()
-            super_type = SuperprojectType.PLAIN
-            path = data.super_path
-            return Superproject(path, helper, True, super_type)
-
-
 # TODO Document own internal path library
 #  - e.g. b"" is the same as b"." and the later is not used!
 # TODO add tests
@@ -1285,7 +1322,8 @@ def is_cwd_toplevel_directory(paths : Paths) -> bool:
 # TODO add not about plumbing command
 def cmd_list(args, parser):
     data = find_superproject()
-    superx = check_and_get_superproject_from_data(data)
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_data(checked_data)
     ensure_superproject_is_configured(superx)
 
     config_abspath = join(superx.path, b".subpatch")
@@ -1381,7 +1419,8 @@ def git_ls_files_untracked():
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
 def cmd_status(args, parser):
     data = find_superproject()
-    superx = check_and_get_superproject_from_data(data)
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
 
