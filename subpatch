@@ -1600,7 +1600,13 @@ def main_wrapped() -> int:
 
 def main() -> int:
     try:
-        return main_wrapped()
+        ret = main_wrapped()
+
+        # For some functions I have forgotten to add a return statement. Catch
+        # this bug here!
+        assert ret is not None
+
+        return ret
     except AppException as e:
         # TODO allow to append a generic error message for all messages, not only for invalid argument.
         if e._code == ErrorCode.NOT_IMPLEMENTED_YET:
