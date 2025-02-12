@@ -1169,14 +1169,14 @@ def cmd_add(args, parser):
         superx.helper.add([paths.cwd_to_sub_relpath])
         with cwd(superx.path):
             superx.helper.add([b".subpatch"])
-    except:
+    except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
         # start of the line.
         if not args.quiet:
             print(" Failed.")
             sys.stdout.flush()
-        raise
+        raise e
     else:
         if not args.quiet:
             print(" Done.")
