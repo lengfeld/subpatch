@@ -273,20 +273,26 @@ class TestFindSuperproject(TestCaseTempFolder):
 
 
 class TestCheckSuperprojectData(TestCaseTempFolder):
-    def test_ok(self):
-        # TODO split
+    def test_no_scm_and_no_config(self):
+        data = FindSuperprojectData(None, None, None)
+        checked_data = check_superproject_data(data)
+        self.assertIsNone(checked_data)
+
+    def test_config_and_no_scm(self):
         data = FindSuperprojectData(b"/super", None, None)
         checked_data = check_superproject_data(data)
         self.assertEqual(checked_data.super_path, b"/super")
         self.assertEqual(checked_data.configured, True)
         self.assertEqual(checked_data.scm_type, None)
 
+    def test_config_and_scm(self):
         data = FindSuperprojectData(b"/super", SCMType.GIT, b"/super")
         checked_data = check_superproject_data(data)
         self.assertEqual(checked_data.super_path, b"/super")
         self.assertEqual(checked_data.configured, True)
         self.assertEqual(checked_data.scm_type, SCMType.GIT)
 
+    def test_no_config_and_scm(self):
         data = FindSuperprojectData(None, SCMType.GIT, b"/super")
         checked_data = check_superproject_data(data)
         self.assertEqual(checked_data.super_path, b"/super")
@@ -298,11 +304,6 @@ class TestCheckSuperprojectData(TestCaseTempFolder):
             data = FindSuperprojectData(b"/a", SCMType.GIT, b"/b")
             check_superproject_data(data)
         self.assertEqual(context.exception.get_code(), ErrorCode.NOT_IMPLEMENTED_YET)
-
-    def test_no_scm_and_no_config(self):
-        data = FindSuperprojectData(None, None, None)
-        checked_data = check_superproject_data(data)
-        self.assertIsNone(checked_data)
 
 
 class TestGit(TestCaseTempFolder):
