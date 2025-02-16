@@ -84,7 +84,7 @@ value in the config.
 
 ## Commands, not implemented yet
 
-The following list is a draft for additional commands. Subpatch will implement
+The following list is a draft for additional commands. subpatch will implement
 these in that form or another.
 
 * `rm <subproject>`: Remove subproject code and config data. The reverse of `add`.

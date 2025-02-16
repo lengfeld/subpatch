@@ -1,6 +1,6 @@
 # Comparison to other tools
 
-Subpatch is not the first tool that tries to solve the multi repository
+subpatch is not the first tool that tries to solve the multi repository
 problem. Other tools are
 
 * [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
