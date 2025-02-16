@@ -15,7 +15,7 @@ from enum import Enum
 from os import mkdir
 from os.path import abspath, join
 from subprocess import DEVNULL, PIPE, Popen
-from typing import Any
+from typing import Any, Optional, Union
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
@@ -453,7 +453,7 @@ def git_add(args):
 #    Variant:
 #       sub_url: The subproject's URL, e.g. to clone/download
 #
-# Subpatch naming
+# subpatch naming
 #  - "config" or "subpatch config". Is the name of the config in the
 #    ".subpatch" file at the toplevel of the superproject.
 #    TODO add to glossary
@@ -586,7 +586,7 @@ def git_ls_remote(url):
 # Returns
 #  - None if ref could not be resolved
 # TODO also return the matched object
-def git_ls_remote_guess_ref(url, ref):
+def git_ls_remote_guess_ref(url, ref) -> Optional[bytes]:
     # TODO "git ls-remote" also allows to query a single ref or a pattern of
     # refs!
     refs_sha1 = git_ls_remote(url)
@@ -617,7 +617,7 @@ class DownloadConfig:
 class CloneConfig:
     full_clone: bool
     object_id: str | None = None
-    ref: str | None = None
+    ref: Optional[bytes] = None
 
 
 # 'revision' can be None
@@ -717,7 +717,13 @@ class SubHelperGit:
 
 
 class SuperHelperPlain:
-    pass
+    def add(self, paths):
+        # Nothing to do here. There is no SCM system. So the code can also not add
+        # files to the SCM
+        pass
+
+    def print_add_success(self):
+        raise NotImplementedError("TOOD think about this case!")
 
 
 class SuperHelperGit:
@@ -730,10 +736,6 @@ class SuperHelperGit:
         print("- To inspect the changes, use `git status` and `git diff --staged`.")
         print("- If you want to keep the changes, commit them with `git commit`.")
         print("- If you want to revert the changes, execute `git reset --merge`.")
-
-
-def is_cwd_toplevel_directory(paths):
-    return paths.super_to_cwd_relpath == b""
 
 
 # TODO also take cwd into account
@@ -1125,7 +1127,7 @@ class SuperprojectType(Enum):
 @dataclass(frozen=True)
 class Superproject:
     path: bytes
-    helper: object
+    helper: Union[SuperHelperGit, SuperHelperPlain]
     configured: bool
     typex: SuperprojectType
 
@@ -1225,7 +1227,7 @@ class Paths:
 #  - symbolic links
 #  - ".." pointing outside of repo
 # TODO fix function naming
-def do_paths(super_abspath, cwd_to_sub_relpath):
+def do_paths(super_abspath : bytes, cwd_to_sub_relpath: bytes) -> Paths:
     assert is_abspath(super_abspath)
     assert is_relpath(cwd_to_sub_relpath)
     # TODO test and ensure that paths are normalized!!
@@ -1263,6 +1265,10 @@ def do_paths(super_abspath, cwd_to_sub_relpath):
     return Paths(super_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name)
 
 
+def is_cwd_toplevel_directory(paths : Paths) -> bool:
+    return paths.super_to_cwd_relpath == b""
+
+
 # TODO add "-z" option to be safe againts any chars in the path
 # TODO add escpaing for "evil" chars in non "-z" output
 # TODO add not about plumbing command
@@ -1271,7 +1277,7 @@ def cmd_list(args, parser):
     superx = check_and_get_superproject_from_data(data)
     ensure_superproject_is_configured(superx)
 
-    config_abspath = join(data.super_path, b".subpatch")
+    config_abspath = join(superx.path, b".subpatch")
 
     with open(config_abspath) as f:
         config_parts = config_parse(split_with_ts(f.read()))
@@ -1511,7 +1517,7 @@ def cmd_status(args, parser):
     return 0
 
 
-def main_wrapped():
+def main_wrapped() -> int:
     # TODO maybe add 'epilog' again
     parser = ArgumentParser(description='Adding subprojects into a git repo, the superproject.')
     parser.add_argument("--version", "-v", dest="version",
@@ -1576,9 +1582,9 @@ def main_wrapped():
     return ret
 
 
-def main():
+def main() -> int:
     try:
-        ret = main_wrapped()
+        return main_wrapped()
     except AppException as e:
         # TODO allow to append a generic error message for all messages, not only for invalid argument.
         if e._code == ErrorCode.NOT_IMPLEMENTED_YET:
@@ -1603,14 +1609,12 @@ def main():
             # TODO maybe it still better that the error is printed here and not
             # printed by the caller!
             pass
-        ret = 4
+        return 4
     except KeyboardInterrupt:
         print("Interrupted!", file=sys.stderr)
         # TODO What is the correct/best error code?
-        ret = 3
-    sys.exit(ret)
+        return 3
 
 
 if __name__ == '__main__':
-    main()
-    raise Exception("Never reached!")
+    sys.exit(main())
