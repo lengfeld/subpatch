@@ -84,6 +84,23 @@ Otherwise subpatch uses the new `url` from the command line and updates the
 value in the config.
 
 
+## subpatch configure
+
+    subpatch configure [-q | --quiet]
+
+Configure the current superproject to use subpatch. The command adds the
+`.subpatch` config file at toplevel directory of the superproject. subpatch
+uses the existens of this file as a marker that the project is using subpatch.
+
+This command works only for git repositories as superprojects currently.
+subpatch does not support other SCM tools or plain directories for now.
+
+Normally you do not have to exectued this command. `subpatch add`
+automatically configures the superproject if necessary.
+
+`-q,--quiet`: Suppress any output to stdout.
+
+
 ## Commands, not implemented yet
 
 The following list is a draft for additional commands. subpatch will implement

@@ -886,6 +886,7 @@ def cmd_update(args, parser):
     else:
         revision = subproject.revision  # Can also be None!
 
+    # subpatch download
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
           (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
           end="")
@@ -907,7 +908,6 @@ def cmd_update(args, parser):
     # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
     # download!
 
-    # subpatch download
     download_config = DownloadConfig(url=sub_url, revision=revision)
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
@@ -1004,7 +1004,7 @@ def cmd_update(args, parser):
     with cwd(superx.path):
         superx.helper.add([b".subpatch"])
 
-    # TODO reapply patches
+    # TODO reapply patches: subpatch push --all
 
     print(" Done.")
 
@@ -1215,6 +1215,48 @@ def ensure_superproject_is_configured(superx):
 def ensure_superproject_is_git(superx):
     if superx.typex != SuperprojectType.GIT:
         raise AppException(ErrorCode.WORKS_ONLY_IN_A_GIT_REPO)
+
+
+# TODO implement option to unconfigure a superproject
+# TODO unconfiguring should only be possible if all subprojects are removed!
+def cmd_configure(args, parser):
+    data = find_superproject()
+    checked_data = check_superproject_data(data)
+
+    if checked_data is None:
+        # There is no config file and no SCM
+        # TODO implement with "subpatch configure --here"
+        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET,
+                           "No SCM found. Cannot configure. '--here' not implemented yet!")
+    elif checked_data.configured:
+        # Nothing to do, the superproject is already configured.
+        if not args.quiet:
+            print("The file .subpatch already exists. Nothing to do!")
+    else:
+        # There is no ".subpatch" file (=the superproject is not configured)
+        if checked_data.scm_type == SCMType.GIT:
+            # TODO for other commands, subpatch checks whether there are
+            # already staged files and errors out/warns!
+            # TODO move this to the super helper
+            config_abspath = join(data.scm_path, b".subpatch")
+            assert not os.path.exists(config_abspath)
+            with open(config_abspath, "bw") as f:
+                pass
+
+            # TODO: Using cwd to the toplevel directory is just a hack because
+            # the helper is cwd-aware.
+            with cwd(data.scm_path):
+                git_add([b".subpatch"])
+            if not args.quiet:
+                print("The file .subpatch was created in the toplevel directory.")
+                print("Now use 'git commit' to finalized your change.")
+            # TODO maybe use the same help text as "add" and "update".
+        else:
+            # Unsupported SCMType
+            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET,
+                               "SCM not supported. Currently subpatch only supports git")
+
+    return 0
 
 
 # TODO Document own internal path library
@@ -1577,6 +1619,12 @@ def main_wrapped() -> int:
                         help="Show more information, like homepage, repo and license")
 
     subparsers = parser.add_subparsers()
+
+    parser_configure = subparsers.add_parser("configure",
+                                             help="Configure the superproject to use subpatch")
+    parser_configure.set_defaults(func=cmd_configure)
+    parser_configure.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                                  help="Suppress output to stdout")
 
     parser_add = subparsers.add_parser("add",
                                        help="Fetch and add a subproject")

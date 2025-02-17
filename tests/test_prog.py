@@ -594,6 +594,65 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             git.remove_staged_changes()
 
 
+class TestCmdConfigure(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def test_subpatch_config_does_not_match_scm(self):
+        git = Git()
+        git.init()
+        with cwd("sub", create=True):
+            touch(".subpatch", b"")
+            p = self.run_subpatch(["configure"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Feature not implemented yet: subpatch config file is not at the root of the SCM repository!\n")
+
+    def test_configure_in_git(self):
+        git = Git()
+        git.init()
+        self.assertFileExists(".git")
+        self.assertFileDoesNotExist(".subpatch")
+        self.assertEqual(git.diff_staged_files(), [])
+
+        p = self.run_subpatch_ok(["configure"], stdout=PIPE)
+        self.assertEqual(p.stdout, b"""\
+The file .subpatch was created in the toplevel directory.
+Now use 'git commit' to finalized your change.
+""")
+        self.assertFileContent(".subpatch", b"")
+        self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
+
+        git.remove_staged_changes()
+
+        # Test in subdirectory
+        with cwd(b"sub", create=True):
+            self.run_subpatch_ok(["configure", "-q"])
+            self.assertFileContent("../.subpatch", b"")
+            self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
+
+    def test_after_configure_list_and_add_are_possible(self):
+        create_super_and_subproject()
+        with cwd("superproject"):
+            self.run_subpatch_ok(["configure", "-q"])
+            self.assertFileContent(".subpatch", b"")
+
+            p = self.run_subpatch_ok(["list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"")
+
+            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.assertFileContent(".subpatch", b"""\
+[subpatch \"subproject\"]
+\turl = ../subproject
+""")
+
+            p = self.run_subpatch_ok(["list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"subproject\n")
+
+    def test_not_in_git_not_yet_supported(self):
+        p = self.run_subpatch(["configure"], stderr=PIPE)
+        self.assertEqual(p.returncode, 4)
+        self.assertEqual(p.stderr,
+                         b"Error: Feature not implemented yet: No SCM found. Cannot configure. '--here' not implemented yet!\n")
+
+
 class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_some_errors_cases(self):
         with cwd("subproject", create=True):
