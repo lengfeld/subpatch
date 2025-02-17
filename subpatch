@@ -1274,7 +1274,7 @@ class Paths:
 #  - symbolic links
 #  - ".." pointing outside of repo
 # TODO fix function naming
-def do_paths(super_abspath : bytes, cwd_to_sub_relpath: bytes) -> Paths:
+def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
     assert is_abspath(super_abspath)
     assert is_relpath(cwd_to_sub_relpath)
     # TODO test and ensure that paths are normalized!!
@@ -1312,7 +1312,7 @@ def do_paths(super_abspath : bytes, cwd_to_sub_relpath: bytes) -> Paths:
     return Paths(super_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name)
 
 
-def is_cwd_toplevel_directory(paths : Paths) -> bool:
+def is_cwd_toplevel_directory(paths: Paths) -> bool:
     return paths.super_to_cwd_relpath == b""
 
 
