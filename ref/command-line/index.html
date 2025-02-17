@@ -80,6 +80,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-update">subpatch update</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-configure">subpatch configure</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
     </li>
     </ul>
@@ -149,7 +151,7 @@ changes.</p>
 <p>It's similar to <code>git status</code>, but not for the whole repository. Only for the
 subprojects.</p>
 <h2 id="subpatch-add">subpatch add</h2>
-<pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [--revision | -r &lt;revision&gt;]
+<pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [-r | --revision &lt;revision&gt;] [-q | --quiet]
 </code></pre>
 <p>Add the remote project specified by <code>url</code> as a subproject at the optional
 <code>path</code> in the current repository.  Currently <code>url</code> can only point to a git
@@ -166,6 +168,7 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.</p>
+<p><code>-q,--quiet</code>: Suppress any output to stdout.</p>
 <h2 id="subpatch-update">subpatch update</h2>
 <pre><code>subpatch update &lt;path&gt; [--revision | -r &lt;revision&gt;] [--url | -r &lt;url&gt;]
 </code></pre>
@@ -179,8 +182,19 @@ the value in the config.</p>
 <p>If no <code>--url</code> argument is given, subpatch uses the value from the config.
 Otherwise subpatch uses the new <code>url</code> from the command line and updates the
 value in the config.</p>
+<h2 id="subpatch-configure">subpatch configure</h2>
+<pre><code>subpatch configure [-q | --quiet]
+</code></pre>
+<p>Configure the current superproject to use subpatch. The command adds the
+<code>.subpatch</code> config file at toplevel directory of the superproject. subpatch
+uses the existens of this file as a marker that the project is using subpatch.</p>
+<p>This command works only for git repositories as superprojects currently.
+subpatch does not support other SCM tools or plain directories for now.</p>
+<p>Normally you do not have to exectued this command. <code>subpatch add</code>
+automatically configures the superproject if necessary.</p>
+<p><code>-q,--quiet</code>: Suppress any output to stdout.</p>
 <h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
-<p>The following list is a draft for additional commands. Subpatch will implement
+<p>The following list is a draft for additional commands. subpatch will implement
 these in that form or another.</p>
 <ul>
 <li><code>rm &lt;subproject&gt;</code>: Remove subproject code and config data. The reverse of <code>add</code>.</li>
@@ -203,7 +217,6 @@ these in that form or another.</p>
 <li><code>root</code>: Show the root path of the superproject. Useful
   for something like <code>croot</code> in the AOSP. For git the command looks like
   <code>git rev-parse --show-toplevel</code>.</li>
-<li><code>push/pop</code>: apply or deapply a patch of the subproject to the working tree.</li>
 </ul>
               
             </div>
