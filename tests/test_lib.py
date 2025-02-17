@@ -14,17 +14,18 @@ from helpers import (Git, TestCaseTempFolder,
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from subpatch import (ObjectType, SCMType, Subproject, URLTypes,
-                      config_add_section, config_parse, config_remove_section,
-                      config_unparse, do_paths, find_superproject,
+from subpatch import (AppException, CheckedSuperprojectData, ErrorCode,
+                      FindSuperprojectData, ObjectType, SCMType, Subproject,
+                      URLTypes, check_superproject_data, config_add_section,
+                      config_parse, config_remove_section, config_unparse,
+                      do_paths, find_superproject,
                       get_name_from_repository_url, get_url_type,
                       git_diff_in_dir, git_diff_name_only, git_get_object_type,
                       git_get_toplevel, git_init_and_fetch,
                       git_ls_files_untracked, git_ls_remote,
                       git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                       is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                      split_with_ts, subprojects_parse, check_superproject_data,
-                      CheckedSuperprojectData, FindSuperprojectData, AppException, ErrorCode)
+                      split_with_ts, subprojects_parse)
 
 
 class TestConfigParse(unittest.TestCase):
