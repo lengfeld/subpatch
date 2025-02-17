@@ -400,22 +400,38 @@ class SuperprojectType(Enum):
     GIT = b"git"
 
 
+class SuperHelperPlain:
+    def add(self, paths):
+        # Nothing to do here. There is no SCM system. So the code can also not add
+        # files to the SCM
+        pass
+
+    def print_add_success(self):
+        raise NotImplementedError("TOOD think about this case!")
+
+
+class SuperHelperGit:
+    # Add the file in 'path' to the index
+    # TODO not all version control systems have the notion of a index!
+    def add(self, paths):
+        git_add(paths)
+
+    def print_add_success(self):
+        print("- To inspect the changes, use `git status` and `git diff --staged`.")
+        print("- If you want to keep the changes, commit them with `git commit`.")
+        print("- If you want to revert the changes, execute `git reset --merge`.")
+
+
 # TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor
 @dataclass(frozen=True)
 class Superproject:
     path: bytes
-    helper: object
+    helper: Union[SuperHelperGit, SuperHelperPlain]
     configured: bool
     typex: SuperprojectType
 
 
 def check_and_get_superproject_from_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
-    def get_helper_from_scm_type(scm_type):
-        if scm_type == SCMType.GIT:
-            return SuperprojectType.GIT, SuperHelperGit()
-        else:
-            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (scm_type,))
-
     # TODO maybe move outside of this function
     if checked_data is None:
         # And there is no subpatch config file and no SCM
@@ -423,18 +439,23 @@ def check_and_get_superproject_from_data(checked_data: Optional[CheckedSuperproj
 
     if checked_data.scm_type is not None:
         # There is a SCM tool
-        super_type, helper = get_helper_from_scm_type(checked_data.scm_type)
         # And there is either a subpatch config file or not: See value of 'configured'
-        configured = checked_data.configured
-        return Superproject(checked_data.super_path, helper, configured, super_type)
+        if checked_data.scm_type == SCMType.GIT:
+            super_type = SuperprojectType.GIT
+            helper = SuperHelperGit()
+        else:
+            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (checked_data.scm_type,))
     else:
-        # Current working directory is not in a SCM system
-        # But there is a config file
+        # Current working directory is not in a SCM system.  But there is a
+        # config file. Ensured by the caller!
         assert checked_data.configured
         helper = SuperHelperPlain()
         super_type = SuperprojectType.PLAIN
-        path = checked_data.super_path
-        return Superproject(path, helper, True, super_type)
+
+    super_path = checked_data.super_path
+    configured = checked_data.configured
+
+    return Superproject(super_path, helper, configured, super_type)
 
 
 # :: void -> None or byte object (or raises an exception)
@@ -800,28 +821,6 @@ class SubHelperGit:
         local_repo_git_dir = join(folder, b".git")
         assert os.path.isdir(local_repo_git_dir)
         shutil.rmtree(local_repo_git_dir)
-
-
-class SuperHelperPlain:
-    def add(self, paths):
-        # Nothing to do here. There is no SCM system. So the code can also not add
-        # files to the SCM
-        pass
-
-    def print_add_success(self):
-        raise NotImplementedError("TOOD think about this case!")
-
-
-class SuperHelperGit:
-    # Add the file in 'path' to the index
-    # TODO not all version control systems have the notion of a index!
-    def add(self, paths):
-        git_add(paths)
-
-    def print_add_success(self):
-        print("- To inspect the changes, use `git status` and `git diff --staged`.")
-        print("- If you want to keep the changes, commit them with `git commit`.")
-        print("- If you want to revert the changes, execute `git reset --merge`.")
 
 
 # TODO also take cwd into account
