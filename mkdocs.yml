@@ -11,6 +11,7 @@ nav:
     - Requirements: 'exp/requirements.md'
     - Design decisions: 'exp/design.md'
     - Comparison to other tools: 'exp/comparison.md'
+    - Frequently asked questions: 'exp/faq.md'
   - Tutorials:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'

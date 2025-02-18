@@ -90,3 +90,45 @@ See also the Wikipedia entry
 [Application-level package managers](https://en.wikipedia.org/wiki/List_of_software_package_management_systems#Application-level_package_managers).
 These APMs are in contrast to package managers of Linux distributions, like rpm and
 dpkg, and embedded build systems, like buildroot and Yocto.
+
+
+# patch and patch file
+
+A *patch* or *patch file* is a textual representation of a source code
+modification. It consists of a patch message describing the change and a diff
+of the changed code lines.
+
+When using git, you can create a patch file with the command `git format-patch`
+from a commit object. For example:
+
+    $ git format-patch e311aaded0a49dced437f2f4be0d2fce4c698132 -1
+    0001-website-fix-warning-in-mkdocs-serve.patch
+    $ cat 0001-website-fix-warning-in-mkdocs-serve.patch
+    From e311aaded0a49dced437f2f4be0d2fce4c698132 Mon Sep 17 00:00:00 2001
+    From: Stefan Lengfeld <stefan@lengfeld.xyz>
+    Date: Fri, 7 Feb 2025 23:10:18 +0100
+    Subject: [PATCH] website: fix warning in 'mkdocs serve'
+
+    ---
+     website/ref/fosdem25.md | 2 +-
+     1 file changed, 1 insertion(+), 1 deletion(-)
+
+    diff --git a/website/ref/fosdem25.md b/website/ref/fosdem25.md
+    index 5dae49e..dca35b8 100644
+    --- a/website/ref/fosdem25.md
+    +++ b/website/ref/fosdem25.md
+    @@ -26,6 +26,6 @@ Thanks!
+     Content:
+
+     1. Present call to action
+    -2. Present [homepage of subpatch](/)
+    +2. Present [homepage of subpatch](../index.md)
+     3. (Maybe) Do a showcase
+     4. Repeat call to action :-)
+    --
+    2.43.0
+
+Patches are a very old concept of distributed software development.
+Developers used them even before SCM tools like cvs, svn, and git existed.
+For some software projects, e.g. the [Linux kernel](https://kernel.org), patch files
+sent to a *mailing list* are an integral part of the development model even today.
