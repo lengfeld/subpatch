@@ -55,6 +55,8 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/comparison/">Comparison to other tools</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/faq/">Frequently asked questions</a>
+                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
               <ul>
@@ -216,6 +218,45 @@ that are integrated into the ecosystem of a programming language. Examples:</p>
 <a href="https://en.wikipedia.org/wiki/List_of_software_package_management_systems#Application-level_package_managers">Application-level package managers</a>.
 These APMs are in contrast to package managers of Linux distributions, like rpm and
 dpkg, and embedded build systems, like buildroot and Yocto.</p>
+<h1 id="patch-and-patch-file">patch and patch file</h1>
+<p>A <em>patch</em> or <em>patch file</em> is a textual representation of a source code
+modification. It consists of a patch message describing the change and a diff
+of the changed code lines.</p>
+<p>When using git, you can create a patch file with the command <code>git format-patch</code>
+from a commit object. For example:</p>
+<pre><code>$ git format-patch e311aaded0a49dced437f2f4be0d2fce4c698132 -1
+0001-website-fix-warning-in-mkdocs-serve.patch
+$ cat 0001-website-fix-warning-in-mkdocs-serve.patch
+From e311aaded0a49dced437f2f4be0d2fce4c698132 Mon Sep 17 00:00:00 2001
+From: Stefan Lengfeld &lt;stefan@lengfeld.xyz&gt;
+Date: Fri, 7 Feb 2025 23:10:18 +0100
+Subject: [PATCH] website: fix warning in 'mkdocs serve'
+
+---
+ website/ref/fosdem25.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/website/ref/fosdem25.md b/website/ref/fosdem25.md
+index 5dae49e..dca35b8 100644
+--- a/website/ref/fosdem25.md
++++ b/website/ref/fosdem25.md
+@@ -26,6 +26,6 @@ Thanks!
+ Content:
+
+ 1. Present call to action
+-2. Present [homepage of subpatch](/)
++2. Present [homepage of subpatch](../index.md)
+ 3. (Maybe) Do a showcase
+ 4. Repeat call to action :-)
+--
+2.43.0
+</code></pre>
+<p>Patches are a very old concept of distributed software development.
+Developers used them even before SCM tools like cvs, svn, and git existed.
+For some software projects, e.g. the <a href="https://kernel.org">Linux kernel</a>, patch files
+sent to a <em>mailing list</em> are an integral part of the development model even today.</p>
+<h1 id="vendoring">vendoring</h1>
+<p>TODO Explain</p>
               
             </div>
           </div><footer>
