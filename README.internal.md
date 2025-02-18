@@ -352,6 +352,7 @@ into multiple commands to gradually add "--exclude/.." config options.
 Implement 'foreach'. See repo and git-submodule
 
 Implement 'rm'. The counterpart of 'add'.
+-> rm is not the the counterpart. No download and unpack is done.
 
 Design principle: Modifiying config files by hand is ok and encouraged. Don't
 add code/commands to do simple things, like adding a version parameter or ...
@@ -363,6 +364,52 @@ State of the superproject
 - configured
    - no subprojects
    - some subprojects
+   
+State of subprojects
+ - worktree contains files: populated
+   - metadata contains checksum of unpatched, but unpacked files
+   - state of applied patches, e.g. none or all
+   - infos about upstream, url, rev, sha1, checksums
+ - cache
+    - type of download: git, svn repo or tarball
+    - contains metadata: url, rev, commit/tag id (in git called FETCH_HEAD)
+    - more metdata: supatch is owning the cache, or it's a seperate cache: cannot clear!
+    - this repo can also be used to rebase patches, and create a pushable branch from a patchlist
+ - patches
+    - directory infos
+ - unpack metadata (not really a dimension)
+    - contains "subtree" and "exclude" directies
+commands for subproject
+ - init
+ - download
+ - unpack
+ - pop, push
+ - commit-to-patch
+ - ls-worktree-files (needed for 'update' to remove only our own tracked files)
+ - 'git rebase' like tool to modify patches
+    But: don't reinvet the wheel?
+
+different types of commands
+- tier 0: No inputs from subprojects, only u
+- tier 1: only one one dimension
+    - cache drop
+    - cache init --type <type>
+    - cache fetch <url> <rev>
+    - worktree ls # list files
+      Is worktree the best name?
+- tier 2: on two dimensions
+    - unpack (uses cache and worktree)
+    - pop, push (uses patches and worktree)
+    - drop <patch> (uses worktree and patches, deapplies, drops and reapplies)
+    - check-unpack (compare worktree with cache content), no patches
+    - check-patches: (deapply patches, check worktree checksum), no cache
+    - add: uses cache, worktree (only worktree and cache, not patches)
+    - patches-to-branch: (uses patches and cache, not worktree)
+- tier 3: on four/all dimensions
+   - update: uses patches, cache, worktree
+   - status: 
+
+Maybe use the term "upstream" instead for "remote" to more distinguish to git.
 
 Convert all paths to bytes
 
@@ -399,8 +446,36 @@ Naming ideas
 Even it's the same thing. Just a file, use diffferent names to allow the
 documentation be clearer.
 Another example
-- It's the superproject "configuration"
+- It's the superproject or subpatch "configuration"
 - and the subproject "metadata"
 Also actual synomous. So be consistent and use it for one and the other.
 
 Add Parsing Error for subpatch config
+
+move "history.md" to "learnings.md"
+
+one group of users are Xcode developers. Xcode does not support git-submodules. So they
+need another tool. E.g. subpatch
+
+Document the different personas: core/maintainer vs contributor
+* Pro: Only core/maintainer needs subpatch, contributor not!
+
+Document storage requirements
+* Pro: no history
+* Same: checkout size is the same!
+* Cons: More resources on own git server
+
+Document/add command to construct commits from the subproject changes to push
+it upstream.
+
+Document lifecycle of patches in a down-stream fork
+
+convention of ".gitupstream" 
+   https://github.com/LineageOS/android_vendor_qcom_opensource_usb/blob/lineage-22.1/.gitupstream
+  
+For command "foreach" add a group feature. Sometimes you only want to execute
+commands for some repos.
+
+Look at other tools, e.g. https://github.com/nikita-skobov/monorepo-git-tools
+and the long list at https://github.com/dfetch-org/dfetch/issues/669
+https://dfetch.readthedocs.io/en/latest/alternatives.html
