@@ -132,3 +132,8 @@ Patches are a very old concept of distributed software development.
 Developers used them even before SCM tools like cvs, svn, and git existed.
 For some software projects, e.g. the [Linux kernel](https://kernel.org), patch files
 sent to a *mailing list* are an integral part of the development model even today.
+
+
+# vendoring
+
+TODO Explain
