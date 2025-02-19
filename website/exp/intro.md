@@ -1,6 +1,6 @@
 # Introduction
 
-Welcome to the realm of multi-repository management and third-party source
+Welcome to the realm of multi repository management and third-party source
 dependencies. Even if you are an experienced software developer, you may not
 have encountered this issue in your career already.  It only arises when
 working on larger software projects, managing inter-team software dependencies,

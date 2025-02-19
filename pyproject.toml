@@ -15,7 +15,7 @@ authors = [
 maintainers = [
   {name = "Stefan Lengfeld", email = "stefan@lengfeld.xyz"}
 ]
-description = "fearless multi-repository management - stay relaxed!"
+description = "fearless multi repository management - stay relaxed!"
 
 readme = "README.md"
 

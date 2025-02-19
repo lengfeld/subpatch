@@ -1,4 +1,4 @@
-# subpatch: fearless multi-repository management - stay relaxed!
+# subpatch: fearless multi repository management - stay relaxed!
 
 Welcome to the website of subpatch. The tool that does multi repository
 management right. Don't worry, stay relaxed!
@@ -50,7 +50,7 @@ subpatch is interesting for you if you want to do the following tasks:
 
 ## Concept and design
 
-subpatch is a multi-repository management tool based on the following ideas:
+subpatch is a multi repository management tool based on the following ideas:
 
 * It's based on `git add`. The files of subprojects are added as normal files
   to the superproject.
