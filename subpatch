@@ -430,7 +430,7 @@ class Superproject:
     typex: SuperprojectType
 
 
-def check_and_get_superproject_from_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
+def check_and_get_superproject_from_checked_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
     # TODO maybe move outside of this function
     if checked_data is None:
         # And there is no subpatch config file and no SCM
@@ -841,7 +841,7 @@ def cmd_update(args, parser):
 
     data = find_superproject()
     checked_data = check_superproject_data(data)
-    superx = check_and_get_superproject_from_data(checked_data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
     sub_helper = SubHelperGit()
@@ -1064,7 +1064,7 @@ def cmd_add(args, parser):
 
     data = find_superproject()
     checked_data = check_superproject_data(data)
-    superx = check_and_get_superproject_from_data(checked_data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
 
     if not superx.configured and superx.typex != SuperprojectType.GIT:
         # NOTE: It's ok if the superproject is *not* configured.
@@ -1363,7 +1363,7 @@ def is_cwd_toplevel_directory(paths: Paths) -> bool:
 def cmd_list(args, parser):
     data = find_superproject()
     checked_data = check_superproject_data(data)
-    superx = check_and_get_superproject_from_data(checked_data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
 
     config_abspath = join(superx.path, b".subpatch")
@@ -1460,7 +1460,7 @@ def git_ls_files_untracked():
 def cmd_status(args, parser):
     data = find_superproject()
     checked_data = check_superproject_data(data)
-    superx = check_and_get_superproject_from_data(checked_data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
 
