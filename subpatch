@@ -44,7 +44,7 @@ def is_section_name(b):
     raise NotImplementedError()
 
 
-# Split with terminator sematics
+# Split with terminator semantics
 def split_with_ts(s):
     len_s = len(s)
     pos = 0
@@ -165,10 +165,9 @@ def config_remove_section(parts_list, section_name, subsection_name):
 
 @dataclass
 class Subproject:
-    # TODO Document with fields can be None
     path: str
-    url: str | None = None
-    revision: str | None = None
+    url: Optional[str] = None
+    revision: Optional[str] = None
 
 
 # Read the config file into Subproject objects
