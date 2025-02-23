@@ -44,7 +44,6 @@ subpatch is interesting for you if you want to do the following tasks:
 
 * assemble a monorepo from multiple repositories
 * integrate third party dependencies into your project as source files
-  (also called 'vendoring')
 * maintain a local fork (with a linear patchstack) of an upstream project
 
 
