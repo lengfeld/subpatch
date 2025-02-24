@@ -15,7 +15,7 @@ from enum import Enum
 from os import mkdir
 from os.path import abspath, join
 from subprocess import DEVNULL, PIPE, Popen
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Dict
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
@@ -486,7 +486,7 @@ def git_reset_hard(sha1):
         raise Exception("git failure")
 
 
-def is_sha1(sha1: bytes):
+def is_sha1(sha1: bytes) -> bool:
     assert isinstance(sha1, bytes)
     if len(sha1) != 40:
         return False
@@ -580,7 +580,7 @@ class ObjectType(Enum):
 # Returns the type of the git object
 # TODO not used yet. Implement sanity check
 # TODO naming 'rev' is incorrect. 'rev' is only for commit objects.
-def git_get_object_type(rev):
+def git_get_object_type(rev: str) -> ObjectType:
     p = Popen(["git", "cat-file", "-t", rev], stdout=PIPE, stderr=DEVNULL)
     stdout, _ = p.communicate()
     if p.returncode != 0:
@@ -602,7 +602,7 @@ def git_get_object_type(rev):
 #     …bla/foo/.git/ -> "foo"
 #     …bla/foo.git/  -> "foo"
 #     …bla/foo       -> "foo"
-def get_name_from_repository_url(url):
+def get_name_from_repository_url(url: str):
     if len(url) == 0:
         raise ValueError("The URL is empty!")
     url = url.rstrip("/")
@@ -616,7 +616,7 @@ def get_name_from_repository_url(url):
 # Check whether the 'rev' can be resolved to a valid object in the repository
 # NOTE:
 # - If this command is not exectued in a git repo, it raises an exception.
-def git_verify(rev):
+def git_verify(rev: str) -> bool:
     p = Popen(["git", "rev-parse", "--quiet", "--verify", rev + "^{object}"],
               stdout=DEVNULL, stderr=DEVNULL)
     p.communicate()
@@ -631,7 +631,7 @@ def git_verify(rev):
     return True
 
 
-def is_valid_revision(revision):
+def is_valid_revision(revision: str) -> bool:
     # TODO add more invalid and strange chars to this list
     # TODO eval svn, git, ... for allow characters. What about umlauts?
     strange_chars = ("\t", "\n", "\b")
@@ -641,33 +641,32 @@ def is_valid_revision(revision):
     return True
 
 
-# parse_sha1_names :: bytes -> dict
 # TODO add example of input
 # TODO add more tests, e.g. with syntax errors or duplicated refs.
-def parse_sha1_names(lines, sep=b' '):
+def parse_sha1_names(lines: bytes, sep=b' ') -> Dict[bytes, bytes]:
     # remove the last new line character
     # Should only be one character
     lines = lines.rstrip(b'\n')
 
     # Ignore empty lines
-    lines = [line.split(sep) for line in lines.split(b'\n') if len(line) != 0]
+    lines1 = [line.split(sep) for line in lines.split(b'\n') if len(line) != 0]
 
-    for line in lines:
+    for line in lines1:
         if len(line) != 2:
             raise Exception("Parsing error in line: sep = %s parts = %s" % (sep, line))
-    lines = [(name, sha1) for sha1, name in lines]
+    lines2 = [(name, sha1) for sha1, name in lines1]
 
     # checks
-    for _, sha1 in lines:
+    for _, sha1 in lines2:
         if not is_sha1(sha1):
             raise ValueError("String is not a SHA1 sum: %s" % (sha1,))
 
-    return dict(lines)
+    return dict(lines2)
 
 
 # git_ls_remote ::  string(url) -> dict<ref_name, sha1>
 # Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
-def git_ls_remote(url):
+def git_ls_remote(url: str) -> Dict[bytes, bytes]:
     # NOTE Subpress stderr output of 'ls-remote'. In case of a fetch failure
     # stuff is written to stderr.
 
@@ -691,12 +690,12 @@ def git_ls_remote(url):
 # Returns
 #  - None if ref could not be resolved
 # TODO also return the matched object
-def git_ls_remote_guess_ref(url, ref) -> Optional[bytes]:
+def git_ls_remote_guess_ref(url: str, ref_str: str) -> Optional[bytes]:
     # TODO "git ls-remote" also allows to query a single ref or a pattern of
     # refs!
     refs_sha1 = git_ls_remote(url)
 
-    ref = ref.encode("utf8")
+    ref = ref_str.encode("utf8")
 
     if ref in refs_sha1:
         return ref  # Direct match
@@ -715,21 +714,25 @@ def git_ls_remote_guess_ref(url, ref) -> Optional[bytes]:
 @dataclass(frozen=True)
 class DownloadConfig:
     url: Any
-    revision: Any = None
+    revision: Optional[Any] = None
 
 
 @dataclass(frozen=True)
 class CloneConfig:
     full_clone: bool
-    object_id: str | None = None
+    object_id: Optional[str] = None
     ref: Optional[bytes] = None
 
 
-# 'revision' can be None
-def git_resolve_to_clone_config(url, revision):
+def git_resolve_to_clone_config(url: str, revision: Optional[str]) -> CloneConfig:
     # Some heuristics to sort out branch, commit/tag id or tag
     if revision is not None:
-        if is_sha1(revision.encode("utf8")):
+
+        # TODO Clean type missmatch
+        assert isinstance(revision, str)
+        revision_bytes = revision.encode("utf8")
+
+        if is_sha1(revision_bytes):
             # NOTE Commit ids are bad! You cannot download just a single
             # commit id. You can only clone everything and hope that the commit id
             # is in there!
@@ -831,6 +834,20 @@ def get_subproject(super_to_sub_relpath, subprojects):
             return subproject
 
     raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
+
+
+def ensure_superproject_is_configured(superx):
+    # Design decision:
+    # Having a empty ".subpatch" config file is something different than having
+    # no config file. It means that subptach is not yet configured for the project.
+    # TODO document this design decision somewhere else!
+    if not superx.configured:
+        raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
+
+
+def ensure_superproject_is_git(superx):
+    if superx.typex != SuperprojectType.GIT:
+        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
 def cmd_update(args, parser):
@@ -1201,20 +1218,6 @@ def show_info(args):
     return 0
 
 
-def ensure_superproject_is_configured(superx):
-    # Design decision:
-    # Having a empty ".subpatch" config file is something different than having
-    # no config file. It means that subptach is not yet configured for the project.
-    # TODO document this design decision somewhere else!
-    if not superx.configured:
-        raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
-
-
-def ensure_superproject_is_git(superx):
-    if superx.typex != SuperprojectType.GIT:
-        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
-
-
 # TODO implement option to unconfigure a superproject
 # TODO unconfiguring should only be possible if all subprojects are removed!
 def cmd_configure(args, parser):
@@ -1236,7 +1239,10 @@ def cmd_configure(args, parser):
             # TODO for other commands, subpatch checks whether there are
             # already staged files and errors out/warns!
             # TODO move this to the super helper
+
+            assert data.scm_path is not None  # TODO rework to avoid this assert because of type issue
             config_abspath = join(data.scm_path, b".subpatch")
+
             assert not os.path.exists(config_abspath)
             with open(config_abspath, "bw") as f:
                 pass
