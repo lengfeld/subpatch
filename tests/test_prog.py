@@ -339,7 +339,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             touch("subproject")
 
             p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
-            self.assertEqual(b"Error: File 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
+            self.assertEqual(b"Error: Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
     def test_add_with_trailing_slash(self):
