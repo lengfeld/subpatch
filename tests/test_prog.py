@@ -285,7 +285,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         self.assertEqual(p.returncode, 2)
         self.assertIn(b"the following arguments are required: url", p.stderr)
 
-    def test_adding_two_subproject(self):
+    def test_adding_two_subprojects(self):
         create_super_and_subproject()
 
         with cwd("superproject"):
