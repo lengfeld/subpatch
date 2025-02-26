@@ -405,7 +405,10 @@ class SuperHelperPlain:
         pass
 
     def print_add_success(self):
-        raise NotImplementedError("TOOD think about this case!")
+        raise NotImplementedError("TODO think about this case!")
+
+    def configure(self, scm_path: bytes) -> None:
+        raise NotImplementedError("TODO think about this case!")
 
 
 class SuperHelperGit:
@@ -418,6 +421,23 @@ class SuperHelperGit:
         print("- To inspect the changes, use `git status` and `git diff --staged`.")
         print("- If you want to keep the changes, commit them with `git commit`.")
         print("- If you want to revert the changes, execute `git reset --merge`.")
+
+    # TODO think about the data strcuture every super_helper method gets!
+    def configure(self, scm_path: bytes) -> None:
+        config_abspath = join(scm_path, b".subpatch")
+        assert not os.path.exists(config_abspath)
+        with open(config_abspath, "bw") as f:
+            pass
+
+        # TODO: Using cwd to the toplevel directory is just a hack because
+        # the helper is cwd-aware.
+        with cwd(scm_path):
+            git_add([b".subpatch"])
+
+    def print_configure_success(self):
+        print("The file .subpatch was created in the toplevel directory.")
+        print("Now use 'git commit' to finalized your change.")
+        # TODO maybe use the same help text as "add" and "update".
 
 
 # TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor
@@ -1078,19 +1098,14 @@ def cmd_add(args, parser):
         # - For now just remove trailing slashes
         cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
+    url_type = get_url_type(sub_url)
+
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
-
-    if not superx.configured and superx.typex != SuperprojectType.GIT:
-        # NOTE: It's ok if the superproject is *not* configured.
-        # The 'add' command will auto-configure the superproject if a SCM tool exists!
-        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "tbd")
-
-    url_type = get_url_type(sub_url)
-
     # TODO remove additional encode() here. Argument should be bytes object!
     paths = do_paths(superx.path, cwd_to_sub_relpath.encode("utf8"))
+    ensure_superproject_is_git(superx)
 
     if url_type == URLTypes.LOCAL_RELATIVE:
         # Check the current work directory of the call is the top level
@@ -1113,20 +1128,35 @@ def cmd_add(args, parser):
     # So the changes are in the filesystem and in the index, but not committed yet.
     # This should work
 
-    # For now just ensure that the superproject is a git repo
-    ensure_superproject_is_git(superx)
-    sub_helper = SubHelperGit()
+    # subpatch configure
+    # TODO reuse more of cmd_configure
+    if not superx.configured:
+        superx.helper.configure(superx.path)
 
-    # TODO Also check the config file whether a entry already exists
+    # subpatch init <path>
     if os.path.exists(paths.cwd_to_sub_relpath):
-        # TODO explain what can be done: Either remove the dir or use another name!
-        # TODO fix decode utf8. Should the the system default encoding!
-        # TODO add tests for this!
+        # There is already a directory
+        # TODO add message how to solve the problem
         raise AppException(ErrorCode.CUSTOM,
-                           "File '%s' alreay exists. Cannot add subproject!" % (paths.cwd_to_sub_relpath.decode("utf8"),))
+                           "Directory '%s' alreay exists. Cannot add subproject!" % (paths.cwd_to_sub_relpath.decode("utf8"),))
+    # TODO for later
+    # if os.path.exists(metadata_path):
+    #     # There is already a subproject at this place
+    #     # TODO also check git index if there is a file
+    #     # TODO explain what can be done: Either remove the dir or use another name!
+    #     # TODO fix decode utf8. Should the the system default encoding!
+    #     # TODO add tests for this!
+    #     # TODO Add ErrorCode for invalid state of superproject.
+    #     raise AppException(ErrorCode.CUSTOM,
+    #                        "File '%s' alreay exists. Cannot add subproject!" % (metadata_path.decode("utf8"),))
 
-    # TODO maybe add pid to avoid race conditions
+    # TODO add notes how to revert if anything of the following fails!
+
+    # subpatch cache init --git
+    sub_helper = SubHelperGit()
     local_tmp_name = paths.cwd_to_sub_relpath + b"-tmp"
+
+    # subpatch cache fetch url -r version
 
     # NOTE: Design decision: The output is relative to the current working dir.
     # The content of '%s' is the remote git name or the path relative to the
@@ -1235,26 +1265,18 @@ def cmd_configure(args, parser):
             print("The file .subpatch already exists. Nothing to do!")
     else:
         # There is no ".subpatch" file (=the superproject is not configured)
+
+        # TODO check_and_get_superproject_from_checked_data
         if checked_data.scm_type == SCMType.GIT:
             # TODO for other commands, subpatch checks whether there are
             # already staged files and errors out/warns!
-            # TODO move this to the super helper
+            # TODO see above. Use other function to switch between super implementations.
+            super_helper = SuperHelperGit()
 
-            assert data.scm_path is not None  # TODO rework to avoid this assert because of type issue
-            config_abspath = join(data.scm_path, b".subpatch")
+            super_helper.configure(checked_data.super_path)
 
-            assert not os.path.exists(config_abspath)
-            with open(config_abspath, "bw") as f:
-                pass
-
-            # TODO: Using cwd to the toplevel directory is just a hack because
-            # the helper is cwd-aware.
-            with cwd(data.scm_path):
-                git_add([b".subpatch"])
             if not args.quiet:
-                print("The file .subpatch was created in the toplevel directory.")
-                print("Now use 'git commit' to finalized your change.")
-            # TODO maybe use the same help text as "add" and "update".
+                super_helper.print_configure_success()
         else:
             # Unsupported SCMType
             raise AppException(ErrorCode.NOT_IMPLEMENTED_YET,
