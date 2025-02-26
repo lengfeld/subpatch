@@ -783,7 +783,7 @@ class SubHelperGit:
         return revision
 
     # Download remote repository, checkout the request revision, remove
-    # repository metadata and leave the plan files in the dir 'local_tmp_name'.
+    # repository metadata and leave the plan files in the dir 'cache_relpath'.
     def download(self, download_config: DownloadConfig, folder):
         # NOTE "git submodule init" creates a bare repository in ".git/modules"
         # TODO maybe also use that folder as a scrat pad.
@@ -938,7 +938,7 @@ def cmd_update(args, parser):
     # - use a bare repository! And ad-hoc checkouts
     # - And at best do not checkout, just import the git objects into the
     # current git and let git of the superproject check it out.
-    local_tmp_name = paths.cwd_to_sub_relpath + b"-tmp"
+    cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
 
     # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
     # download!
@@ -947,11 +947,11 @@ def cmd_update(args, parser):
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     # NOTE: The ".git" folder is already removed! Just the plain tree
-    sub_helper.download(download_config, local_tmp_name)
+    sub_helper.download(download_config, cache_relpath)
 
     # subpatch unpack
     # TODO Just hacky
-    local_tmp_abspath = os.path.abspath(join(os.getcwdb(), local_tmp_name))
+    cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath ))
 
     # Quick and dirty performance improvement. Batch multiple paths together
     class GitCommandBachter:
@@ -984,7 +984,7 @@ def cmd_update(args, parser):
     # and copy
     # TODO convert this code to "superhelper" implementation
     os.makedirs(paths.cwd_to_sub_relpath, exist_ok=True)
-    with cwd(local_tmp_abspath):
+    with cwd(cache_abspath):
         git_add = GitCommandBachter(["git", "add", "-f"])
 
         for root, dirnames, files in os.walk(b"."):
@@ -1005,13 +1005,13 @@ def cmd_update(args, parser):
         git_add.exec_force()
 
     # Remove empty directories in download/cache dir
-    for root, dirnames, files in os.walk(local_tmp_abspath, topdown=False):
+    for root, dirnames, files in os.walk(cache_abspath, topdown=False):
         assert len(files) == 0
         for dirname in dirnames:
             os.rmdir(join(root, dirname))
 
-    assert len(os.listdir(local_tmp_abspath)) == 0
-    os.rmdir(local_tmp_abspath)
+    assert len(os.listdir(cache_abspath)) == 0
+    os.rmdir(cache_abspath)
 
     # TODO update tree checksum in the config
 
@@ -1154,7 +1154,7 @@ def cmd_add(args, parser):
 
     # subpatch cache init --git
     sub_helper = SubHelperGit()
-    local_tmp_name = paths.cwd_to_sub_relpath + b"-tmp"
+    cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
 
     # subpatch cache fetch url -r version
 
@@ -1172,7 +1172,7 @@ def cmd_add(args, parser):
 
         # Fetch remote repository/tarball into local folder and checkout the
         # requested revision.
-        sub_helper.download(download_config, local_tmp_name)
+        sub_helper.download(download_config, cache_relpath)
 
         config_abspath = join(superx.path, b".subpatch")
 
@@ -1204,7 +1204,7 @@ def cmd_add(args, parser):
             f.write(config_unparse(config_parts_new))
 
         # Move files into place
-        os.rename(local_tmp_name, paths.cwd_to_sub_relpath)
+        os.rename(cache_relpath, paths.cwd_to_sub_relpath)
 
         # TODO in case of failure, remove download git dir!
 
