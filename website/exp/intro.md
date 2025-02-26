@@ -68,9 +68,86 @@ superproject and the source dependency *aminilog* is the subproject.
 ## Example 2: Embedded Linux firmware based on Yocto
 
 This example illustrates a multi repository setup of a Yocto project.
+The [Yocto project](https://yoctoproject.org) is a build system to build
+a Linux embedded distribution and firmware. It's based on OpenEmbedded.
 
-TODO add example
+The core consists of
+
+* bitbake (recipe parser and build orchestration)
+* meta-oecore (base recipes and toolchain)
+* documentation
+* the poky distro
+
+All of this is bundled in the [poky repository](https://git.yoctoproject.org/poky/).
+Poky is often used as a based for embedded Linux firmware projects, but you can
+also add the different components separately.
+
+Furthermore the Yocto project has the concept of layers. These are git repositories
+by external parties that contains additional recipes, bbappends, machines and
+distros. These add additional hardware support, software and other features.
+E.g. [meta-qt](https://github.com/meta-qt5/meta-qt5)
+adds support for the QT graphics framework and
+[meta-raspperypi](https://git.yoctoproject.org/meta-raspberrypi/about/) adds
+support for the RaspberryPI hardware.
+
+In general building an embedded firmware with Yocto consists of using poky and
+2 or more additional external layers. And mostly also maintaining your own
+layer with build configurations, additional patches and recipes for your own
+applications.
+
+As a developer you would clone multiple repositories . An
+example:
+
+    $ git clone https://git.yoctoproject.org/poky
+    $ git clone git://git.openembedded.org/meta-openembedded
+    $ git clone https://git.yoctoproject.org/meta-raspberrypi
+
+Then you would configure the build and add the layers.
+
+    $ . poky/oe-init-build-env
+    $ vim conf/bblayers.conf
+    $ vim conf/local.conf
+    $ bitbake some-image
+
+Then adding our own layer for your modifications:
+
+    $ bitbake-layers create-layer ../meta-mylayer
+    $ cd ../meta-mylayer
+    $ git init
+    # e.g. add an image recipe
+    $ git commit -m "add image reipce"
+
+And finally you start the build
+
+    $ bitbake my-image
+
+and use the firmware files in the build artifacts to flash your device.
+
+This is also an example of a *multi repository management* problem.  To make a
+firmware build for the device you, a coworker and the continuous integration
+pipeline needs to clone four different repositories, namely
+
+* poky,
+* meta-openembedded,
+* meta-raspperypi and
+* meta-mylayer.
+
+The first three repos are maintained by external parties. The last repo is
+maintained by you.
+
+Since everyone is facing the multi repository problem when working on Yocto
+projects, there are already some attempts to handle it. E.g. some use
+[repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md) or
+[git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+as generic solutions to the multi repository problem.  But
+there is also the [kas](https://kas.readthedocs.io/en/latest/intro.html)
+project.  It allows to checkout multi external git repos and provides a lot
+additional feature for maintaining Yocto projects. E.g. to assemble the
+`local.conf` and `bblayers.conf` dynamically.
+
 
 ## Recap
 
-TODO write recap
+The two examples show the multi repository problem. Now you can continue
+reading my [learnings and history](learnings.md) of the past years dealing with
+this problem.
