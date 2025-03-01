@@ -215,6 +215,7 @@ class ErrorCode(Enum):
     # TODO distinguish between not implemented and not implemented yet!
     # Not implemented should mostly be a invalid argument then
     NOT_IMPLEMENTED_YET = 2
+    SUPERPROJECT_NOT_FOUND = 3  # if no scm system found and no config found
     SUPERPROJECT_NOT_CONFIGURED = 4
     # The user has given an invalid argument on the command line
     INVALID_ARGUMENT = 5
@@ -383,10 +384,6 @@ def check_superproject_data(data: FindSuperprojectData) -> Optional[CheckedSuper
         # Current working directory is not in a SCM system
         if data.super_path is None:
             # And there is no subpatch config file
-            # TODO This message is wrong. The problem is also that there is no
-            # .subpatch config data. E.g. a git repo would also be valid
-            # TODO Cleanup
-            # raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
             return None
         else:
             # And there is a subpatch config file
@@ -453,7 +450,7 @@ def check_and_get_superproject_from_checked_data(checked_data: Optional[CheckedS
     # TODO maybe move outside of this function
     if checked_data is None:
         # And there is no subpatch config file and no SCM
-        raise AppException(ErrorCode.SUPERPROJECT_NOT_CONFIGURED)
+        raise AppException(ErrorCode.SUPERPROJECT_NOT_FOUND)
 
     if checked_data.scm_type is not None:
         # There is a SCM tool
@@ -1724,6 +1721,9 @@ def main() -> int:
         if e._code == ErrorCode.NOT_IMPLEMENTED_YET:
             # TODO the message should show the github issue url!
             print("Error: Feature not implemented yet: %s" % (e,), file=sys.stderr)
+        elif e._code == ErrorCode.SUPERPROJECT_NOT_FOUND:
+            # TODO add steps to resolve the issue. e.g. touching the file
+            print("Error: No superproject found!", file=sys.stderr)
         elif e._code == ErrorCode.SUPERPROJECT_NOT_CONFIGURED:
             # TODO add steps to resolve the issue. e.g. touching the file
             print("Error: subpatch not yet configured for superproject!", file=sys.stderr)

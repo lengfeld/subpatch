@@ -276,8 +276,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_not_in_superproject(self):
         p = self.run_subpatch(["add", "../ignore"], stderr=PIPE)
-        self.assertEqual(b"Error: subpatch not yet configured for superproject!\n",
-                         p.stderr)
+        self.assertEqual(b"Error: No superproject found!\n", p.stderr)
         self.assertEqual(p.returncode, 4)
 
     def test_without_url_arg(self):
