@@ -997,9 +997,7 @@ def cmd_update(args, parser):
         x = paths.super_to_sub_relpath.decode("utf8")
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
 
-    subproject_abspath = join(paths.super_abspath, paths.super_to_sub_relpath)
-    metadata_abspath = join(subproject_abspath, b".subproject")
-    metadata_url, metadata_revision = read_metadata(metadata_abspath)
+    metadata_url, metadata_revision = read_metadata(paths.metadata_abspath)
 
     # TODO if some of the patches are deapply, it's ok to have changes in the
     # index! How to handle that here? In that case
@@ -1142,7 +1140,7 @@ def cmd_update(args, parser):
         metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
 
     metadata_config = config_unparse2(metadata_lines)
-    with open(metadata_abspath, "bw") as f:
+    with open(paths.metadata_abspath, "bw") as f:
         f.write(metadata_config)
 
     # NOTE "add" assumes cwd is toplevel dir of superproject for now!
@@ -1272,9 +1270,7 @@ def cmd_add(args, parser):
         raise AppException(ErrorCode.CUSTOM,
                            "Directory '%s' alreay exists. Cannot add subproject!" % (paths.cwd_to_sub_relpath.decode("utf8"),))
 
-    subproject_abspath = join(paths.super_abspath, paths.super_to_sub_relpath)
-    metadata_abspath = join(subproject_abspath, b".subproject")
-    if os.path.exists(metadata_abspath):
+    if os.path.exists(paths.metadata_abspath):
         # There is already a subproject at this place
         # TODO also check git index if there is a file
         # TODO explain what can be done: Either remove the dir or use another name!
@@ -1282,12 +1278,12 @@ def cmd_add(args, parser):
         # TODO add tests for this!
         # TODO Add ErrorCode for invalid state of superproject.
         raise AppException(ErrorCode.CUSTOM,
-                           "File '%s' alreay exists. Cannot add subproject!" % (metadata_abspath.decode("utf8"),))
+                           "File '%s' alreay exists. Cannot add subproject!" % (paths.metadata_abspath.decode("utf8"),))
 
-    os.makedirs(subproject_abspath)
-    with open(metadata_abspath, "bw") as f:
+    os.makedirs(paths.subproject_abspath)
+    with open(paths.metadata_abspath, "bw") as f:
         f.write(b"")
-    with cwd(subproject_abspath):
+    with cwd(paths.subproject_abspath):
         # TODO use helper!
         git_add([b".subproject"])
 
@@ -1333,10 +1329,10 @@ def cmd_add(args, parser):
         # HACK for now
         # Check assumptions: We have just created the files ourselves
         assert os.path.exists(paths.cwd_to_sub_relpath)
-        assert os.path.exists(metadata_abspath)
+        assert os.path.exists(paths.metadata_abspath)
         # TODO always check that for subprojects
         assert not os.path.exists(join(cache_relpath, b".subproject"))
-        os.remove(metadata_abspath)
+        os.remove(paths.metadata_abspath)
         os.rmdir(paths.cwd_to_sub_relpath)
         os.rename(cache_relpath, paths.cwd_to_sub_relpath)
 
@@ -1357,7 +1353,7 @@ def cmd_add(args, parser):
             metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
 
         metadata_config = config_unparse2(metadata_lines)
-        with open(metadata_abspath, "bw") as f:
+        with open(paths.metadata_abspath, "bw") as f:
             f.write(metadata_config)
 
         # TODO in case of failure, remove download git dir!
@@ -1461,12 +1457,14 @@ def is_abspath(path):
 @dataclass(frozen=True)
 class Paths:
     super_abspath: bytes
-    config_abspath: bytes  # Maybe just have a single abspath in super_abspath
+    config_abspath: bytes  # TODO Maybe just have a single abspath in super_abspath
     super_to_cwd_relpath: bytes
     # TODO split path into paths for superproject and paths for subproject
     super_to_sub_relpath: bytes
     cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
     sub_name: bytes  # Can be b"" when subproject is at the toplevel directory
+    subproject_abspath: bytes
+    metadata_abspath: bytes
 
 
 # Paths documentation and naming
@@ -1533,7 +1531,11 @@ def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
 
     config_abspath = join(super_abspath, b".subpatch")
 
-    return Paths(super_abspath, config_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name)
+    subproject_abspath = join(super_abspath, super_to_sub_relpath)
+
+    metadata_abspath = join(subproject_abspath, b".subproject")
+
+    return Paths(super_abspath, config_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name, subproject_abspath, metadata_abspath)
 
 
 def is_cwd_toplevel_directory(paths: Paths) -> bool:
