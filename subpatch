@@ -560,7 +560,7 @@ class Superproject:
     path: bytes
     helper: Union[SuperHelperGit, SuperHelperPlain]
     configured: bool
-    typex: SuperprojectType
+    typex: SuperprojectType   # TODO same information is in 'helper'. Refactor!
 
 
 def check_and_get_superproject_from_checked_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
@@ -982,14 +982,13 @@ def cmd_update(args, parser):
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
-    sub_helper = SubHelperGit()
-
-    # Read config
-    config_abspath = join(superx.path, b".subpatch")
-    config = read_config(config_abspath)
-
     cwd_to_sub_relpath = os.fsencode(args.path)
     paths = do_paths(superx.path, cwd_to_sub_relpath)
+
+    # TODO Hardcoded assumption: subproject is also git
+    sub_helper = SubHelperGit()
+
+    config = read_config(paths.config_abspath)
 
     # NOTE two different error cases:
     # * no subproject path in config
@@ -1291,6 +1290,7 @@ def cmd_add(args, parser):
     with cwd(subproject_abspath):
         # TODO use helper!
         git_add([b".subproject"])
+
     # NOTE: At this point subpatch is using the git staging area as a
     # rollback/revert mechansim. If something fails in the next code lines,
     # the user (and the tests) can revert with "git revert".
@@ -1299,8 +1299,7 @@ def cmd_add(args, parser):
     # TODO Think about cwd, abs and relpath, should paths all be relative to
     # superproject or relative to cwd?  Changing the cwd too often seems like a
     # architecture mistake.
-    config_abspath = join(superx.path, b".subpatch")
-    config_add_subproject(config_abspath, paths.super_to_sub_relpath)
+    config_add_subproject(paths.config_abspath, paths.super_to_sub_relpath)
     with cwd(paths.super_abspath):
         # TODO use helper!
         git_add([b".subpatch"])
@@ -1462,6 +1461,7 @@ def is_abspath(path):
 @dataclass(frozen=True)
 class Paths:
     super_abspath: bytes
+    config_abspath: bytes  # Maybe just have a single abspath in super_abspath
     super_to_cwd_relpath: bytes
     # TODO split path into paths for superproject and paths for subproject
     super_to_sub_relpath: bytes
@@ -1531,7 +1531,9 @@ def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
 
     assert super_to_sub_relpath == my_join(super_to_cwd_relpath, cwd_to_sub_relpath)
 
-    return Paths(super_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name)
+    config_abspath = join(super_abspath, b".subpatch")
+
+    return Paths(super_abspath, config_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name)
 
 
 def is_cwd_toplevel_directory(paths: Paths) -> bool:
@@ -1546,9 +1548,9 @@ def cmd_list(args, parser):
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
+    paths = do_paths(superx.path, b"")
 
-    config_abspath = join(superx.path, b".subpatch")
-    config = read_config(config_abspath)
+    config = read_config(paths.config_abspath)
 
     for path in config.subprojects:
         # TODO Maybe avoid the decoded and encode dance
@@ -1678,8 +1680,7 @@ def cmd_status(args, parser):
     # TODO add colorscheme for output, e.g. like git status does
     # TODO handle stdout fd is pipe/file and not tty.
 
-    config_abspath = join(superx.path, b".subpatch")
-    config = read_config(config_abspath)
+    config = read_config(paths.config_abspath)
 
     # These are relative paths: super_to_sub_relpath
     subprojects = config.subprojects
