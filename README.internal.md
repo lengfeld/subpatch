@@ -410,3 +410,6 @@ Another example
 Also actual synomous. So be consistent and use it for one and the other.
 
 Add Parsing Error for subpatch config
+
+Add support and tests for a single subproject at the toplevel directory of the
+superproject.
