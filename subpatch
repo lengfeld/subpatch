@@ -15,7 +15,7 @@ from enum import Enum
 from os import mkdir
 from os.path import abspath, join
 from subprocess import DEVNULL, PIPE, Popen
-from typing import Any, Optional, Union, Dict, List, Generator
+from typing import Any, Dict, Generator, List, Optional, TypeAlias, Union
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
 # e.g. dashes "-" are not allowed and 'a' stands for 'alpha' release.
@@ -105,9 +105,27 @@ class ConfigLine:
     line_data: Union[LineDataKeyValue, LineDataHeader, LineDataEmpty]
 
 
+GeneratorConfigLine: TypeAlias = Generator[ConfigLine, None, None]
+
+
 # config format of git is descriped here
 #   https://git-scm.com/docs/git-config#_configuration_file
-def config_parse2(lines: List[bytes]) -> Generator[ConfigLine, None, None]:
+#
+# TODO find naming convention!
+#
+# Parse git-style config file.
+# See https://git-scm.com/docs/git-config
+# The syntax is described here:
+#    https://git-scm.com/docs/git-config/2.12.5#_syntax
+# Goal: The parsed result can be converted back to the lines object with a 1to1 mapping
+# NOTES:
+# - not supporting "[section.subsection]" syntax
+# - not supporting continouation lines yet
+# - not supporting comments at end of line yet.
+# - every line in lines, ends with a "\n" character
+#   Only the last line may not have a trailing "\n" character.
+# TODO add errors on invalid syntax
+def config_parse2(lines: Generator[bytes, None, None]) -> GeneratorConfigLine:
     def get_first(b: bytes) -> Optional[int]:
         if len(b) == 0:
             return None
@@ -145,7 +163,13 @@ def config_parse2(lines: List[bytes]) -> Generator[ConfigLine, None, None]:
                 yield ConfigLine(line, LineType.KEY_VALUE, LineDataKeyValue(key, value))
 
 
-def config_unparse2(config_lines: List[ConfigLine]) -> bytes:
+# Small hepler to get type rights for pyright
+def empty_config_lines() -> GeneratorConfigLine:
+    if False:
+        yield None
+
+
+def config_unparse2(config_lines: GeneratorConfigLine) -> bytes:
     s = b""
     for config_line in config_lines:
         # TODO: This is really strange here. The data structure ConfigLine contains
@@ -158,7 +182,7 @@ def config_unparse2(config_lines: List[ConfigLine]) -> bytes:
 # Requirement: section already exists
 # Optional arguments
 #  - "append": Whether to replace a existing key with the value or
-def config_set_key_value2(config_lines: List[ConfigLine], section_name: bytes, key: bytes, value: bytes, append: bool = False) -> Generator[ConfigLine, None, None]:
+def config_set_key_value2(config_lines: GeneratorConfigLine, section_name: bytes, key: bytes, value: bytes, append: bool = False) -> GeneratorConfigLine:
     # TODO sanitize 'key' and 'value'
     # HACK: Use list to have a mutable value
     was_emit = [False]
@@ -219,7 +243,7 @@ def config_set_key_value2(config_lines: List[ConfigLine], section_name: bytes, k
             raise Exception("Error: No section with name '%s' found!" % (section_name,))
 
 
-def config_add_section2(config_lines: List[ConfigLine], section_name: bytes) -> Generator[ConfigLine, None, None]:
+def config_add_section2(config_lines: GeneratorConfigLine, section_name: bytes) -> GeneratorConfigLine:
     # TODO find better name for 'was_emit'
     was_emit = [False]
 
@@ -249,112 +273,6 @@ def config_add_section2(config_lines: List[ConfigLine], section_name: bytes) -> 
     yield from emit()
 
 
-# TODO find naming convention!
-#
-# Parse git-style config file.
-# See https://git-scm.com/docs/git-config
-# The syntax is described here:
-#    https://git-scm.com/docs/git-config/2.12.5#_syntax
-# Goal: The parsed result can be converted back to the lines object with a 1to1 mapping
-# NOTES:
-# - not supporting "[section.subsection]" syntax
-# - not supporting continouation lines yet
-# - not supporting comments at end of line yet.
-# - every line in lines, ends with a "\n" character
-#   Only the last line may not have a trailing "\n" character.
-# TODO add errors on invalid syntax
-# TODO lines should be byte objects, not strings
-def config_parse(lines):
-    # result items
-    #   (<leading whitespace>, <section>, <subsection>, <name>, <value>, <comment>)
-
-    def get_first(b):
-        if len(b) == 0:
-            return None
-        return b[0]
-
-    for line in lines:
-        first_char = get_first(line.lstrip())
-        if first_char is None:
-            # It's an empty line
-            yield 1, line
-        else:
-            if first_char in ('#', ';'):
-                yield 1, line
-            elif first_char == '[':
-                # section start, like: "[section]\n"
-                # Parse section name
-                # TODO Check for valid section characters
-                inner_part = line.split('[', 1)[1].split(']')[0]
-                if '"' in inner_part:
-                    # There is a subsection:
-                    #     [section  "subsection"]
-                    section_name = inner_part.split('"')[0].strip()
-                    subsection_name = inner_part.split('"', 2)[1]
-                else:
-                    section_name = inner_part
-                    subsection_name = None
-
-                yield 2, line, section_name, subsection_name
-            else:
-                # This is mostly a variable line
-                #     name = value
-                parts = line.split("=", 1)
-                name = parts[0].strip()
-                value = parts[1].strip()
-                yield 3, line, name, value
-
-
-def config_unparse(parts_list):
-    s = ""
-    for parts in parts_list:
-        s += parts[1]
-    return s
-
-
-# NOTE: the section_lines is a list of the internal parsing type. This is a bit
-# strange to expose the internal parsing data structure to the caller.
-def config_add_section(parts_list, section_name, subsection_name, section_lines):
-    # HACK: Make the variable a "box" value to access it from inside the inner
-    # function.
-    was_emit = [False]
-
-    def emit():
-        if was_emit[0]:
-            return
-        # TODO the trailing "\n" is strange here. All code is agnostice, e.g.
-        # works without newlines But here is the assumption that the config
-        # file is properly newlined.
-        yield 2, "[%s \"%s\"]\n" % (section_name, subsection_name), section_name, subsection_name
-        for parts in section_lines:
-            yield parts
-        was_emit[0] = True
-
-    for parts in parts_list:
-        if parts[0] == 2:
-            if parts[2] > section_name:
-                yield from emit()
-            elif parts[2] == section_name:
-                if parts[3] is None:
-                    yield from emit()
-                elif parts[3] > subsection_name:
-                    yield from emit()
-        yield parts
-    yield from emit()
-
-
-def config_remove_section(parts_list, section_name, subsection_name):
-    in_section = False
-    for parts in parts_list:
-        if parts[0] == 2:
-            in_section = False
-            if parts[2] == section_name and parts[3] == subsection_name:
-                in_section = True
-
-        if not in_section:
-            yield parts
-
-
 @dataclass
 class Subproject:
     path: str
@@ -362,38 +280,45 @@ class Subproject:
     revision: Optional[str] = None
 
 
-# Read the config file into Subproject objects
+@dataclass(frozen=True)
+class Config():
+    subprojects: List[bytes]
+
+
+def parse_config(config_lines) -> Config:
+    subprojects = []
+
+    in_subprojects = False
+    for config_line in config_lines:
+        line_data = config_line.line_data
+        if config_line.line_type == LineType.HEADER:
+            assert isinstance(line_data, LineDataHeader)
+            if line_data.section_name == b"subprojects" and line_data.subsection_name is None:
+                in_subprojects = True
+            else:
+                in_subprojects = True
+        elif config_line.line_type == LineType.KEY_VALUE:
+            assert isinstance(line_data, LineDataKeyValue)
+            if in_subprojects:
+                if line_data.key == b"path":
+                    subprojects.append(line_data.value)
+        else:
+            pass
+
+    return Config(subprojects)
+
+
+# Path can be absolute or relative
+def read_config(path: bytes) -> Config:
+    with open(path, "br") as f:
+        config_lines = config_parse2(split_with_ts_bytes(f.read()))
+
+    return parse_config(config_lines)
+
+
 # TODO is it "<object>_<verb>" or "<verb>_<object>"?
 #  "subprojects_parse" vs "parse_subprojects"
 #  ... -> then should should be "parse_config_parts_to_subprojects
-# NOTE
-# - this will not filter out duplicate entries
-# - it will emit elements in the order as they appear in the config file!
-def subprojects_parse(config_parts):
-    subproject = None
-    for line in config_parts:
-        # TODO The type encoding into numbers 1, 2, 3 must go away!!!
-        if line[0] == 1:
-            pass  # ignore empty lines
-        elif line[0] == 2:
-            if subproject is not None:
-                yield subproject
-                subproject = None
-            if line[2] == "subpatch":
-                subproject = Subproject(line[3])
-        elif line[0] == 3:
-            if subproject is not None:
-                name = line[2]
-                if name == "url":
-                    subproject.url = line[3]
-                elif name == "revision":
-                    subproject.revision = line[3]
-                # TODO add warning for unknown value
-        else:
-            raise Exception("here")
-
-    if subproject is not None:
-        yield subproject
 
 
 # TODO Write blogpost about common error categories, e.g. in HTTP and errno
@@ -1033,18 +958,6 @@ class SubHelperGit:
         shutil.rmtree(local_repo_git_dir)
 
 
-# TODO also take cwd into account
-def get_subproject(super_to_sub_relpath, subprojects):
-    assert isinstance(super_to_sub_relpath, bytes)
-    # TODO convert subprojects to bytes types
-    x = os.fsdecode(super_to_sub_relpath)
-    for subproject in subprojects:
-        if subproject.path == x:
-            return subproject
-
-    raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
-
-
 def ensure_superproject_is_configured(superx):
     # Design decision:
     # Having a empty ".subpatch" config file is something different than having
@@ -1071,18 +984,23 @@ def cmd_update(args, parser):
     ensure_superproject_is_git(superx)
     sub_helper = SubHelperGit()
 
+    # Read config
     config_abspath = join(superx.path, b".subpatch")
-
-    with open(config_abspath) as f:
-        config_parts = config_parse(split_with_ts(f.read()))
-        subprojects = subprojects_parse(config_parts)
-        # Force the generator before closing the file
-        subprojects = list(subprojects)
+    config = read_config(config_abspath)
 
     cwd_to_sub_relpath = os.fsencode(args.path)
     paths = do_paths(superx.path, cwd_to_sub_relpath)
 
-    subproject = get_subproject(paths.super_to_sub_relpath, subprojects)
+    # NOTE two different error cases:
+    # * no subproject path in config
+    # * no subproject file in directory (TODO add code for that)
+    if paths.super_to_sub_relpath not in config.subprojects:
+        x = paths.super_to_sub_relpath.decode("utf8")
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
+
+    subproject_abspath = join(paths.super_abspath, paths.super_to_sub_relpath)
+    metadata_abspath = join(subproject_abspath, b".subproject")
+    metadata_url, metadata_revision = read_metadata(metadata_abspath)
 
     # TODO if some of the patches are deapply, it's ok to have changes in the
     # index! How to handle that here? In that case
@@ -1098,17 +1016,27 @@ def cmd_update(args, parser):
 
     # TODO check that the subproject is in a clean state
 
-    # TODO Download new version
     if args.url is not None:
         # TODO verify URL
         sub_url = args.url
     else:
-        sub_url = subproject.url
+        if metadata_url is None:
+            # TODO this is an error case. There should always be an URL
+            sub_url = None
+        else:
+            sub_url = metadata_url.decode("utf8")
+
     if args.revision is not None:
         # TODO verify revision
         revision = args.revision
     else:
-        revision = subproject.revision  # Can also be None!
+        if metadata_revision is None:
+            revision = None
+        else:
+            revision = metadata_revision.decode("utf8")
+
+    assert isinstance(sub_url, str)
+    assert revision is None or isinstance(revision, str)
 
     # subpatch download
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
@@ -1204,29 +1132,26 @@ def cmd_update(args, parser):
 
     # TODO update tree checksum in the config
 
-    # TODO move config_abspath in paths structure
-    with open(config_abspath) as f:
-        config_parts = config_parse(split_with_ts(f.read()))
-
+    # Write new metadata
     # TODO Code was copied! refactor
-    subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
+    metadata_lines = empty_config_lines()  # TODO no plain new generator, use from disk or from above
+    metadata_lines = config_add_section2(metadata_lines, b"remote")
+    assert isinstance(sub_url, str)
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
     if revision is not None:
-        subproject_config_parts.append((3, "\trevision = %s\n" % (revision,), "revision", revision))
+        assert isinstance(revision, str)
+        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
 
-    super_to_sub_relpath_as_str = paths.super_to_sub_relpath.decode("utf8")
-    config_parts = config_remove_section(list(config_parts), "subpatch", super_to_sub_relpath_as_str)
-    config_parts_new = config_add_section(config_parts,
-                                          "subpatch",
-                                          super_to_sub_relpath_as_str,
-                                          subproject_config_parts)
-
-    with open(config_abspath, "w") as f:
-        f.write(config_unparse(config_parts_new))
+    metadata_config = config_unparse2(metadata_lines)
+    with open(metadata_abspath, "bw") as f:
+        f.write(metadata_config)
 
     # NOTE "add" assumes cwd is toplevel dir of superproject for now!
     # TODO refactor cleanup this!
     with cwd(superx.path):
-        superx.helper.add([b".subpatch"])
+        superx.helper.add([b".subpatch"])  # This should not be needed
+    with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
+        superx.helper.add([b".subproject"])
 
     # TODO reapply patches: subpatch push --all
 
@@ -1248,6 +1173,25 @@ def cmd_update(args, parser):
     superx.helper.print_add_success()
 
     return 0
+
+
+# Argument config can be relpath or an abspath
+# TODO use other prefix "config_" for parser! prefix "config" is for the
+# subpatch config file.
+def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> None:
+    try:
+        # TODO read as bytes instead of str type
+        with open(config_path, "br") as f:
+            config_lines = config_parse2(split_with_ts_bytes(f.read()))
+    except FileNotFoundError:
+        config_lines = empty_config_lines()
+
+    config_lines = config_add_section2(config_lines, b"subprojects")
+    config_lines = config_set_key_value2(config_lines, b"subprojects", b"path", super_to_sub_relpath, append=True)
+
+    with open(config_path, "bw") as f:
+        # TODO parse and unparse are _not_ symmetric. Fix this
+        f.write(config_unparse2(config_lines))
 
 
 def cmd_add(args, parser):
@@ -1328,24 +1272,45 @@ def cmd_add(args, parser):
         # TODO add message how to solve the problem
         raise AppException(ErrorCode.CUSTOM,
                            "Directory '%s' alreay exists. Cannot add subproject!" % (paths.cwd_to_sub_relpath.decode("utf8"),))
-    # TODO for later
-    # if os.path.exists(metadata_path):
-    #     # There is already a subproject at this place
-    #     # TODO also check git index if there is a file
-    #     # TODO explain what can be done: Either remove the dir or use another name!
-    #     # TODO fix decode utf8. Should the the system default encoding!
-    #     # TODO add tests for this!
-    #     # TODO Add ErrorCode for invalid state of superproject.
-    #     raise AppException(ErrorCode.CUSTOM,
-    #                        "File '%s' alreay exists. Cannot add subproject!" % (metadata_path.decode("utf8"),))
+
+    subproject_abspath = join(paths.super_abspath, paths.super_to_sub_relpath)
+    metadata_abspath = join(subproject_abspath, b".subproject")
+    if os.path.exists(metadata_abspath):
+        # There is already a subproject at this place
+        # TODO also check git index if there is a file
+        # TODO explain what can be done: Either remove the dir or use another name!
+        # TODO fix decode utf8. Should the the system default encoding!
+        # TODO add tests for this!
+        # TODO Add ErrorCode for invalid state of superproject.
+        raise AppException(ErrorCode.CUSTOM,
+                           "File '%s' alreay exists. Cannot add subproject!" % (metadata_abspath.decode("utf8"),))
+
+    os.makedirs(subproject_abspath)
+    with open(metadata_abspath, "bw") as f:
+        f.write(b"")
+    with cwd(subproject_abspath):
+        # TODO use helper!
+        git_add([b".subproject"])
+    # NOTE: At this point subpatch is using the git staging area as a
+    # rollback/revert mechansim. If something fails in the next code lines,
+    # the user (and the tests) can revert with "git revert".
+    # TODO maybe make this build-in!
+
+    # TODO Think about cwd, abs and relpath, should paths all be relative to
+    # superproject or relative to cwd?  Changing the cwd too often seems like a
+    # architecture mistake.
+    config_abspath = join(superx.path, b".subpatch")
+    config_add_subproject(config_abspath, paths.super_to_sub_relpath)
+    with cwd(paths.super_abspath):
+        # TODO use helper!
+        git_add([b".subpatch"])
 
     # TODO add notes how to revert if anything of the following fails!
 
     # subpatch cache init --git
     sub_helper = SubHelperGit()
+    # TODO split into directory and cache_name
     cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
-
-    # subpatch cache fetch url -r version
 
     # NOTE: Design decision: The output is relative to the current working dir.
     # The content of '%s' is the remote git name or the path relative to the
@@ -1357,22 +1322,27 @@ def cmd_add(args, parser):
               end="")
         sys.stdout.flush()
     try:
+        # subpatch cache fetch url -r version
         download_config = DownloadConfig(url=sub_url, revision=revision)
 
         # Fetch remote repository/tarball into local folder and checkout the
         # requested revision.
         sub_helper.download(download_config, cache_relpath)
 
-        config_abspath = join(superx.path, b".subpatch")
+        # subpatch unpack # from cache into woktree
 
-        try:
-            # TODO read as bytes instead of str type
-            with open(config_abspath, "r") as f:
-                config_parts = config_parse(split_with_ts(f.read()))
-        except FileNotFoundError:
-            config_parts = []
+        # HACK for now
+        # Check assumptions: We have just created the files ourselves
+        assert os.path.exists(paths.cwd_to_sub_relpath)
+        assert os.path.exists(metadata_abspath)
+        # TODO always check that for subprojects
+        assert not os.path.exists(join(cache_relpath, b".subproject"))
+        os.remove(metadata_abspath)
+        os.rmdir(paths.cwd_to_sub_relpath)
+        os.rename(cache_relpath, paths.cwd_to_sub_relpath)
 
-        # TODO Check if section and subsection already exists!
+        metadata_lines = empty_config_lines()
+
         # TODO currently this always uses "\t" for indention. Try to use the style
         # that is already used in the subpatch file. E.g. four-spaces, two-spaces
         # or no-spaces.
@@ -1380,28 +1350,22 @@ def cmd_add(args, parser):
         # of the argument. If there is a trailing slash in the argument, then the
         # trailing slash is also in the config file. It's not sanitized. It's the
         # same behavior as 'git submodule' does.
-        subproject_config_parts = [(3, "\turl = %s\n" % (sub_url), "url", sub_url)]
+        metadata_lines = config_add_section2(metadata_lines, b"remote")
+        assert isinstance(sub_url, str)
+        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
         if revision is not None:
-            subproject_config_parts.append((3, "\trevision = %s\n" % (revision,), "revision", revision))
+            assert isinstance(revision, str)
+            metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
 
-        config_parts_new = config_add_section(config_parts,
-                                              "subpatch",
-                                              paths.super_to_sub_relpath.decode("utf8"),
-                                              subproject_config_parts)
-
-        with open(config_abspath, "w") as f:
-            f.write(config_unparse(config_parts_new))
-
-        # Move files into place
-        os.rename(cache_relpath, paths.cwd_to_sub_relpath)
+        metadata_config = config_unparse2(metadata_lines)
+        with open(metadata_abspath, "bw") as f:
+            f.write(metadata_config)
 
         # TODO in case of failure, remove download git dir!
 
         # Add files for committing
         # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
         superx.helper.add([paths.cwd_to_sub_relpath])
-        with cwd(superx.path):
-            superx.helper.add([b".subpatch"])
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
@@ -1499,6 +1463,7 @@ def is_abspath(path):
 class Paths:
     super_abspath: bytes
     super_to_cwd_relpath: bytes
+    # TODO split path into paths for superproject and paths for subproject
     super_to_sub_relpath: bytes
     cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
     sub_name: bytes  # Can be b"" when subproject is at the toplevel directory
@@ -1583,12 +1548,11 @@ def cmd_list(args, parser):
     ensure_superproject_is_configured(superx)
 
     config_abspath = join(superx.path, b".subpatch")
+    config = read_config(config_abspath)
 
-    with open(config_abspath) as f:
-        config_parts = config_parse(split_with_ts(f.read()))
-        subprojects = subprojects_parse(config_parts)
-        for subproject in subprojects:
-            print("%s" % (subproject.path,))
+    for path in config.subprojects:
+        # TODO Maybe avoid the decoded and encode dance
+        print("%s" % (path.decode("utf8"),))
 
     return 0
 
@@ -1672,6 +1636,27 @@ def git_ls_files_untracked():
     return parse_z(stdout)
 
 
+def read_metadata(path: bytes):
+    with open(path, "br") as f:
+        lines = split_with_ts_bytes(f.read())
+
+    url = None
+    revision = None
+
+    metadata_lines = config_parse2(lines)
+    for metadata_line in metadata_lines:
+        # TODO only use url and revision in remote section!
+        if metadata_line.line_type == LineType.KEY_VALUE:
+            line_data = metadata_line.line_data
+            assert isinstance(line_data, LineDataKeyValue)
+            if line_data.key == b"url":
+                url = line_data.value
+            elif line_data.key == b"revision":
+                revision = line_data.value
+
+    return url, revision
+
+
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
 def cmd_status(args, parser):
     data = find_superproject()
@@ -1694,18 +1679,15 @@ def cmd_status(args, parser):
     # TODO handle stdout fd is pipe/file and not tty.
 
     config_abspath = join(superx.path, b".subpatch")
+    config = read_config(config_abspath)
 
-    with open(config_abspath) as f:
-        config_parts = config_parse(split_with_ts(f.read()))
-        subprojects = subprojects_parse(config_parts)
-        # Force the generator before closing the file
-        subprojects = list(subprojects)
-
-    # Get all paths to subprojects
     # These are relative paths: super_to_sub_relpath
-    # TODO check paths in config file for sanity. Should not contain trialing slash or double slashes!
-    # The paths must be canoncical for comparing
-    subproject_paths = [subproject.path for subproject in subprojects]
+    subprojects = config.subprojects
+    subproject_paths = subprojects
+
+    if len(subprojects) == 0:
+        # Early return. Nothing to print!
+        return 0
 
     # TODO does the concept of staged and unstaged files als exists in other
     # cvs systems
@@ -1728,26 +1710,21 @@ def cmd_status(args, parser):
     for path in subproject_paths:
         subproject_changes[path] = Changes()
 
-    for subproject_path in subproject_paths:
+    for subproject in subproject_paths:
         # TODO str vs bytes mismatch
-        subproject_path_bytes = subproject_path.encode("utf8")
-        changes = subproject_changes[subproject_path]
+        changes = subproject_changes[subproject]
 
         for path in ls_files_untrack:
-            if path.startswith(subproject_path_bytes):
+            if path.startswith(subproject):
                 changes.untracked += 1
 
         for path in diff_files_staged:
-            if path.startswith(subproject_path_bytes):
+            if path.startswith(subproject):
                 changes.uncommitted += 1
 
         for path in diff_files_not_staged:
-            if path.startswith(subproject_path_bytes):
+            if path.startswith(subproject):
                 changes.unstaged += 1
-
-    if len(subprojects) == 0:
-        # Early return. Nothing to print!
-        return 0
 
     print("NOTE: The format of the output is human-readable and unstable. Do not use in scripts!")
     print("NOTE: The format is markdown currently. Will mostly change in the future.")
@@ -1759,18 +1736,23 @@ def cmd_status(args, parser):
         # for git superprojects. And look like svn for svn superprojects.
         # NOTE: these two ideas are conflicting!
 
+        url, revision = read_metadata(join(paths.super_abspath, subproject, b".subproject"))
+
+        # TODO again some bytes to string decoding. Annoying!
+        subproject_str = subproject.decode("utf8")
+
         # TODO Think about other cvs systems
-        print("# subproject at '%s'" % (subproject.path,))
+        print("# subproject at '%s'" % (subproject_str,))
         print("")
-        if subproject.url is not None:
-            print("* was integrated from URL: %s" % (subproject.url,))
-        if subproject.revision is not None:
-            print("* has integrated revision: %s" % (subproject.revision,))
+        if url is not None:
+            print("* was integrated from URL: %s" % (url.decode("utf8"),))
+        if revision is not None:
+            print("* has integrated revision: %s" % (revision.decode("utf8"),))
             # TODO Maybe included whether it "tracks a branch" or it was a git tag
 
-        p = subproject.path
+        changes = subproject_changes[subproject]
 
-        changes = subproject_changes[p]
+        p = subproject_str
 
         # NOTE Listing the modified files seems to much like "git status".
         # There is already "git status". The output just referneces the git

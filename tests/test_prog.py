@@ -154,11 +154,11 @@ class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_order_is_the_same_as_in_config(self):
         git = Git()
         git.init()
-        with open(".subpatch", "bw") as f:
-            f.write(b"""\
-[subpatch "c_not"]
-[subpatch "b_in"]
-[subpatch "a_alphabetical_order"]
+        touch(".subpatch", b"""\
+[subprojects]
+path = c_not
+path = b_in
+path = a_alphabetical_order
 """)
 
         # TODO add command to check that this handmade config is valid!
@@ -293,19 +293,27 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             p = self.run_subpatch(["add", "-q", "../subproject", "dirA"])
             self.assertEqual(0, p.returncode)
 
-            self.assertFileContent(".subpatch",
-                                   b"""\
-[subpatch \"dirA\"]
-\turl = ../subproject
-[subpatch \"dirB\"]
-\turl = ../subproject
-""")
-
             git = Git()
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tdirA/.subproject",
                               b"A\tdirA/hello",
+                              b"A\tdirB/.subproject",
                               b"A\tdirB/hello"])
+
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = dirA
+\tpath = dirB
+""")
+            self.assertFileContent("dirA/.subproject", b"""\
+[remote]
+\turl = ../subproject
+""")
+            self.assertFileContent("dirB/.subproject", b"""\
+[remote]
+\turl = ../subproject
+""")
 
     def test_gitignore_in_subproject(self):
         # Testing for a bug. There was a "-f" missing for "git add".
@@ -328,6 +336,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
                               b"A\tsubproject/.gitignore",
+                              b"A\tsubproject/.subproject",
                               b"A\tsubproject/a"])
 
     def test_subproject_directory_already_exists(self):
@@ -340,19 +349,6 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
             self.assertEqual(b"Error: Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
-
-    def test_add_with_trailing_slash(self):
-        create_super_and_subproject()
-        with cwd("superproject"):
-            git = Git()
-            p = self.run_subpatch_ok(["add", "../subproject/"], stdout=PIPE)
-            self.assertIn(b"Adding subproject 'subproject' from URL '../subproject/' at revision 'HEAD'... Done.",
-                          p.stdout)
-            self.assertTrue(os.path.isdir("subproject"))
-
-            # NOTE The trailing slash in the URL in the config file!
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject/\n")
 
     def test_add_in_subdirectory(self):
         create_super_and_subproject()
@@ -375,12 +371,12 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tsubdir/subproject/.subproject",
                               b"A\tsubdir/subproject/hello"])
 
-            self.assertFileContent(".subpatch",
-                                   b"""\
-[subpatch \"subdir/subproject\"]
-\turl = http://localhost:7000/subproject/.git/
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = subdir/subproject
 """)
 
     def test_add_with_stdout_output_and_index_updates(self):
@@ -398,13 +394,18 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
 
             # Check working tree
             self.assertFileExistsAndIsDir("subproject")
-
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tsubproject/.subproject",
                               b"A\tsubproject/hello"])
-
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"subproject\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = subproject
+""")
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
+\turl = ../subproject
+""")
 
     def test_add_with_extra_path_but_empty(self):
         create_super_and_subproject()
@@ -450,9 +451,12 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tfolder/.subproject",
                               b"A\tfolder/hello"])
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"folder\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = folder
+""")
             git.remove_staged_changes()
 
             # Add same subproject but in a subfolder
@@ -460,9 +464,12 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             self.assertFileExistsAndIsDir("sub/folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tsub/folder/.subproject",
                               b"A\tsub/folder/hello"])
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"sub/folder\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = sub/folder
+""")
             git.remove_staged_changes()
 
             # Add subproject with trailing slash in path
@@ -471,10 +478,13 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
+                              b"A\tfolder/.subproject",
                               b"A\tfolder/hello"])
             # NOTE: The trailing slash is removed
-            self.assertFileContent(".subpatch",
-                                   b"[subpatch \"folder\"]\n\turl = ../subproject\n")
+            self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = folder
+""")
             git.remove_staged_changes()
 
     def test_add_in_subdirectory_with_relative_path_fails(self):
@@ -501,22 +511,26 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
                              p.stderr)
+            git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             invalid_object_id = b"0" * 40
             p = self.run_subpatch(["add", "-q", "../subproject", "-r", invalid_object_id], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' does not point to a valid object!\n",
                              p.stderr)
+            git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             p = self.run_subpatch(["add", "-q", "../subproject", "-r", object_id_file], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
                              p.stderr)
+            git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             p = self.run_subpatch(["add", "-q", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: revision 'refs/heads\nmain' is invalid\n",
                              p.stderr)
+            git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
     def test_with_revision(self):
         with cwd("subproject", create=True):
@@ -543,40 +557,40 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
                              p.stdout)
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
-\turl = ../subproject
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \trevision = refs/heads/main
+\turl = ../subproject
 """)
             git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", "v1"])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"initial")
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
-\turl = ../subproject
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \trevision = v1
+\turl = ../subproject
 """)
             git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_commit])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on stable")
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
-\turl = ../subproject
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \trevision = %s
+\turl = ../subproject
 """ % (object_id_commit,))
             git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_tag])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
-\turl = ../subproject
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \trevision = %s
+\turl = ../subproject
 """ % (object_id_tag,))
             git.remove_staged_changes()
 
@@ -585,10 +599,10 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             p = self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subdir/subproject"])
             self.assertFileExistsAndIsDir("subdir/subproject")
             self.assertFileContent("subdir/subproject/file", b"initial")
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subdir/subproject\"]
-\turl = ../subproject
+            self.assertFileContent("subdir/subproject/.subproject", b"""\
+[remote]
 \trevision = v1
+\turl = ../subproject
 """)
             git.remove_staged_changes()
 
@@ -631,16 +645,11 @@ Now use 'git commit' to finalized your change.
         create_super_and_subproject()
         with cwd("superproject"):
             self.run_subpatch_ok(["configure", "-q"])
-            self.assertFileContent(".subpatch", b"")
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"")
 
             self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
-\turl = ../subproject
-""")
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"subproject\n")
@@ -730,9 +739,13 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git.init()
             self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "dir/subproject"], stdout=DEVNULL)
             self.assertFileContent(".subpatch", b"""\
-[subpatch \"dir/subproject\"]
-\turl = ../subproject
+[subprojects]
+\tpath = dir/subproject
+""")
+            self.assertFileContent("dir/subproject/.subproject", b"""\
+[remote]
 \trevision = v1
+\turl = ../subproject
 """)
             self.assertFileExistsAndIsDir("dir/subproject/dir")
             self.assertFileContent("dir/subproject/a", b"first-toplevel\n")
@@ -740,6 +753,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
                               b"A\tdir/subproject/.gitignore",
+                              b"A\tdir/subproject/.subproject",
                               b"A\tdir/subproject/a",
                               b"A\tdir/subproject/dir/b",
                               b"A\tdir/subproject/dir/c",
@@ -751,12 +765,16 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(0, p.returncode)
 
             self.assertFileContent(".subpatch", b"""\
-[subpatch \"dir/subproject\"]
-\turl = ../subproject
+[subprojects]
+\tpath = dir/subproject
+""")
+            self.assertFileContent("dir/subproject/.subproject", b"""\
+[remote]
 \trevision = v2
+\turl = ../subproject
 """)
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\t.subpatch",
+                             [b"M\tdir/subproject/.subproject",
                               b"M\tdir/subproject/dir/b",
                               b"M\tdir/subproject/dir/c",
                               b"D\tdir/subproject/dir/d",
@@ -767,15 +785,15 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("dir/subproject/dir/c", b"first\n")
             self.assertFileContent("dir/subproject/dir/e", b"second\n")
             self.assertEqual(git.diff(staged=True), b"""\
-diff --git a/.subpatch b/.subpatch
-index 3453c2c..421a273 100644
---- a/.subpatch
-+++ b/.subpatch
+diff --git a/dir/subproject/.subproject b/dir/subproject/.subproject
+index 534cf67..824acf9 100644
+--- a/dir/subproject/.subproject
++++ b/dir/subproject/.subproject
 @@ -1,3 +1,3 @@
- [subpatch "dir/subproject"]
- \turl = ../subproject
+ [remote]
 -\trevision = v1
 +\trevision = v2
+ \turl = ../subproject
 diff --git a/dir/subproject/dir/b b/dir/subproject/dir/b
 index 9c59e24..e019be0 100644
 --- a/dir/subproject/dir/b
@@ -896,11 +914,11 @@ Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git
             git = Git()
             git.init()
             self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
-            self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \turl = ../subproject
 """)
-            git.commit("add subsproject")
+            git.commit("add subproject")
 
             # There are no changes in the subproject yet
             self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
@@ -946,9 +964,10 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             p = run(["tar", "tvf", "archive.tar"], stdout=PIPE)
             self.assertEqual(p.returncode, 0)
             self.assertEqual(p.stdout, b"""\
--rw-rw-r-- root/root        45 2001-10-09 13:00 .subpatch
+-rw-rw-r-- root/root        33 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
+-rw-rw-r-- root/root        30 2001-10-09 13:00 subproject/.subproject
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
@@ -959,11 +978,15 @@ drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 
             # Check files in working directory
             self.assertFileContent("hello", b"content")
-            self.assertFileContent("subproject/hello", b"content")
             self.assertFileContent(".subpatch", b"""\
-[subpatch \"subproject\"]
+[subprojects]
+\tpath = subproject
+""")
+            self.assertFileContent("subproject/.subproject", b"""\
+[remote]
 \turl = ../subproject
 """)
+            self.assertFileContent("subproject/hello", b"content")
 
             # And now the final test. Check subpatch commands!
             p = self.run_subpatch_ok(["list"], stdout=PIPE)

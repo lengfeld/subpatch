@@ -8,16 +8,18 @@ import unittest
 from os.path import abspath, dirname, join, realpath
 from subprocess import DEVNULL, PIPE, Popen, call
 
-from helpers import (Git, TestCaseTempFolder, TestCaseHelper,
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
                      create_git_repo_with_branches_and_tags, cwd, mkdir, touch)
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from subpatch import (AppException, CheckedSuperprojectData, ErrorCode,
-                      FindSuperprojectData, ObjectType, SCMType, Subproject,
-                      URLTypes, check_superproject_data, config_add_section,
-                      config_parse, config_remove_section, config_unparse,
+from subpatch import (AppException, CheckedSuperprojectData, ConfigLine,
+                      ErrorCode, FindSuperprojectData, LineDataEmpty,
+                      LineDataHeader, LineDataKeyValue, LineType, ObjectType,
+                      SCMType, Subproject, URLTypes, check_superproject_data,
+                      config_add_section2, config_add_subproject,
+                      config_parse2, config_set_key_value2, config_unparse2,
                       do_paths, find_superproject,
                       get_name_from_repository_url, get_url_type,
                       git_diff_in_dir, git_diff_name_only, git_get_object_type,
@@ -25,10 +27,7 @@ from subpatch import (AppException, CheckedSuperprojectData, ErrorCode,
                       git_ls_files_untracked, git_ls_remote,
                       git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                       is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                      split_with_ts, split_with_ts_bytes, subprojects_parse,
-                      config_parse2, ConfigLine, LineType, LineDataEmpty,
-                      LineDataHeader, LineDataKeyValue, config_unparse2,
-                      config_set_key_value2, config_add_section2)
+                      split_with_ts, split_with_ts_bytes)
 
 
 class TestSplitWithTs(unittest.TestCase):
@@ -49,126 +48,31 @@ class TestSplitWithTs(unittest.TestCase):
         self.assertEqual([b"x\n", b"y\n"], list(split_with_ts_bytes(b"x\ny\n")))
 
 
-class TestConfigParse(unittest.TestCase):
-    def test_parse(self):
-        self.assertEqual([], list(config_parse([])))
-        self.assertEqual([(1, "\n")], list(config_parse(["\n"])))
-        self.assertEqual([(1, " \n")], list(config_parse([" \n"])))
-        self.assertEqual([(1, "# comment")], list(config_parse(["# comment"])))
-        self.assertEqual([(1, " # comment")], list(config_parse([" # comment"])))
-        self.assertEqual([(1, " ; comment")], list(config_parse([" ; comment"])))
-        self.assertEqual([(1, "\t; comment")], list(config_parse(["\t; comment"])))
-
-        self.assertEqual([(2, " [name] \n", "name", None)],
-                         list(config_parse([" [name] \n"])))
-        self.assertEqual([(2, " [name \"sub\"] \n", "name", "sub")],
-                         list(config_parse([" [name \"sub\"] \n"])))
-
-        self.assertEqual([(3, "name = value\n", "name", "value")],
-                         list(config_parse(["name = value\n"])))
-        self.assertEqual([(3, "  name\t=\tvalue  \n", "name", "value")],
-                         list(config_parse(["  name\t=\tvalue  \n"])))
-
-    def test_unparse(self):
-        self.assertEqual("", config_unparse([]))
-        self.assertEqual("\n", config_unparse([(1, "\n")]))
-        self.assertEqual("\t\n", config_unparse([(1, "\t\n")]))
-        self.assertEqual("name = value", config_unparse([(3, "name = value", "name", "value")]))
-        self.assertEqual("name = value\n", config_unparse([(3, "name = value\n", "name", "value")]))
-
-    def test_add_section(self):
-        parts_to_add = [(3, "name = value\n", "name", "value")]
-
-        def test(config, result_ok):
-            result_actual = config_add_section(config_parse(split_with_ts(config)),
-                                               "a", "b", parts_to_add)
-            self.assertEqual(list(result_actual), list(config_parse(split_with_ts(result_ok))))
-
-        test("", """\
-[a "b"]
-name = value
+class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
+    def test_empty(self):
+        touch(".subpatch", b"")
+        config_add_subproject(b".subpatch", b"a/b/c")
+        self.assertFileContent(".subpatch", b"""\
+[subprojects]
+\tpath = a/b/c
 """)
 
-        test("""\
-[a "a"]
-""", """\
-[a "a"]
-[a "b"]
-name = value
+    def test_inserting(self):
+        touch(".subpatch", b"""\
+[core]
+\tsome = setting
+[subprojects]
+\tpath = a/x
+\tpath = c/x
 """)
-        test("""\
-[a "a"]
-[a "c"]
-""", """\
-[a "a"]
-[a "b"]
-name = value
-[a "c"]
-""")
-
-        test("""\
-[b "a"]
-""", """\
-[a "b"]
-name = value
-[b "a"]
-""")
-
-        # TODO add this testcase
-        #         test("""\
-        # [a]
-        # """, """\
-        # [a]
-        # [a "b"]
-        # name = value
-        # """)
-
-        test("""\
-[b]
-""", """\
-[a "b"]
-name = value
-[b]
-""")
-
-    def test_remove_section(self):
-        def test(config, section_name, subsection_name, result_ok_as_str):
-            parts_list = config_parse(split_with_ts(config))
-            result_actual = config_remove_section(parts_list, section_name, subsection_name)
-            result_ok = config_parse(split_with_ts(result_ok_as_str))
-            self.assertEqual(list(result_actual), list(result_ok))
-
-        # TODO actual this should be seperate test functions!
-        # Section is removed
-        test("""\
-[a "a"]
-x = y
-[a "c"]
-x = y
-""", "a", "a", """\
-[a "c"]
-x = y
-""")
-
-        # Nothing is removed
-        test("""\
-[a "a"]
-[a "c"]
-""", "a", "x", """\
-[a "a"]
-[a "c"]
-""")
-        # Two times the second is removed!
-        test("""\
-[a "a"]
-x = y
-[a "c"]
-x = y
-[a "a"]
-x = y
-""", "a", "a", """\
-[a "c"]
-x = y
+        config_add_subproject(b".subpatch", b"b/x")
+        self.assertFileContent(".subpatch", b"""\
+[core]
+\tsome = setting
+[subprojects]
+\tpath = a/x
+\tpath = b/x
+\tpath = c/x
 """)
 
 
@@ -330,48 +234,6 @@ class TestConfigAddSection2(unittest.TestCase):
 """, b"""\
 [section]
 """)
-
-
-class TestSubprojectsParse(unittest.TestCase):
-    def parse_from_string(self, s):
-        # TODO Find better name for "string" and "s"
-        lines = split_with_ts(s)
-        config_parts = config_parse(lines)
-        return list(subprojects_parse(config_parts))
-
-    def test_empty(self):
-        subprojects = self.parse_from_string("")
-        self.assertEqual([], subprojects)
-
-    def test_empty_lines(self):
-        subprojects = self.parse_from_string("\n\n\n")
-        self.assertEqual([], subprojects)
-
-    def test_one(self):
-        subprojects = self.parse_from_string("[subpatch \"test\"]\n")
-        self.assertEqual(1, len(subprojects))
-        self.assertEqual(subprojects[0], Subproject("test"))
-
-    def test_one_with_values(self):
-        subprojects = self.parse_from_string("""\
-[subpatch \"subproject\"]
-\turl = ../subproject
-\trevision = v1
-""")
-        self.assertEqual(1, len(subprojects))
-        self.assertEqual(subprojects[0],
-                         Subproject("subproject", url="../subproject", revision="v1"))
-
-    def test_non_subpatch_subsection(self):
-        subprojects = self.parse_from_string("""\
-[subpatch \"subprojectA\"]
-[configbla \"somestuff\"]
-\turl = ../subproject
-[subpatch \"subprojectB\"]
-""")
-        self.assertEqual(2, len(subprojects))
-        self.assertEqual(subprojects[0], Subproject("subprojectA"))
-        self.assertEqual(subprojects[1], Subproject("subprojectB"))
 
 
 class TestFindSuperproject(TestCaseTempFolder):
