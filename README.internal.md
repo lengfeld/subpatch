@@ -44,6 +44,12 @@ How to execute a single tests
     $ python3 tests/test_prog.py TestNoCommands.testVersion
     $ tests/test_prog.py TestNoCommands.testVersion
 
+Tips: If a test fails, e.g., because of a difference in the console output, you can use
+
+    $ DEBUG=1 tests/test_prog.py
+
+to print stdout and stderr of the subpatch invocation to the console for
+further inspection.
 
 ## How to release
 
