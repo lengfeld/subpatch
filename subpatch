@@ -1036,6 +1036,7 @@ def cmd_update(args, parser):
     assert revision is None or isinstance(revision, str)
 
     # subpatch download
+    # TODO combine with cmd_add(). It also does the same!
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
           (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
           end="")
@@ -1045,8 +1046,6 @@ def cmd_update(args, parser):
     # is the same as the already integrated (not yet saved to config). If they are
     # the same, no need to reintegrated!
     # - Note: if there are subtree or exclude changes, update must still be done!
-
-    # TODO combine with cmd_add(). It also does the same!
 
     # TODO implement git dir optimization
     # - use a bare repository! And ad-hoc checkouts
