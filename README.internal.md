@@ -41,15 +41,16 @@ Useful makefile targets
 
 How to execute a single tests
 
-    $ python3 tests/test_prog.py TestNoCommands.testVersion
-    $ tests/test_prog.py TestNoCommands.testVersion
+    $ python3 tests/test_prog.py TestNoCommands.test_version
+    $ tests/test_prog.py TestNoCommands.test_version
 
 Tips: If a test fails, e.g., because of a difference in the console output, you can use
 
-    $ DEBUG=1 tests/test_prog.py
+    $ DEBUG=1 tests/test_prog.py TestNoCommands.test_version
 
 to print stdout and stderr of the subpatch invocation to the console for
 further inspection.
+
 
 ## How to release
 

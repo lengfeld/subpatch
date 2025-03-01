@@ -7,10 +7,11 @@ all:
 tests:       ### Runs the python unit tests
 	python3 -m unittest discover -s tests
 	@# Also test executing the scripts by hand
+	tests/test_git.py
 	tests/test_lib.py
 	tests/test_prog.py
 	tests/test_submodule.py
-	cd tests && ./test_lib.py && ./test_prog.py && ./test_submodule.py
+	cd tests && ./test_git.py && ./test_lib.py && ./test_prog.py && ./test_submodule.py
 
 # The file website/index.md is nearly a one-to-one copy of the README.md file.
 # But there are some differences for links and text. This check should verify
