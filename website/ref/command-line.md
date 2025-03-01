@@ -124,3 +124,4 @@ these in that form or another.
 * `root`: Show the root path of the superproject. Useful
   for something like `croot` in the AOSP. For git the command looks like
   `git rev-parse --show-toplevel`.
+* `push/pop`: apply or deapply a patch of the subproject to the working tree.
