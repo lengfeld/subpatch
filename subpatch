@@ -1144,8 +1144,6 @@ def cmd_update(args, parser):
 
     # NOTE "add" assumes cwd is toplevel dir of superproject for now!
     # TODO refactor cleanup this!
-    with cwd(superx.path):
-        superx.helper.add([b".subpatch"])  # This should not be needed
     with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
         superx.helper.add([b".subproject"])
 
