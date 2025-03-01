@@ -951,7 +951,7 @@ def cmd_update(args, parser):
 
     # subpatch unpack
     # TODO Just hacky
-    cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath ))
+    cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # Quick and dirty performance improvement. Batch multiple paths together
     class GitCommandBachter:
