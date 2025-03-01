@@ -413,3 +413,6 @@ Add Parsing Error for subpatch config
 
 Add support and tests for a single subproject at the toplevel directory of the
 superproject.
+
+Add code and test for "subpatch update <path> --use-head-again".
+-> the revision key in the metadata should be removed.

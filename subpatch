@@ -1260,6 +1260,12 @@ def cmd_add(args, parser):
     if not superx.configured:
         superx.helper.configure(superx.path)
 
+    # NOTE: At this point subpatch is using the git staging area as a
+    # rollback/revert mechansim. If something fails in the next code lines,
+    # the user (and the tests) can revert with "git revert".
+    # TODO maybe make this build-in!
+    # TODO add notes how to revert if anything of the following fails!
+
     # subpatch init <path>
     if os.path.exists(paths.cwd_to_sub_relpath):
         # There is already a directory
@@ -1284,20 +1290,10 @@ def cmd_add(args, parser):
         # TODO use helper!
         git_add([b".subproject"])
 
-    # NOTE: At this point subpatch is using the git staging area as a
-    # rollback/revert mechansim. If something fails in the next code lines,
-    # the user (and the tests) can revert with "git revert".
-    # TODO maybe make this build-in!
-
-    # TODO Think about cwd, abs and relpath, should paths all be relative to
-    # superproject or relative to cwd?  Changing the cwd too often seems like a
-    # architecture mistake.
     config_add_subproject(paths.config_abspath, paths.super_to_sub_relpath)
     with cwd(paths.super_abspath):
         # TODO use helper!
         git_add([b".subpatch"])
-
-    # TODO add notes how to revert if anything of the following fails!
 
     # subpatch cache init --git
     sub_helper = SubHelperGit()
