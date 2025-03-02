@@ -206,10 +206,12 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 # subproject at 'subproject1'
 
 * was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 
 # subproject at 'subproject2'
 
 * was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 """,
                              p.stdout)
 
@@ -250,6 +252,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 # subproject at 'subproject'
 
 * was integrated from URL: ../subproject
+* has integrated object id: a094853f138e0f388d787aca36354e1c3e7d1a2a
 * There are n=1 untracked files and/or directories:
     - To see them execute:
         `git status subproject`
@@ -308,10 +311,12 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dirA/.subproject", b"""\
 [remote]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
             self.assertFileContent("dirB/.subproject", b"""\
 [remote]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -404,6 +409,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
 """)
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -536,9 +542,12 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
         with cwd("subproject", create=True):
             create_git_repo_with_branches_and_tags()
             git = Git()
+            # Ensure that these objects have different types
             object_id_commit = git.get_sha1("v1-stable")
+            self.assertEqual(object_id_commit, b"32c32dcaa3c7f7024387640a91e98a5201e1f202")
             self.assertEqual(ObjectType.COMMIT, git_get_object_type(object_id_commit))
             object_id_tag = git.get_sha1("v2")
+            self.assertEqual(object_id_tag, b"60c7ec01d2a8d8c450896bb683c16637d52ea63c")
             self.assertEqual(ObjectType.TAG, git_get_object_type(object_id_tag))
 
         with cwd("superproject", create=True):
@@ -559,6 +568,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
+\tobject-id = 449e289b617c25c95868658a580b6c52fb817f4d
 \trevision = refs/heads/main
 \turl = ../subproject
 """)
@@ -569,6 +579,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"initial")
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
+\tobject-id = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
 \turl = ../subproject
 """)
@@ -579,9 +590,10 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on stable")
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
-\trevision = %s
+\tobject-id = 32c32dcaa3c7f7024387640a91e98a5201e1f202
+\trevision = 32c32dcaa3c7f7024387640a91e98a5201e1f202
 \turl = ../subproject
-""" % (object_id_commit,))
+""")
             git.remove_staged_changes()
 
             p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_tag])
@@ -589,9 +601,10 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
-\trevision = %s
+\tobject-id = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
+\trevision = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
 \turl = ../subproject
-""" % (object_id_tag,))
+""")
             git.remove_staged_changes()
 
             # Special case: Test revision argument with subdirectory for
@@ -601,6 +614,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subdir/subproject/file", b"initial")
             self.assertFileContent("subdir/subproject/.subproject", b"""\
 [remote]
+\tobject-id = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
 \turl = ../subproject
 """)
@@ -744,6 +758,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
 [remote]
+\tobject-id = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 \trevision = v1
 \turl = ../subproject
 """)
@@ -770,6 +785,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
 [remote]
+\tobject-id = 05273055cdb7635593d13ad7ce4d6da309050ce9
 \trevision = v2
 \turl = ../subproject
 """)
@@ -786,12 +802,14 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("dir/subproject/dir/e", b"second\n")
             self.assertEqual(git.diff(staged=True), b"""\
 diff --git a/dir/subproject/.subproject b/dir/subproject/.subproject
-index 534cf67..824acf9 100644
+index b33db75..01ad2b4 100644
 --- a/dir/subproject/.subproject
 +++ b/dir/subproject/.subproject
-@@ -1,3 +1,3 @@
+@@ -1,4 +1,4 @@
  [remote]
+-\tobject-id = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 -\trevision = v1
++\tobject-id = 05273055cdb7635593d13ad7ce4d6da309050ce9
 +\trevision = v2
  \turl = ../subproject
 diff --git a/dir/subproject/dir/b b/dir/subproject/dir/b
@@ -916,6 +934,7 @@ Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git
             self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
+\tobject-id = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
 \turl = ../subproject
 """)
             git.commit("add subproject")
@@ -933,7 +952,8 @@ Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git
         with cwd("superproject"):
             # Now there are changes in the subproject
             self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
-            self.assertEqual(git.diff_staged_files(), [b"A\tsubproject/b"])
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/.subproject", b"A\tsubproject/b"])
 
     def test_update_has_no_changes(self):
         self.create_subproject()
@@ -967,7 +987,7 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 -rw-rw-r-- root/root        33 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
--rw-rw-r-- root/root        30 2001-10-09 13:00 subproject/.subproject
+-rw-rw-r-- root/root        84 2001-10-09 13:00 subproject/.subproject
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
@@ -984,6 +1004,7 @@ drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 """)
             self.assertFileContent("subproject/.subproject", b"""\
 [remote]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
             self.assertFileContent("subproject/hello", b"content")

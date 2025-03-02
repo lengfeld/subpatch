@@ -87,6 +87,7 @@ class Git():
         self.call(["tag", name, "-m", message])
 
     # Returns the SHA1 checksum as a bytes object without trailing newline!
+    # TODO copied to "subpatch.py" -> refactor
     def get_sha1(self, rev="HEAD"):
         # NOTE: Special case for valid SHA1 sums. Even if the object for the
         # SHA1 does not exist in the repo, it's return as a valid SHA1 If the

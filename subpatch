@@ -628,7 +628,7 @@ def is_sha1(sha1: bytes) -> bool:
 
 
 # TODO Split this command. It seems like a ugly combination
-def git_init_and_fetch(url, ref):
+def git_init_and_fetch(url: str, ref: bytes) -> bytes:
     p = Popen(["git", "init", "-q"])
     p.communicate()
     if p.returncode != 0:
@@ -800,6 +800,19 @@ def parse_sha1_names(lines: bytes, sep=b' ') -> Dict[bytes, bytes]:
     return dict(lines2)
 
 
+def git_get_sha1(rev):
+    # NOTE: Special case for valid SHA1 sums. Even if the object for the
+    # SHA1 does not exist in the repo, it's return as a valid SHA1 If the
+    # rev is a too short SHA1, it's extend to a full SHA1 if a object with
+    # the short SHA1 exists in the repo.
+    p = Popen(["git", "rev-parse", "-q", "--verify", rev], stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("error here TODO")
+
+    return stdout.rstrip(b"\n")
+
+
 # git_ls_remote ::  string(url) -> dict<ref_name, sha1>
 # Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
 def git_ls_remote(url: str) -> Dict[bytes, bytes]:
@@ -900,7 +913,8 @@ class CacheHelperGit:
 
     # Download remote repository, checkout the request revision, remove
     # repository metadata and leave the plan files in the dir 'cache_relpath'.
-    def download(self, download_config: DownloadConfig, folder):
+    # NOTE: return value is either a object_id of a tag or of a commit!
+    def download(self, download_config: DownloadConfig, folder) -> bytes:
         # NOTE "git submodule init" creates a bare repository in ".git/modules"
         # TODO maybe also use that folder as a scrat pad.
         # TODO clone only a single branch and maybe use --depth 1
@@ -937,6 +951,10 @@ class CacheHelperGit:
                                            "Object id '%s' does not point to a commit or tag object!" % (clone_config.object_id,))
 
                     git_reset_hard(clone_config.object_id)
+                object_id = clone_config.object_id.encode("ascii")
+            else:
+                with cwd(folder):
+                    object_id = git_get_sha1("HEAD")
         else:
             # TODO This is really ugly!
             assert not os.path.isabs(folder)
@@ -951,6 +969,8 @@ class CacheHelperGit:
                     url_tmp = b"../" * folder_count + url.encode("utf8")
                 else:
                     url_tmp = url
+                # TODO Rework DownloadConfig to avoid extra asser here
+                assert clone_config.ref is not None
                 object_id = git_init_and_fetch(url_tmp, clone_config.ref)
                 git_reset_hard(object_id)
 
@@ -960,6 +980,8 @@ class CacheHelperGit:
         local_repo_git_dir = join(folder, b".git")
         assert os.path.isdir(local_repo_git_dir)
         shutil.rmtree(local_repo_git_dir)
+
+        return object_id
 
 
 def ensure_superproject_is_configured(superx):
@@ -983,7 +1005,7 @@ def ensure_superproject_is_git(superx):
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str]) -> None:
+def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str], object_id: bytes) -> None:
     try:
         with open(paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -994,6 +1016,7 @@ def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str]) 
     metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", url.encode("utf8"))
     if revision is not None:
         metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"object-id", object_id)
 
     metadata_config = config_unparse2(metadata_lines)
     with open(paths.metadata_abspath, "bw") as f:
@@ -1007,7 +1030,7 @@ def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str]) 
 
 # TODO consolidate with unpack from cmd_add
 # TODO consolide function arguments
-def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision: Optional[str]) -> None:
+def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
@@ -1071,7 +1094,7 @@ def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision
     os.rmdir(cache_abspath)
 
     # TODO update tree checksum in the config
-    do_unpack_update_metadata(superx, paths, url, revision)
+    do_unpack_update_metadata(superx, paths, url, revision, object_id)
 
 
 def cmd_update(args, parser):
@@ -1099,7 +1122,7 @@ def cmd_update(args, parser):
         x = paths.super_to_sub_relpath.decode("utf8")
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
 
-    metadata_url, metadata_revision = read_metadata(paths.metadata_abspath)
+    metadata = read_metadata(paths.metadata_abspath)
 
     # TODO if some of the patches are deapply, it's ok to have changes in the
     # index! How to handle that here? In that case
@@ -1119,20 +1142,20 @@ def cmd_update(args, parser):
         # TODO verify URL
         url = args.url
     else:
-        if metadata_url is None:
+        if metadata.url is None:
             # TODO this is an error case. There should always be an URL
             url = None
         else:
-            url = metadata_url.decode("utf8")
+            url = metadata.url.decode("utf8")
 
     if args.revision is not None:
         # TODO verify revision
         revision = args.revision
     else:
-        if metadata_revision is None:
+        if metadata.revision is None:
             revision = None
         else:
-            revision = metadata_revision.decode("utf8")
+            revision = metadata.revision.decode("utf8")
 
     assert isinstance(url, str)
     assert revision is None or isinstance(revision, str)
@@ -1162,12 +1185,12 @@ def cmd_update(args, parser):
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     # NOTE: The ".git" folder is already removed! Just the plain tree
-    cache_helper.download(download_config, cache_relpath)
+    object_id = cache_helper.download(download_config, cache_relpath)
 
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # subpatch unpack
-    do_unpack_for_update(superx, paths, cache_abspath, url, revision)
+    do_unpack_for_update(superx, paths, cache_abspath, url, revision, object_id)
 
     # TODO reapply patches: subpatch push --all
 
@@ -1210,7 +1233,7 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_add(superx, paths, cache_relpath: bytes, url: str, revision: Optional[str]) -> None:
+def do_unpack_for_add(superx, paths, cache_relpath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
     # HACK for now
     # Check assumptions: We have just created the files ourselves
     assert os.path.exists(paths.cwd_to_sub_relpath)
@@ -1225,7 +1248,7 @@ def do_unpack_for_add(superx, paths, cache_relpath: bytes, url: str, revision: O
 
     # TODO in case of failure, remove download git dir!
 
-    do_unpack_update_metadata(superx, paths, url, revision)
+    do_unpack_update_metadata(superx, paths, url, revision, object_id)
 
 
 def cmd_add(args, parser):
@@ -1352,10 +1375,10 @@ def cmd_add(args, parser):
 
         # Fetch remote repository/tarball into local folder and checkout the
         # requested revision.
-        cache_helper.download(download_config, cache_relpath)
+        object_id = cache_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
-        do_unpack_for_add(superx, paths, cache_relpath, url, revision)
+        do_unpack_for_add(superx, paths, cache_relpath, url, revision, object_id)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
@@ -1636,12 +1659,20 @@ def git_ls_files_untracked():
     return parse_z(stdout)
 
 
-def read_metadata(path: bytes):
+@dataclass(frozen=True)
+class Metadata:
+    url: Optional[bytes]
+    revision: Optional[bytes]
+    object_id: Optional[bytes]
+
+
+def read_metadata(path: bytes) -> Metadata:
     with open(path, "br") as f:
         lines = split_with_ts_bytes(f.read())
 
     url = None
     revision = None
+    object_id = None
 
     metadata_lines = config_parse2(lines)
     for metadata_line in metadata_lines:
@@ -1653,8 +1684,10 @@ def read_metadata(path: bytes):
                 url = line_data.value
             elif line_data.key == b"revision":
                 revision = line_data.value
+            elif line_data.key == b"object-id":
+                object_id = line_data.value
 
-    return url, revision
+    return Metadata(url, revision, object_id)
 
 
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
@@ -1735,7 +1768,7 @@ def cmd_status(args, parser):
         # for git superprojects. And look like svn for svn superprojects.
         # NOTE: these two ideas are conflicting!
 
-        url, revision = read_metadata(join(paths.super_abspath, subproject, b".subproject"))
+        metadata = read_metadata(join(paths.super_abspath, subproject, b".subproject"))
 
         # TODO again some bytes to string decoding. Annoying!
         subproject_str = subproject.decode("utf8")
@@ -1743,11 +1776,13 @@ def cmd_status(args, parser):
         # TODO Think about other cvs systems
         print("# subproject at '%s'" % (subproject_str,))
         print("")
-        if url is not None:
-            print("* was integrated from URL: %s" % (url.decode("utf8"),))
-        if revision is not None:
-            print("* has integrated revision: %s" % (revision.decode("utf8"),))
+        if metadata.url is not None:
+            print("* was integrated from URL: %s" % (metadata.url.decode("utf8"),))
+        if metadata.revision is not None:
+            print("* has integrated revision: %s" % (metadata.revision.decode("utf8"),))
             # TODO Maybe included whether it "tracks a branch" or it was a git tag
+        if metadata.object_id is not None:
+            print("* has integrated object id: %s" % (metadata.object_id.decode("utf8"),))
 
         changes = subproject_changes[subproject]
 

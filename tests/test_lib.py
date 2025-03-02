@@ -24,7 +24,7 @@ from subpatch import (AppException, CheckedSuperprojectData, ConfigLine,
                       get_name_from_repository_url, get_url_type,
                       git_diff_in_dir, git_diff_name_only, git_get_object_type,
                       git_get_toplevel, git_init_and_fetch,
-                      git_ls_files_untracked, git_ls_remote,
+                      git_ls_files_untracked, git_ls_remote, git_get_sha1,
                       git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                       is_sha1, is_valid_revision, parse_sha1_names, parse_z,
                       split_with_ts, split_with_ts_bytes)
@@ -651,6 +651,25 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
             self.assertEqual([b"b", b"dir/a"], git_ls_tree_in_dir(b""))
             self.assertEqual([b"dir/a"], git_ls_tree_in_dir(b"dir"))
             self.assertEqual([], git_ls_tree_in_dir(b"does-not-exists-dir"))
+
+    def test_git_get_sha1(self):
+        git = Git()
+        git.init()
+        git.call(["switch", "-c", "main", "-q"])
+
+        touch("a", b"1")
+        git.add("a")
+        git.commit("add a")
+        git.tag("v1", "msg")
+
+        touch("a", b"2")
+        git.add("a")
+        git.commit("change a")
+
+        self.assertEqual(git_get_sha1("HEAD"), b"4975f72e17be27d5e0d66dd3ec6ea9662de9046e")
+        self.assertEqual(git_get_sha1("HEAD^"), b"e9a39bbb7a5057ad81ae413ed9b31a848e73b36a")
+        self.assertEqual(git_get_sha1("v1"), b"e3471ab3cc16a5dc71317a5567929f172a88d763")
+        self.assertEqual(git_get_sha1("main"), b"4975f72e17be27d5e0d66dd3ec6ea9662de9046e")
 
 
 class TestFuncs(unittest.TestCase):
