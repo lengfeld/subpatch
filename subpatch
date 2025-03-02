@@ -240,7 +240,7 @@ def config_set_key_value2(config_lines: GeneratorConfigLine, section_name: bytes
         yield from emit()
     else:
         if not was_emit[0]:
-            raise Exception("Error: No section with name '%s' found!" % (section_name,))
+            raise Exception("Error: No section with name '%s' found!" % (section_name.decode("utf8"),))
 
 
 def config_add_section2(config_lines: GeneratorConfigLine, section_name: bytes) -> GeneratorConfigLine:
@@ -888,9 +888,11 @@ def git_resolve_to_clone_config(url: str, revision: Optional[str]) -> CloneConfi
 
 # TODO finalize of naming convention for helper code for subprojects and
 # superprojects.
+# TODO Idea: rename this to CacheHelper, because it's only for download and
+# unpack other subrpoject takes, like pop/push patches are the same!
 class SubHelperGit:
-    def get_revision_as_str(self, revision):
-        # The revision is of type Maybe<String>. It's either None or a str.
+    def get_revision_as_str(self, revision: Optional[str]) -> str:
+        # The revision is of type Optional<str>. It's either None or a str.
         # Convert to a printable string for stdout
         if revision is None:
             return "HEAD"
