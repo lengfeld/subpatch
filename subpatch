@@ -974,6 +974,91 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
+# TODO consolidate with unpack from cmd_add
+# TODO consolide commandline arguments
+def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revision: Optional[str]) -> None:
+    # Quick and dirty performance improvement. Batch multiple paths together
+    class GitCommandBachter:
+        BATCH_COUNT = 5000
+
+        def __init__(self, cmd):
+            self._args = []
+            self._cmd = cmd
+
+        def add_and_maybe_exec(self, arg):
+            self._args.append(arg)
+            if len(self._args) >= self.BATCH_COUNT:
+                self.exec_force()
+
+        def exec_force(self):
+            if len(self._args) == 0:
+                return
+            cmd = self._cmd + self._args
+            subprocess.run(cmd, check=True, cwd=paths.super_abspath)
+            self._args.clear()
+
+    # Just quick and try remove and copy!
+    # TODO convert this code to "superhelper" implementation
+    with cwd(paths.super_abspath):
+        git_rm = GitCommandBachter(["git", "rm", "-q"])
+        for path in git_ls_tree_in_dir(paths.super_to_sub_relpath):
+            git_rm.add_and_maybe_exec(path)
+        git_rm.exec_force()
+
+    # and copy
+    # TODO convert this code to "superhelper" implementation
+    os.makedirs(paths.cwd_to_sub_relpath, exist_ok=True)
+    with cwd(cache_abspath):
+        git_add = GitCommandBachter(["git", "add", "-f"])
+
+        for root, dirnames, files in os.walk(b"."):
+            for dirname in dirnames:
+                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, dirname)
+                dest_path = join(paths.super_abspath, super_to_dest_relpath)
+                os.makedirs(dest_path, exist_ok=True)
+
+            for filename in files:
+                src_path = join(root, filename)
+                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
+                dest_path = join(paths.super_abspath, super_to_dest_relpath)
+                os.rename(src_path, dest_path)
+                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
+
+                git_add.add_and_maybe_exec(super_to_dest_relpath)
+
+        git_add.exec_force()
+
+    # Remove empty directories in download/cache dir
+    for root, dirnames, files in os.walk(cache_abspath, topdown=False):
+        assert len(files) == 0
+        for dirname in dirnames:
+            os.rmdir(join(root, dirname))
+
+    assert len(os.listdir(cache_abspath)) == 0
+    os.rmdir(cache_abspath)
+
+    # TODO update tree checksum in the config
+
+    # Write new metadata
+    # TODO Code was copied! refactor
+    metadata_lines = empty_config_lines()  # TODO no plain new generator, use from disk or from above
+    metadata_lines = config_add_section2(metadata_lines, b"remote")
+    assert isinstance(sub_url, str)
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
+    if revision is not None:
+        assert isinstance(revision, str)
+        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
+
+    metadata_config = config_unparse2(metadata_lines)
+    with open(paths.metadata_abspath, "bw") as f:
+        f.write(metadata_config)
+
+    # NOTE "add" assumes cwd is toplevel dir of superproject for now!
+    # TODO refactor cleanup this!
+    with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
+        superx.helper.add([b".subproject"])
+
+
 def cmd_update(args, parser):
     if args.path is None:
         # TODO should also work when cwd is inside the subproject
@@ -1064,90 +1149,11 @@ def cmd_update(args, parser):
     # NOTE: The ".git" folder is already removed! Just the plain tree
     sub_helper.download(download_config, cache_relpath)
 
-    # subpatch unpack
-    # TODO Just hacky
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
-    # Quick and dirty performance improvement. Batch multiple paths together
-    class GitCommandBachter:
-        BATCH_COUNT = 5000
-
-        def __init__(self, cmd):
-            self._args = []
-            self._cmd = cmd
-
-        def add_and_maybe_exec(self, arg):
-            self._args.append(arg)
-            if len(self._args) >= self.BATCH_COUNT:
-                self.exec_force()
-
-        def exec_force(self):
-            if len(self._args) == 0:
-                return
-            cmd = self._cmd + self._args
-            subprocess.run(cmd, check=True, cwd=paths.super_abspath)
-            self._args.clear()
-
-    # Just quick and try remove and copy!
-    # TODO convert this code to "superhelper" implementation
-    with cwd(superx.path):
-        git_rm = GitCommandBachter(["git", "rm", "-q"])
-        for path in git_ls_tree_in_dir(paths.super_to_sub_relpath):
-            git_rm.add_and_maybe_exec(path)
-        git_rm.exec_force()
-
-    # and copy
-    # TODO convert this code to "superhelper" implementation
-    os.makedirs(paths.cwd_to_sub_relpath, exist_ok=True)
-    with cwd(cache_abspath):
-        git_add = GitCommandBachter(["git", "add", "-f"])
-
-        for root, dirnames, files in os.walk(b"."):
-            for dirname in dirnames:
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, dirname)
-                dest_path = join(paths.super_abspath, super_to_dest_relpath)
-                os.makedirs(dest_path, exist_ok=True)
-
-            for filename in files:
-                src_path = join(root, filename)
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
-                dest_path = join(paths.super_abspath, super_to_dest_relpath)
-                os.rename(src_path, dest_path)
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
-
-                git_add.add_and_maybe_exec(super_to_dest_relpath)
-
-        git_add.exec_force()
-
-    # Remove empty directories in download/cache dir
-    for root, dirnames, files in os.walk(cache_abspath, topdown=False):
-        assert len(files) == 0
-        for dirname in dirnames:
-            os.rmdir(join(root, dirname))
-
-    assert len(os.listdir(cache_abspath)) == 0
-    os.rmdir(cache_abspath)
-
-    # TODO update tree checksum in the config
-
-    # Write new metadata
-    # TODO Code was copied! refactor
-    metadata_lines = empty_config_lines()  # TODO no plain new generator, use from disk or from above
-    metadata_lines = config_add_section2(metadata_lines, b"remote")
-    assert isinstance(sub_url, str)
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
-    if revision is not None:
-        assert isinstance(revision, str)
-        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
-
-    metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
-        f.write(metadata_config)
-
-    # NOTE "add" assumes cwd is toplevel dir of superproject for now!
-    # TODO refactor cleanup this!
-    with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
-        superx.helper.add([b".subproject"])
+    # subpatch unpack
+    # TODO Just hacky
+    do_unpack_for_update(superx, paths, cache_abspath, sub_url, revision)
 
     # TODO reapply patches: subpatch push --all
 
@@ -1188,6 +1194,44 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
     with open(config_path, "bw") as f:
         # TODO parse and unparse are _not_ symmetric. Fix this
         f.write(config_unparse2(config_lines))
+
+
+def do_unpack_for_cmd_add(superx, paths, cache_relpath: bytes, sub_url: str, revision: Optional[str]) -> None:
+    # HACK for now
+    # Check assumptions: We have just created the files ourselves
+    assert os.path.exists(paths.cwd_to_sub_relpath)
+    assert os.path.exists(paths.metadata_abspath)
+    # TODO always check that for subprojects
+    assert not os.path.exists(join(cache_relpath, b".subproject"))
+    os.remove(paths.metadata_abspath)
+    os.rmdir(paths.cwd_to_sub_relpath)
+    os.rename(cache_relpath, paths.cwd_to_sub_relpath)
+
+    metadata_lines = empty_config_lines()
+
+    # TODO currently this always uses "\t" for indention. Try to use the style
+    # that is already used in the subpatch file. E.g. four-spaces, two-spaces
+    # or no-spaces.
+    # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
+    # of the argument. If there is a trailing slash in the argument, then the
+    # trailing slash is also in the config file. It's not sanitized. It's the
+    # same behavior as 'git submodule' does.
+    metadata_lines = config_add_section2(metadata_lines, b"remote")
+    assert isinstance(sub_url, str)
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
+    if revision is not None:
+        assert isinstance(revision, str)
+        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
+
+    metadata_config = config_unparse2(metadata_lines)
+    with open(paths.metadata_abspath, "bw") as f:
+        f.write(metadata_config)
+
+    # TODO in case of failure, remove download git dir!
+
+    # Add files for committing
+    # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
+    superx.helper.add([paths.cwd_to_sub_relpath])
 
 
 def cmd_add(args, parser):
@@ -1320,42 +1364,7 @@ def cmd_add(args, parser):
         sub_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
-
-        # HACK for now
-        # Check assumptions: We have just created the files ourselves
-        assert os.path.exists(paths.cwd_to_sub_relpath)
-        assert os.path.exists(paths.metadata_abspath)
-        # TODO always check that for subprojects
-        assert not os.path.exists(join(cache_relpath, b".subproject"))
-        os.remove(paths.metadata_abspath)
-        os.rmdir(paths.cwd_to_sub_relpath)
-        os.rename(cache_relpath, paths.cwd_to_sub_relpath)
-
-        metadata_lines = empty_config_lines()
-
-        # TODO currently this always uses "\t" for indention. Try to use the style
-        # that is already used in the subpatch file. E.g. four-spaces, two-spaces
-        # or no-spaces.
-        # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
-        # of the argument. If there is a trailing slash in the argument, then the
-        # trailing slash is also in the config file. It's not sanitized. It's the
-        # same behavior as 'git submodule' does.
-        metadata_lines = config_add_section2(metadata_lines, b"remote")
-        assert isinstance(sub_url, str)
-        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
-        if revision is not None:
-            assert isinstance(revision, str)
-            metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
-
-        metadata_config = config_unparse2(metadata_lines)
-        with open(paths.metadata_abspath, "bw") as f:
-            f.write(metadata_config)
-
-        # TODO in case of failure, remove download git dir!
-
-        # Add files for committing
-        # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
-        superx.helper.add([paths.cwd_to_sub_relpath])
+        do_unpack_for_cmd_add(superx, paths, cache_relpath, sub_url, revision)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
