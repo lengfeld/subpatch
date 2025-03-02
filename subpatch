@@ -665,6 +665,8 @@ def git_init_and_fetch(url, ref):
 
 def git_add(args):
     assert len(args) >= 1
+    # NOTE: use "-f" here otherwise git honors ignored files and does not add
+    # all files!
     p = Popen(["git", "add", "-f"] + args)
     p.communicate()
     if p.returncode != 0:
@@ -974,9 +976,19 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
+# TODO currently this always uses "\t" for indention. Try to use the style
+# that is already used in the subpatch file. E.g. four-spaces, two-spaces
+# or no-spaces.
+# NOTE: DDX/Design decision: The URL is taken as a verbatim copy
+# of the argument. If there is a trailing slash in the argument, then the
+# trailing slash is also in the config file. It's not sanitized. It's the
+# same behavior as 'git submodule' does.
 def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[str]) -> None:
-    with open(paths.metadata_abspath, "br") as f:
-        metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
+    try:
+        with open(paths.metadata_abspath, "br") as f:
+            metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
+    except FileNotFoundError:
+        metadata_lines = empty_config_lines()
 
     metadata_lines = config_add_section2(metadata_lines, b"remote")
     metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
@@ -1197,7 +1209,7 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_cmd_add(superx, paths, cache_relpath: bytes, sub_url: str, revision: Optional[str]) -> None:
+def do_unpack_for_add(superx, paths, cache_relpath: bytes, sub_url: str, revision: Optional[str]) -> None:
     # HACK for now
     # Check assumptions: We have just created the files ourselves
     assert os.path.exists(paths.cwd_to_sub_relpath)
@@ -1208,31 +1220,11 @@ def do_unpack_for_cmd_add(superx, paths, cache_relpath: bytes, sub_url: str, rev
     os.rmdir(paths.cwd_to_sub_relpath)
     os.rename(cache_relpath, paths.cwd_to_sub_relpath)
 
-    metadata_lines = empty_config_lines()
-
-    # TODO currently this always uses "\t" for indention. Try to use the style
-    # that is already used in the subpatch file. E.g. four-spaces, two-spaces
-    # or no-spaces.
-    # NOTE: DDX/Design decision: The URL is taken as a verbatim copy
-    # of the argument. If there is a trailing slash in the argument, then the
-    # trailing slash is also in the config file. It's not sanitized. It's the
-    # same behavior as 'git submodule' does.
-    metadata_lines = config_add_section2(metadata_lines, b"remote")
-    assert isinstance(sub_url, str)
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
-    if revision is not None:
-        assert isinstance(revision, str)
-        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
-
-    metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
-        f.write(metadata_config)
+    superx.helper.add([paths.cwd_to_sub_relpath])
 
     # TODO in case of failure, remove download git dir!
 
-    # Add files for committing
-    # TODO git_add must use "-f" otherwise ignore files are used and not all files are added!
-    superx.helper.add([paths.cwd_to_sub_relpath])
+    do_unpack_update_metadata(superx, paths, sub_url, revision)
 
 
 def cmd_add(args, parser):
@@ -1310,7 +1302,7 @@ def cmd_add(args, parser):
     # NOTE: At this point subpatch is using the git staging area as a
     # rollback/revert mechansim. If something fails in the next code lines,
     # the user (and the tests) can revert with "git revert".
-    # TODO maybe make this build-in!
+    # TODO maybe make this built-in!
     # TODO add notes how to revert if anything of the following fails!
 
     # subpatch init <path>
@@ -1365,7 +1357,7 @@ def cmd_add(args, parser):
         sub_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
-        do_unpack_for_cmd_add(superx, paths, cache_relpath, sub_url, revision)
+        do_unpack_for_add(superx, paths, cache_relpath, sub_url, revision)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
