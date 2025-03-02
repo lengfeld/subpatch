@@ -1012,11 +1012,11 @@ def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str], 
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
 
-    metadata_lines = config_add_section2(metadata_lines, b"remote")
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", url.encode("utf8"))
+    metadata_lines = config_add_section2(metadata_lines, b"upstream")
+    metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"url", url.encode("utf8"))
     if revision is not None:
-        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"object-id", object_id)
+        metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"revision", revision.encode("utf8"))
+    metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"object-id", object_id)
 
     metadata_config = config_unparse2(metadata_lines)
     with open(paths.metadata_abspath, "bw") as f:
