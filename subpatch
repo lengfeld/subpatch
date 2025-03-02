@@ -692,7 +692,7 @@ def git_add(args):
 #  - url: The URL for a git/svn/.. repository or tarball.
 #      Can be a http, git or file URL. Or just a local path.
 #    Variant:
-#       sub_url: The subproject's URL, e.g. to clone/download
+#       url: The subproject's URL, e.g. to clone/download
 #
 # subpatch naming
 #  - "config" or "subpatch config". Is the name of the config in the
@@ -955,6 +955,8 @@ class CacheHelperGit:
                 git_reset_hard(object_id)
 
         # Remove ".git" folder in this repo
+        # TODO this must be moved outside of the download function. It should
+        # be persistent.
         local_repo_git_dir = join(folder, b".git")
         assert os.path.isdir(local_repo_git_dir)
         shutil.rmtree(local_repo_git_dir)
@@ -981,7 +983,7 @@ def ensure_superproject_is_git(superx):
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[str]) -> None:
+def do_unpack_update_metadata(superx, paths, url: str, revision: Optional[str]) -> None:
     try:
         with open(paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -989,7 +991,7 @@ def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[s
         metadata_lines = empty_config_lines()
 
     metadata_lines = config_add_section2(metadata_lines, b"remote")
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", url.encode("utf8"))
     if revision is not None:
         metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
 
@@ -1005,7 +1007,7 @@ def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[s
 
 # TODO consolidate with unpack from cmd_add
 # TODO consolide function arguments
-def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revision: Optional[str]) -> None:
+def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision: Optional[str]) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
@@ -1069,7 +1071,7 @@ def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revi
     os.rmdir(cache_abspath)
 
     # TODO update tree checksum in the config
-    do_unpack_update_metadata(superx, paths, sub_url, revision)
+    do_unpack_update_metadata(superx, paths, url, revision)
 
 
 def cmd_update(args, parser):
@@ -1115,13 +1117,13 @@ def cmd_update(args, parser):
 
     if args.url is not None:
         # TODO verify URL
-        sub_url = args.url
+        url = args.url
     else:
         if metadata_url is None:
             # TODO this is an error case. There should always be an URL
-            sub_url = None
+            url = None
         else:
-            sub_url = metadata_url.decode("utf8")
+            url = metadata_url.decode("utf8")
 
     if args.revision is not None:
         # TODO verify revision
@@ -1132,13 +1134,13 @@ def cmd_update(args, parser):
         else:
             revision = metadata_revision.decode("utf8")
 
-    assert isinstance(sub_url, str)
+    assert isinstance(url, str)
     assert revision is None or isinstance(revision, str)
 
     # subpatch download
     # TODO combine with cmd_add(). It also does the same!
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
-          (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, cache_helper.get_revision_as_str(revision)),
+          (paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
           end="")
     sys.stdout.flush()
 
@@ -1156,7 +1158,7 @@ def cmd_update(args, parser):
     # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
     # download!
 
-    download_config = DownloadConfig(url=sub_url, revision=revision)
+    download_config = DownloadConfig(url=url, revision=revision)
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     # NOTE: The ".git" folder is already removed! Just the plain tree
@@ -1165,7 +1167,7 @@ def cmd_update(args, parser):
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # subpatch unpack
-    do_unpack_for_update(superx, paths, cache_abspath, sub_url, revision)
+    do_unpack_for_update(superx, paths, cache_abspath, url, revision)
 
     # TODO reapply patches: subpatch push --all
 
@@ -1208,7 +1210,7 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_add(superx, paths, cache_relpath: bytes, sub_url: str, revision: Optional[str]) -> None:
+def do_unpack_for_add(superx, paths, cache_relpath: bytes, url: str, revision: Optional[str]) -> None:
     # HACK for now
     # Check assumptions: We have just created the files ourselves
     assert os.path.exists(paths.cwd_to_sub_relpath)
@@ -1223,7 +1225,7 @@ def do_unpack_for_add(superx, paths, cache_relpath: bytes, sub_url: str, revisio
 
     # TODO in case of failure, remove download git dir!
 
-    do_unpack_update_metadata(superx, paths, sub_url, revision)
+    do_unpack_update_metadata(superx, paths, url, revision)
 
 
 def cmd_add(args, parser):
@@ -1240,11 +1242,8 @@ def cmd_add(args, parser):
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
 
-    # TODO "Can be None" comment is bad. It should be encoded into the variable name
-    # and/or in the type.
-    revision = args.revision  # Can be None
-
-    sub_url = args.url
+    revision: Optional[str] = args.revision
+    url = args.url
 
     if revision is not None:
         if not is_valid_revision(revision):
@@ -1254,7 +1253,7 @@ def cmd_add(args, parser):
     # TODO check with ls-remote that remote is accessible
 
     if args.path is None:
-        cwd_to_sub_relpath = get_name_from_repository_url(sub_url)
+        cwd_to_sub_relpath = get_name_from_repository_url(url)
     else:
         cwd_to_sub_relpath = args.path
         # TODO split into path and name component
@@ -1263,7 +1262,7 @@ def cmd_add(args, parser):
         # - For now just remove trailing slashes
         cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
-    url_type = get_url_type(sub_url)
+    url_type = get_url_type(url)
 
     data = find_superproject()
     checked_data = check_superproject_data(data)
@@ -1344,19 +1343,19 @@ def cmd_add(args, parser):
     # TODO move this design decision to the website
     if not args.quiet:
         print("Adding subproject '%s' from URL '%s' at revision '%s'..." %
-              (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, cache_helper.get_revision_as_str(revision)),
+              (paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
               end="")
         sys.stdout.flush()
     try:
         # subpatch cache fetch url -r version
-        download_config = DownloadConfig(url=sub_url, revision=revision)
+        download_config = DownloadConfig(url=url, revision=revision)
 
         # Fetch remote repository/tarball into local folder and checkout the
         # requested revision.
         cache_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
-        do_unpack_for_add(superx, paths, cache_relpath, sub_url, revision)
+        do_unpack_for_add(superx, paths, cache_relpath, url, revision)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
