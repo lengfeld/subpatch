@@ -1369,6 +1369,7 @@ def cmd_add(args, parser):
     else:
         if not args.quiet:
             print(" Done.")
+            # TODO is flush() also needed here?
 
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
