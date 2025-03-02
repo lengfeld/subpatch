@@ -974,8 +974,27 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
+def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[str]) -> None:
+    with open(paths.metadata_abspath, "br") as f:
+        metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
+
+    metadata_lines = config_add_section2(metadata_lines, b"remote")
+    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
+    if revision is not None:
+        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
+
+    metadata_config = config_unparse2(metadata_lines)
+    with open(paths.metadata_abspath, "bw") as f:
+        f.write(metadata_config)
+
+    # NOTE "add" assumes cwd is toplevel dir of superproject for now!
+    # TODO refactor cleanup this!
+    with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
+        superx.helper.add([b".subproject"])
+
+
 # TODO consolidate with unpack from cmd_add
-# TODO consolide commandline arguments
+# TODO consolide function arguments
 def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revision: Optional[str]) -> None:
     # Quick and dirty performance improvement. Batch multiple paths together
     class GitCommandBachter:
@@ -1038,25 +1057,7 @@ def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revi
     os.rmdir(cache_abspath)
 
     # TODO update tree checksum in the config
-
-    # Write new metadata
-    # TODO Code was copied! refactor
-    metadata_lines = empty_config_lines()  # TODO no plain new generator, use from disk or from above
-    metadata_lines = config_add_section2(metadata_lines, b"remote")
-    assert isinstance(sub_url, str)
-    metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"url", sub_url.encode("utf8"))
-    if revision is not None:
-        assert isinstance(revision, str)
-        metadata_lines = config_set_key_value2(metadata_lines, b"remote", b"revision", revision.encode("utf8"))
-
-    metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
-        f.write(metadata_config)
-
-    # NOTE "add" assumes cwd is toplevel dir of superproject for now!
-    # TODO refactor cleanup this!
-    with cwd(join(paths.super_abspath, paths.super_to_sub_relpath)):
-        superx.helper.add([b".subproject"])
+    do_unpack_update_metadata(superx, paths, sub_url, revision)
 
 
 def cmd_update(args, parser):
