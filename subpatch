@@ -1008,6 +1008,8 @@ def do_unpack_update_metadata(superx, paths,  sub_url: str, revision: Optional[s
 # TODO consolidate with unpack from cmd_add
 # TODO consolide function arguments
 def do_unpack_for_update(superx, paths, cache_abspath: bytes, sub_url: str, revision: Optional[str]) -> None:
+    # TODO This function is very very hacky. Works for now!
+
     # Quick and dirty performance improvement. Batch multiple paths together
     class GitCommandBachter:
         BATCH_COUNT = 5000
@@ -1165,7 +1167,6 @@ def cmd_update(args, parser):
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # subpatch unpack
-    # TODO Just hacky
     do_unpack_for_update(superx, paths, cache_abspath, sub_url, revision)
 
     # TODO reapply patches: subpatch push --all
