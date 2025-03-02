@@ -890,9 +890,7 @@ def git_resolve_to_clone_config(url: str, revision: Optional[str]) -> CloneConfi
 
 # TODO finalize of naming convention for helper code for subprojects and
 # superprojects.
-# TODO Idea: rename this to CacheHelper, because it's only for download and
-# unpack other subrpoject takes, like pop/push patches are the same!
-class SubHelperGit:
+class CacheHelperGit:
     def get_revision_as_str(self, revision: Optional[str]) -> str:
         # The revision is of type Optional<str>. It's either None or a str.
         # Convert to a printable string for stdout
@@ -1088,7 +1086,7 @@ def cmd_update(args, parser):
     paths = do_paths(superx.path, cwd_to_sub_relpath)
 
     # TODO Hardcoded assumption: subproject is also git
-    sub_helper = SubHelperGit()
+    cache_helper = CacheHelperGit()
 
     config = read_config(paths.config_abspath)
 
@@ -1140,7 +1138,7 @@ def cmd_update(args, parser):
     # subpatch download
     # TODO combine with cmd_add(). It also does the same!
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
-          (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
+          (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, cache_helper.get_revision_as_str(revision)),
           end="")
     sys.stdout.flush()
 
@@ -1162,7 +1160,7 @@ def cmd_update(args, parser):
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     # NOTE: The ".git" folder is already removed! Just the plain tree
-    sub_helper.download(download_config, cache_relpath)
+    cache_helper.download(download_config, cache_relpath)
 
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
@@ -1336,7 +1334,7 @@ def cmd_add(args, parser):
         git_add([b".subpatch"])
 
     # subpatch cache init --git
-    sub_helper = SubHelperGit()
+    cache_helper = CacheHelperGit()
     # TODO split into directory and cache_name
     cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
 
@@ -1346,7 +1344,7 @@ def cmd_add(args, parser):
     # TODO move this design decision to the website
     if not args.quiet:
         print("Adding subproject '%s' from URL '%s' at revision '%s'..." %
-              (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, sub_helper.get_revision_as_str(revision)),
+              (paths.cwd_to_sub_relpath.decode("utf8"), sub_url, cache_helper.get_revision_as_str(revision)),
               end="")
         sys.stdout.flush()
     try:
@@ -1355,7 +1353,7 @@ def cmd_add(args, parser):
 
         # Fetch remote repository/tarball into local folder and checkout the
         # requested revision.
-        sub_helper.download(download_config, cache_relpath)
+        cache_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
         do_unpack_for_add(superx, paths, cache_relpath, sub_url, revision)
