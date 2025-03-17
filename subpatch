@@ -12,7 +12,6 @@ import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
-from os import mkdir
 from os.path import abspath, join
 from subprocess import DEVNULL, PIPE, Popen
 from typing import Any, Dict, Generator, List, Optional, TypeAlias, Union
@@ -540,7 +539,7 @@ class SuperHelperGit:
     def configure(self, scm_path: bytes) -> None:
         config_abspath = join(scm_path, b".subpatch")
         assert not os.path.exists(config_abspath)
-        with open(config_abspath, "bw") as f:
+        with open(config_abspath, "bw"):
             pass
 
         # TODO: Using cwd to the toplevel directory is just a hack because
