@@ -9,7 +9,6 @@ import sys
 import tempfile
 import unittest
 from dataclasses import dataclass
-from os.path import dirname, isdir, isfile, join, realpath
 from subprocess import DEVNULL, PIPE, Popen
 
 # TODO unify

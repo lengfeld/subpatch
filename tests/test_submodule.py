@@ -2,11 +2,8 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
-# TODO reduce imports
-import sys
 import unittest
-from os.path import abspath, dirname, join, realpath
-from subprocess import DEVNULL, PIPE, Popen, call
+from subprocess import PIPE, Popen
 
 from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
                      create_git_repo_with_branches_and_tags, cwd, touch)
@@ -26,7 +23,6 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
         with cwd("subproject", create=True):
             create_git_repo_with_branches_and_tags()
             git = Git()
-            sha1_tag_v1 = git.get_sha1("v1")
 
         with cwd("superproject", create=True):
             create_git_repo_with_single_commit()

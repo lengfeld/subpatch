@@ -2,11 +2,9 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
-import _thread
 import os
 import socket
 import socketserver
-import sys
 import threading
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler
@@ -57,7 +55,7 @@ class FileRequestHandler(SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(content)))
                 self.end_headers()
                 self.wfile.write(content)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             self.send_error(HTTPStatus.NOT_FOUND, "File not found")
             return None
         except Exception as e:

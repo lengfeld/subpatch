@@ -6,8 +6,8 @@ import os
 import sys
 import unittest
 from copy import deepcopy
-from os.path import abspath, dirname, join, realpath
-from subprocess import DEVNULL, PIPE, Popen, call, run
+from os.path import dirname, join, realpath
+from subprocess import DEVNULL, PIPE, Popen, run
 from time import sleep
 
 from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
@@ -416,7 +416,6 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
     def test_add_with_extra_path_but_empty(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            git = Git()
             p = self.run_subpatch(["add", "../subproject", ""], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: path is empty\n",
@@ -425,7 +424,6 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
     def test_absolute_paths_are_not_supported(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            git = Git()
             p = self.run_subpatch(["add", "/tmp/subproject"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Absolute local paths to a remote repository are not supported!\n",
@@ -453,7 +451,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
         with cwd("superproject"):
             git = Git()
 
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "folder"])
+            self.run_subpatch_ok(["add", "-q", "../subproject", "folder"])
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -466,7 +464,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git.remove_staged_changes()
 
             # Add same subproject but in a subfolder
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "sub/folder"])
+            self.run_subpatch_ok(["add", "-q", "../subproject", "sub/folder"])
             self.assertFileExistsAndIsDir("sub/folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -479,7 +477,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             git.remove_staged_changes()
 
             # Add subproject with trailing slash in path
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "folder/"])
+            self.run_subpatch_ok(["add", "-q", "../subproject", "folder/"])
 
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),

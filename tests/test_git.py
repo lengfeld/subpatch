@@ -4,14 +4,9 @@
 
 # TODO reduce imports
 import os
-import sys
 import unittest
-from os.path import abspath, dirname, join, realpath
-from subprocess import DEVNULL, PIPE, Popen, call
 
-from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
-                     create_git_repo_with_branches_and_tags, cwd, touch)
-from localwebserver import FileRequestHandler, LocalWebserver
+from helpers import Git, TestCaseHelper, TestCaseTempFolder, cwd, touch
 
 
 class TestGit(TestCaseTempFolder, TestCaseHelper):

@@ -6,7 +6,6 @@ import os
 import sys
 import unittest
 from os.path import abspath, dirname, join, realpath
-from subprocess import DEVNULL, PIPE, Popen, call
 
 from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
                      create_git_repo_with_branches_and_tags, cwd, mkdir, touch)
@@ -14,19 +13,19 @@ from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from subpatch import (AppException, CheckedSuperprojectData, ConfigLine,
-                      ErrorCode, FindSuperprojectData, LineDataEmpty,
-                      LineDataHeader, LineDataKeyValue, LineType, ObjectType,
-                      SCMType, Subproject, URLTypes, check_superproject_data,
-                      config_add_section2, config_add_subproject,
-                      config_parse2, config_set_key_value2, config_unparse2,
-                      do_paths, find_superproject,
-                      get_name_from_repository_url, get_url_type,
-                      git_diff_in_dir, git_diff_name_only, git_get_object_type,
-                      git_get_toplevel, git_init_and_fetch,
-                      git_ls_files_untracked, git_ls_remote, git_get_sha1,
-                      git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
-                      is_sha1, is_valid_revision, parse_sha1_names, parse_z,
+from subpatch import (AppException, ConfigLine, ErrorCode,
+                      FindSuperprojectData, LineDataEmpty, LineDataHeader,
+                      LineDataKeyValue, LineType, ObjectType, SCMType,
+                      URLTypes, check_superproject_data, config_add_section2,
+                      config_add_subproject, config_parse2,
+                      config_set_key_value2, config_unparse2, do_paths,
+                      find_superproject, get_name_from_repository_url,
+                      get_url_type, git_diff_in_dir, git_diff_name_only,
+                      git_get_object_type, git_get_sha1, git_get_toplevel,
+                      git_init_and_fetch, git_ls_files_untracked,
+                      git_ls_remote, git_ls_remote_guess_ref,
+                      git_ls_tree_in_dir, git_verify, is_sha1,
+                      is_valid_revision, parse_sha1_names, parse_z,
                       split_with_ts, split_with_ts_bytes)
 
 
@@ -632,7 +631,6 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
     def test_git_ls_tree_in_dir(self):
         git = Git()
         git.init()
-        top_dir = os.getcwdb()
 
         mkdir("dir")
         touch("dir/a")
