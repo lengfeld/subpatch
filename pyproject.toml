@@ -2,6 +2,16 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff.lint]
+# To see a linters execute `ruff linters`
+extend-select = [
+  "I", # isort
+]
+ignore = [
+  "E402", # ignore because the test/test_*.py files contain a import hack
+  "I001", # ignore because it conflicts with the default isort formatting
+] 
+
 [project]
 name = "subpatch"
 dynamic = ["version"]

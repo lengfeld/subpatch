@@ -1401,7 +1401,76 @@ def cmd_add(args, parser):
     return 0
 
 
+<<<<<<< Updated upstream
 def show_version(args):
+=======
+# NOTE: Must be executed in the subprojects work tree
+# TODO look at quilt. Mabye "apply" is the wrong term. But it would match "git apply"
+def cmd_apply(args, parser):
+    if args.path is None:
+        # TODO should also work when cwd is inside the subproject
+        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "Must give a path to a patch file")
+
+    data = find_superproject()
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
+    ensure_superproject_is_configured(superx)
+    ensure_superproject_is_git(superx)
+
+    # Check whether the current cwd is inside a subproject
+    # TODO split Paths object into superproject and subproject parts!
+    paths = do_paths(superx.path, b"")
+    config = read_config(paths.config_abspath)
+
+    super_to_sub_relpath = is_inside_subproject_and_return_path(config, paths)
+    if super_to_sub_relpath is None:
+        # TODO decided whether a wrong work directory is a invalid argument or a runtime error!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Current work directory must be inside a subproject!")
+
+    assert super_to_sub_relpath is not None
+
+    # TODO Fix the last argumnet. It's "cwd_to_sub_relpath
+    paths = do_paths(superx.path, b"")
+
+    if not os.path.isfile(args.path):
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
+
+    # TODO Check for valid subproject!
+
+    # TODO use "--check" to validate patch content before applying and committing
+    p = Popen(["git", "apply", "-v", "--index", "--directory=%s" % (paths.super_to_sub_relpath.decode("utf8"),), args.path])
+    p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+    
+    # TODO: subproject path should be cwd ware. But this make no sense here, the cwd is already in the subproject!
+    # TODO mabye remove subproject path from output!
+
+    patch_dir = join(paths.super_abspath, paths.super_to_sub_relpath, b"patches")
+    os.makedirs(patch_dir)
+
+    import shutil
+    shutil.copy(args.path.encode("utf8"), patch_dir)
+
+    patch_filename = os.path.basename(args.path.encode("utf8"))
+
+    # TODO order of patches is important!
+    with cwd(paths.super_abspath):
+        # TODO use helper!
+        super_to_patch_relpath = join(paths.super_to_sub_relpath, b"patches", patch_filename)
+        git_add([super_to_patch_relpath])
+
+    print("here", super_to_patch_relpath)
+
+    print("Applied patch '%s' to subproject '%s' successfully!" % (args.path, super_to_sub_relpath.decode("utf8")))
+
+    # TODO print commands for comitting
+
+    return 0
+
+
+def cmd_version(args):
+>>>>>>> Stashed changes
     print("subpatch version %s" % (__version__,))
     return 0
 
@@ -1483,6 +1552,15 @@ class Paths:
     sub_name: bytes  # Can be b"" when subproject is at the toplevel directory
     subproject_abspath: bytes
     metadata_abspath: bytes
+
+
+# TODO refactor function order!
+def is_inside_subproject_and_return_path(config : Config, paths : Paths) -> Optional[bytes]:
+    for relpath in config.subprojects:
+        if paths.super_to_sub_relpath.startswith(relpath):
+            return relpath
+    return None
+
 
 
 # Paths documentation and naming
@@ -1675,7 +1753,7 @@ def read_metadata(path: bytes) -> Metadata:
 
     metadata_lines = config_parse2(lines)
     for metadata_line in metadata_lines:
-        # TODO only use url and revision in remote section!
+        # TODO only use url and revision in upstream section!
         if metadata_line.line_type == LineType.KEY_VALUE:
             line_data = metadata_line.line_data
             assert isinstance(line_data, LineDataKeyValue)
@@ -1785,6 +1863,12 @@ def cmd_status(args, parser):
 
         changes = subproject_changes[subproject]
 
+        # Get count of patches for subproject
+        patches_list = [filename for filename
+                        in os.listdir(join(paths.super_abspath, subproject, b"patches"))
+                        if filename.endswith(b".patch")]
+        patches_count = len(patches_list)
+
         p = subproject_str
 
         # NOTE Listing the modified files seems to much like "git status".
@@ -1829,6 +1913,10 @@ def cmd_status(args, parser):
             # untouched This helps because it does ot leave new files in the
             # working tree as "git restore --staged" will done.
 
+        print("* There are n=%d patches applied." % (patches_count))
+        # TODO implement subpatch patch list
+        #print("    - Use `subpatch patch list` to list them")
+
         if i + 1 < len(subprojects):
             # Add a empty line between the subprojects
             print("")
@@ -1855,6 +1943,12 @@ def main_wrapped() -> int:
     parser_configure.set_defaults(func=cmd_configure)
     parser_configure.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                                   help="Suppress output to stdout")
+
+    parser_apply = subparsers.add_parser("apply",
+                                       help="Apply a patch to the worktree")
+    parser_apply.set_defaults(func=cmd_apply)
+    parser_apply.add_argument(dest="path", type=str,
+                              help="Path to patch file")
 
     parser_add = subparsers.add_parser("add",
                                        help="Fetch and add a subproject")

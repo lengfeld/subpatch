@@ -125,3 +125,39 @@ these in that form or another.
   for something like `croot` in the AOSP. For git the command looks like
   `git rev-parse --show-toplevel`.
 * `push/pop`: apply or deapply a patch of the subproject to the working tree.
+
+## Commands
+
+              single subproject or multiple subproject
+                V
+|                | config  | cache    | worktree | patches   |
+|----------------|---------|----------|----------|-----------|
+| list          m| ro      |          |          |           |
+| foreach       m| ro      |          |          |           |
+| cache         s| ro      | rw       |          |           |
+| patch         s| ro      |          |          | rw        |
+| worktree      s| ro      |          | rw       |           |
+| download      s| ro      | rw       | ro       |           |
+| unpack        s| ro      | ro       | rw       |           |
+| add           s| rw      | rw       | rw       |           |
+| rm             | rw      | rw       | rw       | rw        |
+| update        s| ro      | rw       | rw       | rw        |
+| pop,push      s| ro      |          | rw       | ro        |
+| apply         s| ro      |          | rw       | rw        |
+| drop          s| ro      |          | rw       | rw        |
+| check-unpack  s| ro      | ro       | rw       |           |
+| check-patches s| ro      |          | rw       | ro        |
+| status        m| ro      | ro       | ro       | ro        |
+
+config :: list<paths>
+cache  :: Maybe<Git>
+   Git=tuple<remote url, rev, object-id> + git repo
+   - owning/reomve-after-unpack
+worktree :: filetree (maybe rename worktree to subtree)
+            + worktree checksum (git tree object id)
+          + latest applied patch
+upstream :: (maybe separate form worktree)
+          + url+rev+object-id
+patches :: list<patch files> + patch-file-content
+     - in the future there can be also patch groups/dirs
+     - and ignore/skipped patches

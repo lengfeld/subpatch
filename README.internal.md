@@ -39,6 +39,10 @@ Useful makefile targets
     $ make tests
     $ make lint
 
+The `ruff` linter can also fix errors itself:
+
+    $ ruff check --fix
+
 How to execute a single tests
 
     $ python3 tests/test_prog.py TestNoCommands.test_version
@@ -417,3 +421,14 @@ superproject.
 
 Add code and test for "subpatch update <path> --use-head-again".
 -> the revision key in the metadata should be removed.
+
+New feature of git. Donwload a single revision in "git clone". see 
+
+    https://github.com/git/git/compare/0cc13007e5d50b096c95047680ace56749c18789...337855629f59a3f435dabef900e22202ce8e00e1
+    https://github.blog/open-source/git/highlights-from-git-2-49/
+
+use this!
+
+Trying out ruff
+   $ sudo snap install ruff
+

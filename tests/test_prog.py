@@ -128,6 +128,71 @@ def create_super_and_subproject():
         # TODO check git commit id
 
 
+class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def test_error_cases(self):
+        # TODO convert to a nice testcase for subfolders!
+        create_super_and_subproject()
+        with cwd("superproject"):
+            self.run_subpatch_ok(["add", "-q", "../subproject", "subdir1/subdir2"])
+            p = self.run_subpatch(["apply", "path"], stderr=PIPE)
+            with cwd("subdir1/"):
+                p = self.run_subpatch(["apply", "path"], stderr=PIPE)
+            with cwd("subdir1/subdir2"):
+                p = self.run_subpatch(["apply", "path"], stderr=PIPE)
+            with cwd("subdir1/subdir2/subdir3", create=True):
+                p = self.run_subpatch(["apply", "path"], stderr=PIPE)
+
+    def test_simple_case(self):
+        create_super_and_subproject()
+        with cwd("subproject"):
+            git = Git()
+            touch("new-file", b"new-content")
+            git.add("new-file")
+            git.commit("adding new-file")
+            git.call(["format-patch", "-1"])
+            self.assertFileContent("0001-adding-new-file.patch", b"""\
+From 1dcebed46152337a954aecadf333d546f0299d04 Mon Sep 17 00:00:00 2001
+From: OTHER other <other@example.com>
+Date: Sat, 1 Oct 2016 14:00:00 +0800
+Subject: [PATCH] adding new-file
+
+---
+ new-file | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 new-file
+
+diff --git a/new-file b/new-file
+new file mode 100644
+index 0000000..72278a7
+--- /dev/null
++++ b/new-file
+@@ -0,0 +1 @@
++new-content
+\\ No newline at end of file
+-- 
+2.43.0
+
+""")
+            git.call(["reset", "--hard", "HEAD^"])
+
+        with cwd("superproject"):
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.assertFileContent("subproject/hello", b"content")
+            git = Git()
+            git.commit("add subproject")
+            with cwd("subproject"):
+                p = self.run_subpatch_ok(["apply", "../../subproject/0001-adding-new-file.patch"])
+            self.assertFileContent("subproject/new-file", b"new-content")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\tsubproject/new-file",
+                              b'A\tsubproject/patches/0001-adding-new-file.patch'])
+            # TODO Check if this work if cwd is a sub dir in subproject
+            git.commit("add patch")
+
+            p = self.run_subpatch_ok(["status"])
+
+
+
 class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
         with cwd("superproject", create=True):
