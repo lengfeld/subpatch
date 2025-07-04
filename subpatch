@@ -1401,9 +1401,6 @@ def cmd_add(args, parser):
     return 0
 
 
-<<<<<<< Updated upstream
-def show_version(args):
-=======
 # NOTE: Must be executed in the subprojects work tree
 # TODO look at quilt. Mabye "apply" is the wrong term. But it would match "git apply"
 def cmd_apply(args, parser):
@@ -1469,8 +1466,7 @@ def cmd_apply(args, parser):
     return 0
 
 
-def cmd_version(args):
->>>>>>> Stashed changes
+def show_version(args):
     print("subpatch version %s" % (__version__,))
     return 0
 
@@ -1864,10 +1860,13 @@ def cmd_status(args, parser):
         changes = subproject_changes[subproject]
 
         # Get count of patches for subproject
-        patches_list = [filename for filename
-                        in os.listdir(join(paths.super_abspath, subproject, b"patches"))
-                        if filename.endswith(b".patch")]
-        patches_count = len(patches_list)
+        try:
+            patches_list = [filename for filename
+                            in os.listdir(join(paths.super_abspath, subproject, b"patches"))
+                            if filename.endswith(b".patch")]
+            patches_count = len(patches_list)
+        except FileNotFoundError:
+            patches_count = 0 
 
         p = subproject_str
 
@@ -1913,15 +1912,14 @@ def cmd_status(args, parser):
             # untouched This helps because it does ot leave new files in the
             # working tree as "git restore --staged" will done.
 
-        print("* There are n=%d patches applied." % (patches_count))
+        if patches_count > 0:
+            print("* There are n=%d patches applied." % (patches_count))
         # TODO implement subpatch patch list
         #print("    - Use `subpatch patch list` to list them")
 
         if i + 1 < len(subprojects):
             # Add a empty line between the subprojects
             print("")
-
-        # TODO list amount of patches
 
     return 0
 

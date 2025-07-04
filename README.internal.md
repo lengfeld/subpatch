@@ -432,3 +432,9 @@ use this!
 Trying out ruff
    $ sudo snap install ruff
 
+Thing about encoding the the program
+- Encoding for shell arguments and console output (is/must always be the same)
+- Encoding of the filesystem (non-repo files)
+- encoding of the files in the repository 
+   Maybe the repo contains multiple files with different encodings
+(maybe (or even a must) boths must be the same

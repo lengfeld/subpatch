@@ -130,24 +130,25 @@ these in that form or another.
 
               single subproject or multiple subproject
                 V
-|                | config  | cache    | worktree | patches   |
-|----------------|---------|----------|----------|-----------|
-| list          m| ro      |          |          |           |
-| foreach       m| ro      |          |          |           |
-| cache         s| ro      | rw       |          |           |
-| patch         s| ro      |          |          | rw        |
-| worktree      s| ro      |          | rw       |           |
-| download      s| ro      | rw       | ro       |           |
-| unpack        s| ro      | ro       | rw       |           |
-| add           s| rw      | rw       | rw       |           |
-| rm             | rw      | rw       | rw       | rw        |
-| update        s| ro      | rw       | rw       | rw        |
-| pop,push      s| ro      |          | rw       | ro        |
-| apply         s| ro      |          | rw       | rw        |
-| drop          s| ro      |          | rw       | rw        |
-| check-unpack  s| ro      | ro       | rw       |           |
-| check-patches s| ro      |          | rw       | ro        |
-| status        m| ro      | ro       | ro       | ro        |
+|                | config  | cache    | worktree | patches   | upstream |
+|----------------|---------|----------|----------|-----------|----------|
+| list          m| ro      |          |          |           |          |
+| foreach       m| ro      |          |          |           |          |
+| cache         s| ro      | rw       |          |           |          |
+| worktree      s| ro      |          | rw       |           |          |
+| patch         s| ro      |          |          | rw        |          |
+| upstream      s| ro      |          |          |           | rw       |
+| download      s| ro      | rw       | ro       |           | ro       |
+| unpack        s| ro      | ro       | rw       |           |          |
+| add           s| rw      | rw       | rw       |           | rw       |
+| rm             | rw      | rw       | rw       | rw        | rw       |
+| update        s| ro      | rw       | rw       | rw        | ro       |
+| pop,push      s| ro      |          | rw       | rw        |          |  # and skip and unskip
+| apply         s| ro      |          | rw       | rw        |          |
+| drop          s| ro      |          | rw       | rw        |          |
+| check-unpack  s| ro      | ro       | rw       |           |          |
+| check-patches s| ro      |          | rw       | ro        |          |
+| status        m| ro      | ro       | ro       | ro        | ro       |
 
 config :: list<paths>
 cache  :: Maybe<Git>
@@ -156,8 +157,9 @@ cache  :: Maybe<Git>
 worktree :: filetree (maybe rename worktree to subtree)
             + worktree checksum (git tree object id)
           + latest applied patch
-upstream :: (maybe separate form worktree)
+upstream ::
           + url+rev+object-id
 patches :: list<patch files> + patch-file-content
      - in the future there can be also patch groups/dirs
      - and ignore/skipped patches
+     - and excluded files from unpacking
