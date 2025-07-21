@@ -22,6 +22,7 @@ The following table compares the architecture of the tools
 | superproject   | any(1)   | none   | git           | git     | git     | git     |
 | subprojects    | any(1)   | git    | git           | git     | git     | git     |
 | language       | python   | python | C             | python  | python  | shell   |
+| agnostic       | yes      | yes    | yes           | no      | no      | yes     |
 
 Explanations of the rows:
 
@@ -33,6 +34,9 @@ Explanations of the rows:
 * *subprojects*: The type of cvs that is support as a subproject. For all
   other tools, except subpatch, only other git repositories are supported.
 * *language*: The main programming language that the tool is written in.
+* *agnostic*: Whether the tool is project/tooling agnostic or tailored to a
+  specific project or usecase. E.g. *kas* is designed for the Yocto project and
+  *west* is designed for Zephyr.
 
 Legend:
 
