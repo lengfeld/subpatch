@@ -13,6 +13,23 @@ production environments! E.g. the config format will change. Nevertheless
 please try it out. Any feedback is welcome.
 
 
+## v0.1a5
+
+Forth release of subpatch.
+
+* Add command `configure`
+* Add commands `apply`, `pop` and `push` for patch management
+* And a lot of other changes
+
+Further links:
+
+* [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a5)
+* standalone python script for download:
+  [https://subpatch.net/downloads/v0.1a5/subpatch](https://subpatch.net/downloads/v0.1a5/subpatch)
+
+Date: 2025-08-04
+
+
 ## v0.1a4
 
 Third release of subpatch.
