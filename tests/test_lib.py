@@ -17,7 +17,8 @@ from subpatch import (AppException, ConfigLine, ErrorCode,
                       FindSuperprojectData, LineDataEmpty, LineDataHeader,
                       LineDataKeyValue, LineType, ObjectType, SCMType,
                       URLTypes, check_superproject_data, config_add_section2,
-                      config_add_subproject, config_parse2,
+                      config_add_subproject, config_parse2, config_drop_key2,
+                      config_drop_section_if_empty,
                       config_set_key_value2, config_unparse2, do_paths,
                       find_superproject, get_name_from_repository_url,
                       get_url_type, git_diff_in_dir, git_diff_name_only,
@@ -111,6 +112,90 @@ class TestConfigParse2(unittest.TestCase):
  ; comment
  [name]
 key=value
+""")
+
+
+class TestConfigDropKey(unittest.TestCase):
+    def compare(self, section, key, config, config_expected):
+        config_lines = config_parse2(split_with_ts_bytes(config))
+        config_lines_actual = config_drop_key2(config_lines, section, key)
+        config_actual = config_unparse2(list(config_lines_actual))
+        # TODO settle on consistent order. What should be exepted and whould should be actual!
+        self.assertEqual(config_actual, config_expected)
+
+    def test_simple(self):
+        self.compare(b"section", b"key", b"""\
+[section]
+\tkey = x
+""", b"""\
+[section]
+""")
+
+    def test_complex(self):
+        self.compare(b"b", b"key", b"""\
+[a]
+\tkey = x
+[b]
+\tkey = x
+\tkey = x
+[c]
+\tkey = x
+""", b"""\
+[a]
+\tkey = x
+[b]
+[c]
+\tkey = x
+""")
+
+
+class TestConfigDropSectionIfEmpty(unittest.TestCase):
+    def compare(self, section, config, config_expected):
+        config_lines = config_parse2(split_with_ts_bytes(config))
+        config_lines_actual = config_drop_section_if_empty(config_lines, section)
+        config_actual = config_unparse2(list(config_lines_actual))
+        # TODO settle on consistent order. What should be exepted and whould should be actual!
+        self.assertEqual(config_actual, config_expected)
+
+    def test_simple_drop(self):
+        self.compare(b"section",  b"""\
+[section]
+""", b"""\
+""")
+
+    def test_simple_no_drop(self):
+        self.compare(b"section",  b"""\
+[section]
+\tkey = value
+""", b"""\
+[section]
+\tkey = value
+""")
+
+    def test_complex(self):
+        self.compare(b"a",  b"""\
+[a]
+[b]
+[c]
+""", b"""\
+[b]
+[c]
+""")
+        self.compare(b"b",  b"""\
+[a]
+[b]
+[c]
+""", b"""\
+[a]
+[c]
+""")
+        self.compare(b"c",  b"""\
+[a]
+[b]
+[c]
+""", b"""\
+[a]
+[b]
 """)
 
 

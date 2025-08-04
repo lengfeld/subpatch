@@ -128,6 +128,212 @@ def create_super_and_subproject():
         # TODO check git commit id
 
 
+# TODO update name. Also pop and push are tested!
+class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def create_super_and_subproject_for_class(self):
+        create_super_and_subproject()
+        with cwd("subproject"):
+            git = Git()
+            touch("hello", b"new-content")
+            git.add("hello")
+            git.commit("changing hello")
+            touch("hello", b"new-new-content")
+            git.add("hello")
+            git.commit("changing hello")
+            git.call(["format-patch", "-q", "HEAD^^.."])
+            git.call(["reset", "--hard", "HEAD^^", "-q"])
+            self.assertFileExists("0001-changing-hello.patch")
+            self.assertFileExists("0002-changing-hello.patch")
+
+        with cwd("superproject"):
+            git = Git()
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.assertFileContent("subproject/hello", b"content")
+            git.commit("add subproject")
+
+    def test_cwd_errors(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject"):
+            touch("test.patch")
+
+            p = self.run_subpatch(["apply", "test.patch"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Invalid argument: Current work directory must be inside a subproject!\n")
+
+            with cwd("subproject/subdir", create=True):
+                p = self.run_subpatch(["apply", "../../test.patch"], stderr=PIPE)
+                self.assertEqual(p.returncode, 4)
+                self.assertEqual(p.stderr,
+                                 b"Error: Invalid argument: Current work directory must be the toplevel directory of the subproject for now!\n")
+
+    def test_apply_simple_case(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject"):
+            git = Git()
+            self.assertFileContent("subproject/hello", b"content")
+
+            with cwd("subproject"):
+                p = self.run_subpatch_ok(["apply", "../../subproject/0001-changing-hello.patch"], stdout=PIPE)
+            self.assertFileContent("subproject/hello", b"new-content")
+            self.assertFileExists("subproject/patches/0001-changing-hello.patch")
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/hello",
+                              b'A\tsubproject/patches/0001-changing-hello.patch'])
+            self.assertEqual(p.stdout,
+                             b"Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!\n")
+
+    def test_multiple_patches(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject/subproject"):
+            git = Git()
+
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.assertFileContent("hello", b"new-content")
+            self.assertFileExists("patches/0001-changing-hello.patch")
+            self.assertFileDoesNotExist("patches/0002-changing-hello.patch")
+
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
+            self.assertFileContent("hello", b"new-new-content")
+            self.assertFileExists("patches/0001-changing-hello.patch")
+            self.assertFileExists("patches/0002-changing-hello.patch")
+
+            # Now pop two patches
+            self.run_subpatch_ok(["pop"])
+            self.assertFileContent("hello", b"new-content")
+
+            self.run_subpatch_ok(["pop"])
+            self.assertFileContent("hello", b"content")
+
+            # The patch files are still there
+            self.assertFileExists("patches/0001-changing-hello.patch")
+            self.assertFileExists("patches/0002-changing-hello.patch")
+
+            # But it is recorded in the metadata
+            self.assertFileContent(".subproject", b"""\
+[patches]
+\tappliedIndex = -1
+[upstream]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\turl = ../subproject
+""")
+
+            # Now push again
+            self.run_subpatch_ok(["push"])
+            self.assertFileContent("hello", b"new-content")
+
+            self.run_subpatch_ok(["push"])
+            self.assertFileContent("hello", b"new-new-content")
+
+    def test_push_pop_no_patches(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject/subproject"):
+            git = Git()
+
+            p = self.run_subpatch(["pop"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: There is no patch to pop!\n")
+
+            p = self.run_subpatch(["push"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: There is no patch to push!\n")
+
+    def test_error_not_all_applied(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject/subproject"):
+            git = Git()
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["pop"])
+            p = self.run_subpatch(["apply", "-q", "../../subproject/0002-changing-hello.patch"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Invalid argument: Cannot apply new patch. Not all existing patches are applied!\n")
+
+    def test_error_patch_filename_not_correct(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject/subproject"):
+            git = Git()
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+
+            # First test that the patch filename is unique
+            p = self.run_subpatch(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Invalid argument: The filename '0001-changing-hello.patch' must be unique. There is already a patch with the same name!\n")
+
+            # Second test that the patch filename is in order (=higher)
+            # -> Rename the second patch file to provoke the error
+            with cwd("../../subproject/"):
+                os.rename("0002-changing-hello.patch", "0000-changing-hello.patch")
+            p = self.run_subpatch(["apply", "-q", "../../subproject/0000-changing-hello.patch"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Invalid argument: The patch filenames must be in order. The new patch filename '0000-changing-hello.patch' does not sort latest!\n")
+
+    def test_pop_push_simple_case(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject"):
+            git = Git()
+            with cwd("subproject"):
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/hello",
+                              b'A\tsubproject/patches/0001-changing-hello.patch'])
+            self.assertFileContent("subproject/hello", b"new-content")
+
+            with cwd("subproject"):
+                p = self.run_subpatch_ok(["pop"])
+                # TODO check stdout
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/.subproject",
+                              b'A\tsubproject/patches/0001-changing-hello.patch'])
+            self.assertFileContent("subproject/hello", b"content")
+            self.assertFileContent("subproject/.subproject", b"""\
+[patches]
+\tappliedIndex = -1
+[upstream]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\turl = ../subproject
+""")
+
+            with cwd("subproject"):
+                self.run_subpatch_ok(["push"])
+                # TODO check stdout
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/hello",
+                              b'A\tsubproject/patches/0001-changing-hello.patch'])
+            self.assertFileContent("subproject/hello", b"new-content")
+            self.assertFileContent("subproject/.subproject", b"""\
+[upstream]
+\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\turl = ../subproject
+""")
+
+    def test_status(self):
+        self.create_super_and_subproject_for_class()
+
+        with cwd("superproject"):
+            git = Git()
+            with cwd("subproject"):
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
+                self.run_subpatch_ok(["pop"])
+                git.commit("add patches")
+
+            p = self.run_subpatch_ok(["status"], stdout=PIPE)
+            self.assertEqual(b"""\
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'subproject'
+
+* was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+* There are n=2 patches.
+* There are only n=1 patches applied.
+""", p.stdout)
+
+
 class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
         with cwd("superproject", create=True):
