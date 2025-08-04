@@ -37,7 +37,7 @@ TODO add [+] points here
 
 TODO E.g. git-subtree and combo-layers are doing this
 
-TODO This is against learing L4 (minimize accidentally complexity)
+TODO Including the history is against learing L4 (minimize accidentally complexity)
 
 TODO add [+],[-] points here
 
