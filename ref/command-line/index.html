@@ -84,6 +84,8 @@
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Command line arguments</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#common-arguments">Common arguments</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-list">subpatch list</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-status">subpatch status</a>
@@ -93,6 +95,10 @@
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-update">subpatch update</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-configure">subpatch configure</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-apply">subpatch apply</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-poppush">subpatch pop|push</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
     </li>
@@ -150,6 +156,9 @@ subpatch add -r &lt;revision&gt; &lt;url&gt;
 subpatch add &lt;url&gt; --revision=&lt;revision&gt;
 subpatch add &lt;url&gt; --revision &lt;revision&gt;
 </code></pre>
+<h2 id="common-arguments">Common arguments</h2>
+<p>This paragraph explains the common arguments that are used by multiple commands:</p>
+<p><code>-q,--quiet</code>: Suppress any output to stdout.</p>
 <h2 id="subpatch-list">subpatch list</h2>
 <p>subpatch list</p>
 <p>Print the path of all subprojects in the repository.</p>
@@ -180,7 +189,6 @@ or a commit id. For performance you should give a branch name or tag name. The
 git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.</p>
-<p><code>-q,--quiet</code>: Suppress any output to stdout.</p>
 <h2 id="subpatch-update">subpatch update</h2>
 <pre><code>subpatch update &lt;path&gt; [--revision | -r &lt;revision&gt;] [--url | -r &lt;url&gt;]
 </code></pre>
@@ -202,9 +210,25 @@ value in the config.</p>
 uses the existens of this file as a marker that the project is using subpatch.</p>
 <p>This command works only for git repositories as superprojects currently.
 subpatch does not support other SCM tools or plain directories for now.</p>
-<p>Normally you do not have to exectued this command. <code>subpatch add</code>
-automatically configures the superproject if necessary.</p>
-<p><code>-q,--quiet</code>: Suppress any output to stdout.</p>
+<p>Normally you do not have to execute this command. <code>subpatch add</code> automatically
+configures the superproject if necessary.</p>
+<h2 id="subpatch-apply">subpatch apply</h2>
+<pre><code>subpatch configure [-q | --quiet] &lt;patch file&gt;
+</code></pre>
+<p>Apply the patch in the <code>patch file</code> to the current subproject. The code changes
+in the patch are applied onto the source code in the directory
+and the patch file is stored in the <code>patches</code> subdirectory.</p>
+<p>You select the subproject by changing the current work directory into the
+subproject.</p>
+<h2 id="subpatch-poppush">subpatch pop|push</h2>
+<pre><code>subpatch pop|push [-q | --quiet]
+</code></pre>
+<p>Pop or push the top most applied patch of the current subproject. The code
+changes are reverted (for <code>pop</code>) or applied (for <code>push</code>) to the working tree of
+the subproject. subpatch records the current state of applied or not applied
+patches in the metadata.</p>
+<p>You select the subproject by changing the current work directory into the
+subproject.</p>
 <h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
 <p>The following list is a draft for additional commands. subpatch will implement
 these in that form or another.</p>
@@ -229,7 +253,6 @@ these in that form or another.</p>
 <li><code>root</code>: Show the root path of the superproject. Useful
   for something like <code>croot</code> in the AOSP. For git the command looks like
   <code>git rev-parse --show-toplevel</code>.</li>
-<li><code>push/pop</code>: apply or deapply a patch of the subproject to the working tree.</li>
 </ul>
               
             </div>
