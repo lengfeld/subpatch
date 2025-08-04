@@ -39,7 +39,20 @@ Useful makefile targets
     $ make tests
     $ make lint
 
-How to execute a single tests
+The project is adopting `ruff` as a python linter and checker. Currently only a
+very limited set of rules is enabled, but this should change in the future:
+
+    $ ruff check subpatch.py
+    $ ruff check subpatch.py --fix  # ruff can also fix directly
+
+Note: Use `make lint` to also check the python code in the folder `tests/`.
+
+The codebase also starts to use type annotations. Check these with
+
+    $ mypy subpatch.py
+
+The codebase uses unit and integration tests extensively. To execute a single
+tests
 
     $ python3 tests/test_prog.py TestNoCommands.test_version
     $ tests/test_prog.py TestNoCommands.test_version
@@ -163,8 +176,6 @@ Not much conventions yet. For naming in python stick to the
 
 
 ## TODOs and ideas
-
-Start using pylint
 
 Allow to lock subprojects. The CI check should error/warn, when a PR/commit
 introduces changes to a subproject dir!
@@ -417,3 +428,31 @@ superproject.
 
 Add code and test for "subpatch update <path> --use-head-again".
 -> the revision key in the metadata should be removed.
+
+New feature of git. Donwload a single revision in "git clone". see
+
+    https://github.com/git/git/compare/0cc13007e5d50b096c95047680ace56749c18789...337855629f59a3f435dabef900e22202ce8e00e1
+    https://github.blog/open-source/git/highlights-from-git-2-49/
+
+use this!
+
+Thing about encoding the the program
+- Encoding for shell arguments and console output (is/must always be the same)
+- Encoding of the filesystem (non-repo files)
+- encoding of the files in the repository
+   Maybe the repo contains multiple files with different encodings
+(maybe (or even a must) boths must be the same
+
+Command/instructions how to recreate the patches/the patchstack in the patches/
+folder, e.g. to clean them up.
+
+Add command pretty print the current patch stack
+- higlight the current applied patch and active/non-actice patches
+
+Renumbering patches files, e.g. on drop. Make a DD
+- either rename all, causes a big diff
+- or just on user wish
+- or use "series" file!
+
+Extend ruff:
+- enable more rules

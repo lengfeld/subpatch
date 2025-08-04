@@ -4,7 +4,7 @@
 all:
 
 .PHONY: tests
-tests:       ### Runs the python unit tests
+tests:       ### Runs the unit and integration tests
 	python3 -m unittest discover -s tests
 	@# Also test executing the scripts by hand
 	tests/test_git.py
@@ -34,10 +34,8 @@ lint: check-index-md
 
 
 .PHONY: lint
-lint:                 ### Runs the pycodestyle on source code
-	@# The default line length 79 is too limited for modern use.
-	@# I don't have 80 column terminals anymore.
-	pycodestyle *.py tests/*.py --max-line-length=100
+lint:                 ### Runs linters (ruff, self-made) on the source code
+	ruff check *.py tests/*.py
 
 .PHONY: reformat
 reformat:

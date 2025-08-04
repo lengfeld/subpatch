@@ -2,6 +2,20 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff.lint]
+# To see a linters execute `ruff linter`
+extend-select = [
+  "I", # isort
+  "UP", # pyupgrade
+  "E", # pycodestyle
+]
+ignore = [
+  "E402", # ignore because the test/test_*.py files contain a import hack
+  "I001", # ignore because it conflicts with the default isort formatting
+  "UP031", # ignore for now because there are so many percentage format specifiers used
+  "E501", # ignore because there are too many to long lines and finding a good max lenth is hard.
+]
+
 [project]
 name = "subpatch"
 dynamic = ["version"]

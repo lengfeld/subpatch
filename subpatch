@@ -345,7 +345,7 @@ class Subproject:
 
 
 @dataclass(frozen=True)
-class Config():
+class Config:
     subprojects: List[bytes]
 
 

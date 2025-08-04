@@ -24,7 +24,7 @@ sys.path.append(join(dirname(path), "../"))
 from subpatch import ObjectType, git_get_object_type, git_ls_files_untracked
 
 
-class TestSubpatch():
+class TestSubpatch:
     def run_subpatch(self, args, stderr=None, stdout=None, hack=False):
         if os.environ.get("DEBUG", "0") == "1":
             print("Running subpatch command: %s" % (args,), file=sys.stderr)
@@ -186,8 +186,6 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_multiple_patches(self):
         self.create_super_and_subproject_for_class()
         with cwd("superproject/subproject"):
-            git = Git()
-
             self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
             self.assertFileContent("hello", b"new-content")
             self.assertFileExists("patches/0001-changing-hello.patch")
@@ -228,8 +226,6 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_push_pop_no_patches(self):
         self.create_super_and_subproject_for_class()
         with cwd("superproject/subproject"):
-            git = Git()
-
             p = self.run_subpatch(["pop"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr, b"Error: Invalid argument: There is no patch to pop!\n")
@@ -241,7 +237,6 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_error_not_all_applied(self):
         self.create_super_and_subproject_for_class()
         with cwd("superproject/subproject"):
-            git = Git()
             self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
             self.run_subpatch_ok(["pop"])
             p = self.run_subpatch(["apply", "-q", "../../subproject/0002-changing-hello.patch"], stderr=PIPE)
@@ -252,7 +247,6 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_error_patch_filename_not_correct(self):
         self.create_super_and_subproject_for_class()
         with cwd("superproject/subproject"):
-            git = Git()
             self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
 
             # First test that the patch filename is unique
@@ -282,7 +276,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("subproject/hello", b"new-content")
 
             with cwd("subproject"):
-                p = self.run_subpatch_ok(["pop"])
+                self.run_subpatch_ok(["pop"])
                 # TODO check stdout
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/.subproject",
