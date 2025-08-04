@@ -19,6 +19,12 @@ So the following commands are equivalent:
     subpatch add <url> --revision=<revision>
     subpatch add <url> --revision <revision>
 
+## Common arguments
+
+This paragraph explains the common arguments that are used by multiple commands:
+
+`-q,--quiet`: Suppress any output to stdout.
+
 
 ## subpatch list
 
@@ -63,8 +69,6 @@ git protocol allows to clone a single branch or tag efficiently. For git commit
 ids subpatch needs to download the whole repository including all branches,
 tags and the complete history instead of just a single revision.
 
-`-q,--quiet`: Suppress any output to stdout.
-
 
 ## subpatch update
 
@@ -95,10 +99,33 @@ uses the existens of this file as a marker that the project is using subpatch.
 This command works only for git repositories as superprojects currently.
 subpatch does not support other SCM tools or plain directories for now.
 
-Normally you do not have to exectued this command. `subpatch add`
-automatically configures the superproject if necessary.
+Normally you do not have to execute this command. `subpatch add` automatically
+configures the superproject if necessary.
 
-`-q,--quiet`: Suppress any output to stdout.
+
+## subpatch apply
+
+    subpatch configure [-q | --quiet] <patch file>
+
+Apply the patch in the `patch file` to the current subproject. The code changes
+in the patch are applied onto the source code in the directory
+and the patch file is stored in the `patches` subdirectory.
+
+You select the subproject by changing the current work directory into the
+subproject.
+
+
+## subpatch pop|push
+
+    subpatch pop|push [-q | --quiet]
+
+Pop or push the top most applied patch of the current subproject. The code
+changes are reverted (for `pop`) or applied (for `push`) to the working tree of
+the subproject. subpatch records the current state of applied or not applied
+patches in the metadata.
+
+You select the subproject by changing the current work directory into the
+subproject.
 
 
 ## Commands, not implemented yet
@@ -124,4 +151,3 @@ these in that form or another.
 * `root`: Show the root path of the superproject. Useful
   for something like `croot` in the AOSP. For git the command looks like
   `git rev-parse --show-toplevel`.
-* `push/pop`: apply or deapply a patch of the subproject to the working tree.
