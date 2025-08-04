@@ -285,9 +285,6 @@ Introduction typing in the code base
 Add test cases to verify hat svn and hg also uses the term 'revision' and
 argument `-r`.
 
-Additional to latest, also add every version of the subpatch script on the
-download folder on the website. No need to link to github.
-
 Add/Do language and grammar checking for content on the website.
 
 Add command (or at least check) to compare/update settings in config format
@@ -307,12 +304,6 @@ Add site with "Things to be aware of".
      - Shared CI by multiple teams.
        You can have multiple CI Files, e.g. on github
      - "I see pull request that I don't care".
-
-Add "move"/mv command to move subprojects.
-
-Add "rm" command to remove them.
-
-Add "foreach" command
 
 Add learning/LX: review of patches of patches is not nice.
 
@@ -351,8 +342,6 @@ everything.
 
 For "add" print the commit message that is integrated
 
-Add "rm" command
-
 For a potential "update" command list the commits and diffstat that are integrated
 
 Show list of added files in the "add" command. Showing the diffstat is too
@@ -367,9 +356,12 @@ certain files and dirs from the subproject that is integrated, the argument
 list can be become quite long. Maybe then the "add" argument must be splitted
 into multiple commands to gradually add "--exclude/.." config options.
 
-Implement 'foreach'. See repo and git-submodule
 
-Implement 'rm'. The counterpart of 'add'.
+Implement commaands:
+- 'foreach'. See repo and git-submodule
+- 'rm'. The counterpart of 'add'.
+- 'move'/mv command to move subprojects.
+- `git rev-parse --show-toplevel` for subpatch
 
 Design principle: Modifiying config files by hand is ok and encouraged. Don't
 add code/commands to do simple things, like adding a version parameter or ...
@@ -394,8 +386,6 @@ then print also infos how to create a patch file for it!
 Think about subpatch superprojects as subprojects in other repos.  Then the
 subpatch config file is not at the root of the repo. Currently this is not
 supported.
-
-Implement `git rev-parse --show-toplevel` for subpatch
 
 There is a common confusion about relative paths in the output (and on the
 commandline) of subpatch or other commands: Are the paths relative to the
