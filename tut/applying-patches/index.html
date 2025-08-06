@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/design/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/tut/applying-patches/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Design decisions - subpatch</title>
+    <title>Applying patches - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Design decisions";
-        var mkdocs_page_input_path = "exp/design.md";
-        var mkdocs_page_url = "/exp/design/";
+        var mkdocs_page_name = "Applying patches";
+        var mkdocs_page_input_path = "tut/applying-patches.md";
+        var mkdocs_page_url = "/tut/applying-patches/";
       </script>
     
     <!--[if lt IE 9]>
@@ -54,29 +54,29 @@
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Explanations</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/history/">Pre-subpatch history</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/requirements/">Requirements</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Design decisions</a>
-    <ul class="current">
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/comparison/">Comparison to other tools</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/faq/">Frequently asked questions</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../tut/installation/">Installation</a>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../tut/basic-usage/">Basic usage</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../basic-usage/">Basic usage</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../tut/applying-patches/">Applying patches</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Applying patches</a>
+    <ul class="current">
+    </ul>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">How-to guides</span></p>
@@ -113,8 +113,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Explanations</li>
-      <li class="breadcrumb-item active">Design decisions</li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Applying patches</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -123,46 +123,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h2 id="design-decisions">Design decisions</h2>
-<p>While developing subpatch, I took the following design decisions. The
-<a href="../requirements/">requirement list</a> still gives a lot of freedom for the
-implementation. Therefore this page documents and explains the chosen decisions
-here.</p>
-<p><strong>DD1</strong>: written in python3 (but open for a port to another language later if successful)</p>
-<ul>
-<li>[+] faster iteration speed</li>
-<li>[+] Easier deployment/install for users of subpatch. python runs everywhere.</li>
-<li>[+] Programming language that I know really good and written a lot of code
-  already.</li>
-</ul>
-<p><strong>DD2</strong>: config file format is <code>git-config</code></p>
-<ul>
-<li>[+] the same config format that the main scm tool for subpatch (=git) uses.</li>
-<li>[+] Most developers are already familiar with the config format, e.g. because
-  they are modyfing <code>~/.git config</code>.</li>
-</ul>
-<p><strong>DD3</strong>: The config is a single file and placed at the root of the repository</p>
-<ul>
-<li>[+] The project's root directory can be found even without scm. E.g. after
-  the source code was exported with <code>git archive</code>.</li>
-<li>[+] A single file avoids a search in all sub directories. Can be expensive
-  for big projects.</li>
-</ul>
-<p><strong>DD4</strong>: Published as a standalone and single python script</p>
-<p>TODO add [+] points here</p>
-<p><strong>DD5</strong>: Filenames and file system paths are python bytes objects, not strings</p>
-<p>TODO add [+] points here</p>
-<p><strong>DD6</strong>: The subproject's history is not include in the superproject's history.</p>
-<p>TODO E.g. git-subtree and combo-layers are doing this</p>
-<p>TODO Including the history is against learing L4 (minimize accidentally complexity)</p>
-<p>TODO add [+],[-] points here</p>
-<p><em>Note</em>: This list is not completed yet and should grow while supbatch is developed.</p>
+                <h1 id="applying-patches">Applying patches</h1>
+<p>TODO write this tutorial!</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../requirements/" class="btn btn-neutral float-left" title="Requirements"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../comparison/" class="btn btn-neutral float-right" title="Comparison to other tools">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../basic-usage/" class="btn btn-neutral float-left" title="Basic usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../howto/yocto/" class="btn btn-neutral float-right" title="Project based on Yocto">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -186,10 +154,10 @@ here.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../requirements/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../basic-usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../comparison/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../howto/yocto/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
