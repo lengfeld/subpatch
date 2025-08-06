@@ -178,3 +178,5 @@ Congratulations! You have
 * added your first subproject to a superproject with `subpatch add`,
 * queried information with `subpatch list` and `subpatch status ` and
 * updated the subproject to a new upstream version with `subpatch update`.
+
+Now you are ready to continue with the next tutorial [Applying patches](applying-patches.md).

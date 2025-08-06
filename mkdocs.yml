@@ -16,6 +16,7 @@ nav:
   - Tutorials:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'
+    - Applying patches: 'tut/applying-patches.md'
   - How-to guides:
     - Project based on Yocto: 'howto/yocto.md'
   - Reference:
