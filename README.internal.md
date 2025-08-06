@@ -140,19 +140,6 @@ Make release to real pypi
     # Check with
     $ subpatch --version
 
-Make release on github:
-
-* Goto https://github.com/lengfeld/subpatch/releases
-* Create release
-* Title `subpatch version v0.1aX`
-* Add text:
-
-      See the [release notes webpage](https://subpatch.net/ref/releases/#v01aX)
-
-* Mark as pre-release
-
-Should look like the other releases.
-
 Publish release on website:
 
     $ cp subpatch website/downloads/latest/subpatch
@@ -167,6 +154,19 @@ Publish release on website:
     $ git push origin main --dry-run
     $ git push origin main
     $ mkdocs gh-deploy
+
+Make release on github:
+
+* Goto https://github.com/lengfeld/subpatch/releases
+* Create release
+* Title `subpatch version v0.1aX`
+* Add text:
+
+      See the [release notes webpage](https://subpatch.net/ref/releases/#v01aX)
+
+* Mark as pre-release
+
+Should look like the other releases.
 
 
 ## Code style
