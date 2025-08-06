@@ -446,3 +446,15 @@ Renumbering patches files, e.g. on drop. Make a DD
 
 Extend ruff:
 - enable more rules
+
+"subpatch status" should print the current applied patch, if not all patches are applied!
+
+pop/push must make a success messages with patch name
+- must show a diff statu
+- must show the command to continue!
+
+Put "objectId" into [worktree] and not [upstream]!
+
+Make naming convention "upstream" in the code. move all git repos in the tests
+from "subproject" to "upstream" as the remote directory! The path in the
+superproject should still be "subproject".
