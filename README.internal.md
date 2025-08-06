@@ -458,3 +458,9 @@ Put "objectId" into [worktree] and not [upstream]!
 Make naming convention "upstream" in the code. move all git repos in the tests
 from "subproject" to "upstream" as the remote directory! The path in the
 superproject should still be "subproject".
+
+Add "unit tests" for the tutorial. The Commands and the output of the commands
+used in the tutorial text should be actually executed and compared against the
+output in the text. Otherwise the tutorials will bit rot and get out of sync.
+See rustdoc (https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html)
+as an example.
