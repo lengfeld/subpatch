@@ -1,10 +1,10 @@
 # Installation
 
-This tutorial explains who to install subpatch on your computer. Currently
-there are two ways to install subpatch:
+This tutorial explains who to install subpatch on your computer. You will learn
+how to install subpatch either
 
-1. With [pipx](https://pipx.pypa.io/stable/) into your HOME directory
-2. As a standalone script into the PATH
+1. with [pipx](https://pipx.pypa.io/stable/) into your HOME directory or
+2. as a standalone script into the PATH.
 
 **Warning**: subpatch is in a very *very* early stage. Do not use it in
 production environments! E.g. the config format will change. Nevertheless
@@ -117,6 +117,7 @@ The last step is to download the subpatch script and copy it into the `bin` fold
 First go to the [releases page](../ref/releases.md) and find the latest
 release. There are two options: manual download or using the command line:
 
+
 #### Manual download
 
 Now click on the link for *standalone python script* and download the script
@@ -160,3 +161,13 @@ It should print the version number of subpatch that is currently installed.
 get further infos and the help text, execute
 
     $ subpatch --help
+
+
+## Conclusion
+
+You have learned
+
+* two different methods to install subpatch and
+* how to query the version information and help text.
+
+Now you are ready to continue with the next tutorial [Basic Usage](basic-usage.md).

@@ -1,17 +1,21 @@
 # Basic usage
 
-This tutorial explains how to add a third party dependency with subpatch to a
-git repository.
+This tutorial explains how to add a third party dependency to a git repository.
+You will learn
+
+* how to add a subproject to the superproject,
+* how to query the subprojects and get more information about them and
+* how to upgrade a subproject to a new upstream version.
 
 In this tutorial the superproject is a simple C-library project that contains a
-function that adds two numbers. The subproject (=third party dependency) is the
-[GoogleTest](https://google.github.io/googletest/) test library for C and C++
-projects.
+single function that adds two numbers. The subproject (=third party dependency)
+is the [GoogleTest](https://google.github.io/googletest/) test library for C
+and C++ projects.
 
 
 ## Prerequisites
 
-To follow the tutorial you need the following setup
+To follow the tutorial you need the following setup and skills:
 
 * Basic knowledge of git and the command line
 * git installed
@@ -22,16 +26,16 @@ To follow the tutorial you need the following setup
 ## Cloning the example repository
 
 First you need to clone the
-[example repository](https://github.com/lengfeld/subpatch-example0). It's
+[example repository](https://github.com/subpatch/tutorial-basic-usage). It's
 the superproject that contains minimal C library. On the command line execute
 
-    $ git clone https://github.com/lengfeld/subpatch-example0
-    $ cd subpatch-example0
+    $ git clone https://github.com/subpatch/tutorial-basic-usage
+    $ cd tutorial-basic-usage
 
 If interested, have a look at the `README.md` file.
 
 
-## (optional) Buliding the C project
+## (optional) Building the C project
 
 If you want, you can also build the C library and test the example program.
 You need cmake and a c/c++ compiler for that. Execute the commands
@@ -56,11 +60,11 @@ called `external`. To add the dependency execute the commands
 
 The last command takes some seconds to execute. It downloads the git repository
 and extract the files. It uses revision `v1.15.2` of the git repository. It's a
-git tag that points to the current latest release of googletest.
+git tag that points to the current latest release of GoogleTest.
 
 When the command finishes it prints the message
 
-    Adding subproject 'https://github.com/google/googletest' into 'googletest'... Done.
+    Adding subproject 'googletest' from URL 'https://github.com/google/googletest' at revision 'v1.15.2'... Done.
     - To inspect the changes, use `git status` and `git diff --staged`.
     - If you want to keep the changes, commit them with `git commit`.
     - If you want to revert the changes, execute `git reset --merge`.
@@ -73,24 +77,31 @@ to the git index, execute
 There are around 240 new files. Commit them by executing
 
     $ cd ..
-    $ git commit -m "external: Adding GooglTest dependency"
+    $ git commit -m "external: add gtest"
 
-Info: Apart from the files of the third party dependency subpatch also
-adds some metadata to the superproject. You can find it a the root
-directory of the git repository in the file `.subpatch`. For this
-tutorial the content looks like
+You have added your first subproject. To see all subprojects execute
 
-    [subpatch "external/googletest"]
-    	url = https://github.com/google/googletest
-    	revision = v1.15.2
+    $ subpatch list
+    external/googletest
+
+For now there is only a single subproject. To see more details about the
+subprojects use the `status` command.
+
+    $ subpatch status
+    NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+    NOTE: The format is markdown currently. Will mostly change in the future.
+
+    # subproject at 'external/googletest'
+
+    * was integrated from URL: https://github.com/google/googletest
+    * has integrated revision: v1.17.0
+    * has integrated object id: 52eb8108c5bdec04579160ae17225d66034bd723
 
 
 ## (optional) Enable and build the tests
 
 After adding the GoogleTest dependency, you can build and execute the tests.
-Open the `CMakeLists.txt` file and enable them. You can find the needed cmake
-configuration already in the file, just remove the comments. Now the last lines
-of the file should look like
+Open the `CMakeLists.txt` file and add the following lines at the end:
 
     # Tests
     add_subdirectory(external/googletest gtest)
@@ -104,10 +115,66 @@ After that you can build and run the tests with
     $ cmake --build build
     $ build/test
 
-Executing the last command will perform all tests and show the test results. All
-tests should pass!
+Executing the last command will perform all tests and show the test results.
+All tests should pass!
+
+Don't forget to commit the changes to the `CMakeLists.txt`:
+
+    $ git add CMakeLists.txt
+    $ git commit -m "enable tests"
 
 
-## Congratulations
+## Updating the subproject
 
-Congratulations! You have added your first subproject with subpatch.
+There is a new version of GoogleTest available already. See the
+[releases page on github](https://github.com/google/googletest/releases). So update the
+subproject to a new version.
+
+     $ subpatch update external/googletest -r v1.17.0
+
+This will print the output
+
+    Updating subproject 'external/googletest' from URL 'https://github.com/google/googletest' to revision 'v1.17.0'... Done.
+    - To inspect the changes, use `git status` and `git diff --staged`.
+    - If you want to keep the changes, commit them with `git commit`.
+    - If you want to revert the changes, execute `git reset --merge`.
+
+
+## (optional) Retest after update
+
+After the update of a dependency you should retest your project. For this
+tutorial it's optional, but it's not optional for a real world project.
+
+Execute the tests with
+
+    $ cmake --build build
+    $ build/test
+
+
+## Finish the update
+
+After the update all tests are still o.k. Since you are confident of the version upgrade now,
+commit the changes with
+
+    $ git commit -m "external: update gtest"
+
+After commit `subpatch status` prints the new information:
+
+    $ subpatch status
+    NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+    NOTE: The format is markdown currently. Will mostly change in the future.
+
+    # subproject at 'external/googletest'
+
+    * was integrated from URL: https://github.com/google/googletest
+    * has integrated revision: v1.17.0
+    * has integrated object id: 52eb8108c5bdec04579160ae17225d66034bd723
+
+
+## Conclusion
+
+Congratulations! You have
+
+* added your first subproject to a superproject with `subpatch add`,
+* queried information with `subpatch list` and `subpatch status ` and
+* updated the subproject to a new upstream version with `subpatch update`.
