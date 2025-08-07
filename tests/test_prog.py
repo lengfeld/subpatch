@@ -212,7 +212,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 [patches]
 \tappliedIndex = -1
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -286,7 +286,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 [patches]
 \tappliedIndex = -1
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -299,7 +299,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -511,12 +511,12 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dirA/.subproject", b"""\
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
             self.assertFileContent("dirB/.subproject", b"""\
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -609,7 +609,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
 """)
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
 
@@ -766,7 +766,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 449e289b617c25c95868658a580b6c52fb817f4d
+\tobjectId = 449e289b617c25c95868658a580b6c52fb817f4d
 \trevision = refs/heads/main
 \turl = ../subproject
 """)
@@ -777,7 +777,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"initial")
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
+\tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
 \turl = ../subproject
 """)
@@ -788,7 +788,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on stable")
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 32c32dcaa3c7f7024387640a91e98a5201e1f202
+\tobjectId = 32c32dcaa3c7f7024387640a91e98a5201e1f202
 \trevision = 32c32dcaa3c7f7024387640a91e98a5201e1f202
 \turl = ../subproject
 """)
@@ -799,7 +799,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
+\tobjectId = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
 \trevision = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
 \turl = ../subproject
 """)
@@ -812,7 +812,7 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/
             self.assertFileContent("subdir/subproject/file", b"initial")
             self.assertFileContent("subdir/subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
+\tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
 \turl = ../subproject
 """)
@@ -956,7 +956,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 97d971584b8d9ef942abc6a88e500c5233fb89b3
+\tobjectId = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 \trevision = v1
 \turl = ../subproject
 """)
@@ -983,7 +983,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 05273055cdb7635593d13ad7ce4d6da309050ce9
+\tobjectId = 05273055cdb7635593d13ad7ce4d6da309050ce9
 \trevision = v2
 \turl = ../subproject
 """)
@@ -1000,14 +1000,14 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("dir/subproject/dir/e", b"second\n")
             self.assertEqual(git.diff(staged=True), b"""\
 diff --git a/dir/subproject/.subproject b/dir/subproject/.subproject
-index a1b635a..cdf93bf 100644
+index 59c08af..dea6d51 100644
 --- a/dir/subproject/.subproject
 +++ b/dir/subproject/.subproject
 @@ -1,4 +1,4 @@
  [upstream]
--\tobject-id = 97d971584b8d9ef942abc6a88e500c5233fb89b3
+-\tobjectId = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 -\trevision = v1
-+\tobject-id = 05273055cdb7635593d13ad7ce4d6da309050ce9
++\tobjectId = 05273055cdb7635593d13ad7ce4d6da309050ce9
 +\trevision = v2
  \turl = ../subproject
 diff --git a/dir/subproject/dir/b b/dir/subproject/dir/b
@@ -1132,7 +1132,7 @@ Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git
             self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
+\tobjectId = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
 \turl = ../subproject
 """)
             git.commit("add subproject")
@@ -1185,7 +1185,7 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 -rw-rw-r-- root/root        33 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
--rw-rw-r-- root/root        86 2001-10-09 13:00 subproject/.subproject
+-rw-rw-r-- root/root        85 2001-10-09 13:00 subproject/.subproject
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
@@ -1202,7 +1202,7 @@ drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 """)
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
-\tobject-id = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
             self.assertFileContent("subproject/hello", b"content")

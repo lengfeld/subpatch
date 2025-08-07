@@ -110,8 +110,6 @@ GeneratorConfigLine: TypeAlias = Generator[ConfigLine, None, None]
 # config format of git is descriped here
 #   https://git-scm.com/docs/git-config#_configuration_file
 #
-# TODO find naming convention!
-#
 # Parse git-style config file.
 # See https://git-scm.com/docs/git-config
 # The syntax is described here:
@@ -1626,7 +1624,7 @@ def do_unpack_update_metadata(paths: Paths, url: str, revision: Optional[str], o
     metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"url", url.encode("utf8"))
     if revision is not None:
         metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"revision", revision.encode("utf8"))
-    metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"object-id", object_id)
+    metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"objectId", object_id)
 
     metadata_config = config_unparse2(metadata_lines)
     with open(paths.metadata_abspath, "bw") as f:
@@ -1964,7 +1962,7 @@ def read_metadata(path: bytes) -> Metadata:
                 url = line_data.value
             elif line_data.key == b"revision":
                 revision = line_data.value
-            elif line_data.key == b"object-id":
+            elif line_data.key == b"objectId":
                 object_id = line_data.value
             elif line_data.key == b"appliedIndex":
                 patches_applied_index = line_data.value

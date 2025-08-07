@@ -41,4 +41,13 @@ TODO Including the history is against learing L4 (minimize accidentally complexi
 
 TODO add [+],[-] points here
 
+**DD7**: The naming convention in config and metadata is the git config style.
+
+In the config file `.subpatch` and metadata files `.subproject` (that are
+git config files) the naming convention is *camelCase*. See
+[these example from the git documentation.](https://git-scm.com/docs/git-config#_example)
+
+* [+] Consistency, since supatch is using the same style as git itself.
+
+
 *Note*: This list is not completed yet and should grow while supbatch is developed.
