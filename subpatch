@@ -598,7 +598,7 @@ class SuperHelperGit:
         print("- If you want to keep the changes, commit them with `git commit`.")
         print("- If you want to revert the changes, execute `git reset --merge`.")
 
-    # TODO think about the data strcuture every super_helper method gets!
+    # TODO think about the data structure every super_helper method gets!
     def configure(self, scm_path: bytes) -> None:
         config_abspath = join(scm_path, b".subpatch")
         assert not os.path.exists(config_abspath)
@@ -1730,7 +1730,7 @@ def cmd_apply(args, parser):
     if not os.path.isfile(args.path):
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
 
-    _, paths = checks_for_cmds_apply_pop_push(args)
+    superx, paths = checks_for_cmds_apply_pop_push(args)
 
     metadata = read_metadata(paths.metadata_abspath)
     patches_dim = read_patches_dim(paths, metadata)
@@ -1771,18 +1771,17 @@ def cmd_apply(args, parser):
     shutil.copy(args.path.encode("utf8"), paths.patches_abspath)
     super_to_patch_relpath = join(paths.super_to_sub_relpath, b"patches", patch_filename)
 
+    # TODO Thing about releative paths for SuperHelper
     with cwd(paths.super_abspath):
-        # TODO use helper!
-        git_add([super_to_patch_relpath])
+        superx.helper.add([super_to_patch_relpath])
 
     if not args.quiet:
         # TODO The output convetion is wrong here. It should be relative and
-        # the path to the subrpoject is not relative to the cwd here!
-        # TODO Having the subrpoject name is kind of reduntant, because the cwd
+        # the path to the subproject is not relative to the cwd here!
+        # TODO Having the subproject name is kind of reduntant, because the cwd
         # is already inside the subproject
         print("Applied patch '%s' to subproject '%s' successfully!" % (args.path, paths.super_to_sub_relpath.decode("utf8")))
-
-    # TODO print commands for comitting
+        superx.helper.print_add_success()
 
     return 0
 
@@ -1813,7 +1812,10 @@ def cmd_pop(args, parser):
     with cwd(paths.super_abspath):
         superx.helper.add([paths.metadata_abspath])
 
-    # TODO print commands for comitting and success messages
+    if not args.quiet:
+        print("Poped patch '%s' from subproject '%s' successfully!" % (patch_filename.decode("utf8"),
+                                                                     paths.super_to_sub_relpath.decode("utf8")))
+        superx.helper.print_add_success()
 
     return 0
 
@@ -1850,7 +1852,10 @@ def cmd_push(args, parser):
     with cwd(paths.super_abspath):
         superx.helper.add([paths.metadata_abspath])
 
-    # TODO print commands for comitting and success messages
+    if not args.quiet:
+        print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
+                                                                      paths.super_to_sub_relpath.decode("utf8")))
+        superx.helper.print_add_success()
 
     return 0
 
@@ -2192,11 +2197,15 @@ def main_wrapped() -> int:
     # TODO add argument "-a" and think about exit code!
     parser_pop = subparsers.add_parser("pop",
                                        help="Remove topmost patch from the worktree")
+    parser_pop.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                            help="Suppress output to stdout")
     parser_pop.set_defaults(func=cmd_pop)
 
     # TODO add argument "-a"
     parser_push = subparsers.add_parser("push",
                                         help="Add the next patch to the worktree")
+    parser_push.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                             help="Suppress output to stdout")
     parser_push.set_defaults(func=cmd_push)
 
     parser_add = subparsers.add_parser("add",

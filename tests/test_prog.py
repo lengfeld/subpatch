@@ -182,8 +182,12 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
-            self.assertEqual(p.stdout,
-                             b"Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!\n")
+            self.assertEqual(p.stdout, b"""\
+Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!
+- To inspect the changes, use `git status` and `git diff --staged`.
+- If you want to keep the changes, commit them with `git commit`.
+- If you want to revert the changes, execute `git reset --merge`.
+""")
 
     def test_multiple_patches(self):
         self.create_super_and_subproject_for_class()
@@ -199,10 +203,10 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileExists("patches/0002-changing-hello.patch")
 
             # Now pop two patches
-            self.run_subpatch_ok(["pop"])
+            self.run_subpatch_ok(["pop", "-q"])
             self.assertFileContent("hello", b"new-content")
 
-            self.run_subpatch_ok(["pop"])
+            self.run_subpatch_ok(["pop", "-q"])
             self.assertFileContent("hello", b"content")
 
             # The patch files are still there
@@ -219,10 +223,10 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 """)
 
             # Now push again
-            self.run_subpatch_ok(["push"])
+            self.run_subpatch_ok(["push", "-q"])
             self.assertFileContent("hello", b"new-content")
 
-            self.run_subpatch_ok(["push"])
+            self.run_subpatch_ok(["push", "-q"])
             self.assertFileContent("hello", b"new-new-content")
 
     def test_push_pop_no_patches(self):
@@ -240,7 +244,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         self.create_super_and_subproject_for_class()
         with cwd("superproject/subproject"):
             self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
-            self.run_subpatch_ok(["pop"])
+            self.run_subpatch_ok(["pop", "-q"])
             p = self.run_subpatch(["apply", "-q", "../../subproject/0002-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
@@ -271,15 +275,14 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with cwd("superproject"):
             git = Git()
             with cwd("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
 
             with cwd("subproject"):
-                self.run_subpatch_ok(["pop"])
-                # TODO check stdout
+                p = self.run_subpatch_ok(["pop"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/.subproject",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
@@ -291,10 +294,15 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
+            self.assertEqual(p.stdout, b"""\
+Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
+- To inspect the changes, use `git status` and `git diff --staged`.
+- If you want to keep the changes, commit them with `git commit`.
+- If you want to revert the changes, execute `git reset --merge`.
+""")
 
             with cwd("subproject"):
-                self.run_subpatch_ok(["push"])
-                # TODO check stdout
+                p = self.run_subpatch_ok(["push"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
@@ -303,6 +311,12 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
+""")
+            self.assertEqual(p.stdout, b"""\
+Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
+- To inspect the changes, use `git status` and `git diff --staged`.
+- If you want to keep the changes, commit them with `git commit`.
+- If you want to revert the changes, execute `git reset --merge`.
 """)
 
     def test_status(self):
@@ -313,7 +327,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             with cwd("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
-                self.run_subpatch_ok(["pop"])
+                self.run_subpatch_ok(["pop", "-q"])
                 git.commit("add patches")
 
             p = self.run_subpatch_ok(["status"], stdout=PIPE)
