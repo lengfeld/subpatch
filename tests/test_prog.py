@@ -38,13 +38,15 @@ class TestSubpatch:
         stdout_output, stderr_output = p.communicate()
         # TODO This overwrites a member variable!
         # TODO introduce result tuple/class
-        # TODO dump stdout and sterr for debugging testscases via env variable.
-        # TODO dump stdout and sterr for debugging testscases via env variable.
         if os.environ.get("DEBUG", "0") == "1":
             if stdout_output is not None:
+                sys.stdout.flush()
                 print("stdout:", stdout_output.decode("utf8"), file=sys.stderr)
+                sys.stderr.flush()
             if stderr_output is not None:
+                sys.stdout.flush()
                 print("stderr:", stderr_output.decode("utf8"), file=sys.stderr)
+                sys.stderr.flush()
         p.stdout = stdout_output
         p.stderr = stderr_output
         return p
