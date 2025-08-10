@@ -464,3 +464,13 @@ used in the tutorial text should be actually executed and compared against the
 output in the text. Otherwise the tutorials will bit rot and get out of sync.
 See rustdoc (https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html)
 as an example.
+
+Document minimum python requirements. E.g. look at the latest debian stable release:
+- https://www.debian.org/releases/
+- https://www.debian.org/releases/stable/
+- Pacakge file is here https://packages.debian.org/trixie/python3
+-> current its python3 version 3.13  for "trixie"
+-> This  version is even nether than on my Ubuntu 24.04 system (Python 3.12.3)
+-> So mybe use oldstable as a reference!
+- NOTE: maybe also look at the python version in Yocto LTS
+- NOTE: also document the minimum git requirement
