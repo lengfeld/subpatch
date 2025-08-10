@@ -184,6 +184,8 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertEqual(p.stdout, b"""\
 Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!
+The following changes are recorded in the git index:
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -296,6 +298,8 @@ Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subpro
 """)
             self.assertEqual(p.stdout, b"""\
 Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
+The following changes are recorded in the git index:
+ 2 files changed, 23 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -314,6 +318,8 @@ Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfull
 """)
             self.assertEqual(p.stdout, b"""\
 Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
+The following changes are recorded in the git index:
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -608,6 +614,8 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             p = self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
             self.assertEqual(b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Done.
+The following changes are recorded in the git index:
+ 3 files changed, 6 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -773,6 +781,8 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Do
             # in git_reset_hard().
             self.assertEqual(b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/main'... Done.
+The following changes are recorded in the git index:
+ 3 files changed, 7 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1084,6 +1094,8 @@ index 0000000..e019be0
             self.assertEqual(p.returncode, 0)
             self.assertEqual(p.stdout, b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'v1'... Done.
+The following changes are recorded in the git index:
+ 8 files changed, 12 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1094,6 +1106,8 @@ Adding subproject 'subproject' from URL '../subproject' at revision 'v1'... Done
             self.assertEqual(p.returncode, 0)
             self.assertEqual(p.stdout, b"""\
 Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Done.
+The following changes are recorded in the git index:
+ 5 files changed, 4 insertions(+), 4 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1128,6 +1142,8 @@ Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Do
                 # NOTE: Path in output is relative to the current work directory!
                 self.assertEqual(p.stdout, b"""\
 Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' to revision 'v2'... Done.
+The following changes are recorded in the git index:
+ 5 files changed, 4 insertions(+), 4 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.

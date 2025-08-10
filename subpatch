@@ -580,7 +580,7 @@ class SuperHelperPlain:
         # files to the SCM
         pass
 
-    def print_add_success(self):
+    def print_instructions_to_commit_and_inspects(self):
         raise NotImplementedError("TODO think about this case!")
 
     def configure(self, scm_path: bytes) -> None:
@@ -593,7 +593,10 @@ class SuperHelperGit:
     def add(self, paths):
         git_add(paths)
 
-    def print_add_success(self):
+    def print_instructions_to_commit_and_inspects(self):
+        print("The following changes are recorded in the git index:")
+        shortstat = git_diff_staged_shortstat()
+        print("%s" % (shortstat.decode("ascii"),))
         print("- To inspect the changes, use `git status` and `git diff --staged`.")
         print("- If you want to keep the changes, commit them with `git commit`.")
         print("- If you want to revert the changes, execute `git reset --merge`.")
@@ -733,6 +736,17 @@ def git_add(args):
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
+
+
+def git_diff_staged_shortstat():
+    p = Popen(["git", "diff", "--staged", "--shortstat"], stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+    stdout = stdout.rstrip(b"\n")
+    assert isinstance(stdout, bytes)
+    return stdout
 
 
 # TODO clarify naming: path, filename, url
@@ -1240,11 +1254,9 @@ def cmd_update(args, parser):
         print("Note: There are no changes in the subproject. Nothing to commit!")
         return 0
 
-    # TODO show diff state
-
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
-    superx.helper.print_add_success()
+    superx.helper.print_instructions_to_commit_and_inspects()
 
     return 0
 
@@ -1407,6 +1419,7 @@ def cmd_add(args, parser):
               (paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
               end="")
         sys.stdout.flush()
+
     try:
         # subpatch cache fetch url -r version
         download_config = DownloadConfig(url=url, revision=revision)
@@ -1433,7 +1446,7 @@ def cmd_add(args, parser):
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
     if not args.quiet:
-        superx.helper.print_add_success()
+        superx.helper.print_instructions_to_commit_and_inspects()
 
     # TODO Maybe prepare a commit/patch/change message
 
@@ -1781,7 +1794,7 @@ def cmd_apply(args, parser):
         # TODO Having the subproject name is kind of reduntant, because the cwd
         # is already inside the subproject
         print("Applied patch '%s' to subproject '%s' successfully!" % (args.path, paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_add_success()
+        superx.helper.print_instructions_to_commit_and_inspects()
 
     return 0
 
@@ -1814,8 +1827,8 @@ def cmd_pop(args, parser):
 
     if not args.quiet:
         print("Poped patch '%s' from subproject '%s' successfully!" % (patch_filename.decode("utf8"),
-                                                                     paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_add_success()
+                                                                       paths.super_to_sub_relpath.decode("utf8")))
+        superx.helper.print_instructions_to_commit_and_inspects()
 
     return 0
 
@@ -1855,7 +1868,7 @@ def cmd_push(args, parser):
     if not args.quiet:
         print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
                                                                       paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_add_success()
+        superx.helper.print_instructions_to_commit_and_inspects()
 
     return 0
 
