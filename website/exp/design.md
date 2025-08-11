@@ -25,6 +25,9 @@ here.
 * [+] A single file avoids a search in all sub directories. Can be expensive
   for big projects.
 
+TODO: Update this DD. subpatch has `.subproject` files now that are seperate
+from the subpatch config file.
+
 **DD4**: Published as a standalone and single python script
 
 TODO add [+] points here
