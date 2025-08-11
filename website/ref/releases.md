@@ -73,8 +73,8 @@ Changes to the tool
 Changes to the website
 
 * Adding a quick start guide to the [front page of the webpage](../index.md)
-* Adding a [history page](../exp/history.md) to explain the path
-  to subpatch and the learnings from previous attempts and projects
+* Adding a [learnings page](../exp/learnings.md) to explain the path
+  to subpatch and the history from previous attempts and projects
 * Adding a reference for the [commandline arguments](command-line.md)
 * Merging the website into the main git repository. This makes it easier to
   work on subpatch. The old

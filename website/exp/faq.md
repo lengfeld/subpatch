@@ -19,7 +19,7 @@ is a unique feature for multi repository management tools like subpatch.
 No, subpatch is not another wrapper around git. Like git submodules or git
 subtree, subpatch is an extension to git.
 
-Refere to the learning (L1) on [Pre-subpatch history](history.md): The
+Refere to the learning (L1) on [Learnings](learnings.md): The
 solution to the multi repository problem is inside of git (or generally inside
 any version control system).
 

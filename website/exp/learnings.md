@@ -1,9 +1,11 @@
-# Pre-subpatch history
+# Learnings
+
+On the previous [introductions page](intro.md), you could read about the basics
+of the multi repository problem.
 
 subpatch is not my first attempt to solve the multi repository problem. There
 is a long history before I started the subpatch project. This page should tell
-the history and what learnings I made along the way. These learnings lead to
-[the design and the requirements](design.md) of subpatch.
+the history and what learnings I made along the way.
 
 lt;dr: The summary of all learnings is
 

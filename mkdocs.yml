@@ -8,7 +8,7 @@ nav:
   - Home: 'index.md'
   - Explanations:
     - Introduction: 'exp/intro.md'
-    - Pre-subpatch history: 'exp/history.md'
+    - Learnings: 'exp/learnings.md'
     - Requirements: 'exp/requirements.md'
     - Design decisions: 'exp/design.md'
     - Comparison to other tools: 'exp/comparison.md'
