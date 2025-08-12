@@ -580,7 +580,7 @@ class SuperHelperPlain:
         # files to the SCM
         pass
 
-    def print_instructions_to_commit_and_inspects(self):
+    def print_instructions_to_commit_and_inspect(self):
         raise NotImplementedError("TODO think about this case!")
 
     def configure(self, scm_path: bytes) -> None:
@@ -593,7 +593,7 @@ class SuperHelperGit:
     def add(self, paths):
         git_add(paths)
 
-    def print_instructions_to_commit_and_inspects(self):
+    def print_instructions_to_commit_and_inspect(self):
         print("The following changes are recorded in the git index:")
         shortstat = git_diff_staged_shortstat()
         print("%s" % (shortstat.decode("ascii"),))
@@ -1256,7 +1256,7 @@ def cmd_update(args, parser):
 
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
-    superx.helper.print_instructions_to_commit_and_inspects()
+    superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
@@ -1446,7 +1446,7 @@ def cmd_add(args, parser):
     # TODO Idea "subpatch status" should print the info/help text. The status
     # command should be command to get help if a user is lost.
     if not args.quiet:
-        superx.helper.print_instructions_to_commit_and_inspects()
+        superx.helper.print_instructions_to_commit_and_inspect()
 
     # TODO Maybe prepare a commit/patch/change message
 
@@ -1794,7 +1794,7 @@ def cmd_apply(args, parser):
         # TODO Having the subproject name is kind of reduntant, because the cwd
         # is already inside the subproject
         print("Applied patch '%s' to subproject '%s' successfully!" % (args.path, paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_instructions_to_commit_and_inspects()
+        superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
@@ -1828,7 +1828,7 @@ def cmd_pop(args, parser):
     if not args.quiet:
         print("Poped patch '%s' from subproject '%s' successfully!" % (patch_filename.decode("utf8"),
                                                                        paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_instructions_to_commit_and_inspects()
+        superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
@@ -1868,7 +1868,7 @@ def cmd_push(args, parser):
     if not args.quiet:
         print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
                                                                       paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_instructions_to_commit_and_inspects()
+        superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
