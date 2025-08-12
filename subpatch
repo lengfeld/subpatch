@@ -2004,6 +2004,7 @@ def read_patches_dim(paths: Paths, metadata: Metadata) -> PatchesDim:
     try:
         patches = os.listdir(paths.patches_abspath)
         patches = [p for p in patches if p.endswith(b".patch")]
+        patches.sort()
     except FileNotFoundError:
         patches = []
 
