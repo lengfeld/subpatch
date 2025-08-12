@@ -400,18 +400,6 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                              p.stderr)
             self.assertEqual(p.returncode, 4)
 
-    def test_not_in_toplevel_directory(self):
-        git = Git()
-        git.init()
-
-        touch(".subpatch")
-
-        with cwd("subdir", create=True):
-            p = self.run_subpatch(["status"], stderr=PIPE)
-            self.assertEqual(b"Error: Feature not implemented yet: Current work directory must be the toplevel directory of the repo for now!\n",
-                             p.stderr)
-            self.assertEqual(p.returncode, 4)
-
     def test_two_clean_subprojects(self):
         create_super_and_subproject()
         with cwd("superproject"):
@@ -424,6 +412,26 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(b"""\
 NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
 NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'subproject1'
+
+* was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+
+# subproject at 'subproject2'
+
+* was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+""",
+                             p.stdout)
+
+            with cwd("subproject1"):
+                p = self.run_subpatch_ok(["status"], stdout=PIPE)
+                self.assertEqual(b"""\
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+WARNING: The current working directory is not the toplevel directory of the superproject.
+WARNING: The paths in this console output are wrong (for now)!
 
 # subproject at 'subproject1'
 

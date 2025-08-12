@@ -2034,8 +2034,9 @@ def cmd_status(args, parser):
     paths = do_paths(superx.path, b"")
 
     if not is_cwd_toplevel_directory(paths):
-        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET,
-                           "Current work directory must be the toplevel directory of the repo for now!")
+        print_warning = True
+    else:
+        print_warning = False
 
     # TODO add plumbing commands for scripts!
     # TODO add colorscheme for output, e.g. like git status does
@@ -2056,9 +2057,10 @@ def cmd_status(args, parser):
     diff_files_not_staged = git_diff_name_only()
     diff_files_staged = git_diff_name_only(staged=True)
 
-    # TODO 'git_ls_files_untracked' depends on the cwd for now! Cwd must be the
+    # NOTE git_ls_files_untracked() depends on the cwd for now! Cwd must be the
     # root of the directory for now.
-    ls_files_untrack = git_ls_files_untracked()
+    with cwd(paths.super_abspath):
+        ls_files_untrack = git_ls_files_untracked()
 
     # TODO refactor this struct and the following code to a function! And make
     # to interface for other cvs
@@ -2090,7 +2092,11 @@ def cmd_status(args, parser):
 
     print("NOTE: The format of the output is human-readable and unstable. Do not use in scripts!")
     print("NOTE: The format is markdown currently. Will mostly change in the future.")
+    if print_warning:
+        print("WARNING: The current working directory is not the toplevel directory of the superproject.")
+        print("WARNING: The paths in this console output are wrong (for now)!")
     print("")
+
     for i, subproject in enumerate(subprojects):
         # TODO Idea: make it valid markdown output
         # TODO Idea: For every cvs superproject (superhelper) make the output
