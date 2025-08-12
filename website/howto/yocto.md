@@ -6,6 +6,9 @@ firmware based on the [Yocto project](https://yoctoproject.org/).
 A full feature example of a Yocto project maintained with subpatch is available
 here: [yocto-example](https://github.com/subpatch/example-yocto)
 
+Note: There are maybe some mistakes in the following commands. There are no
+automated tests yet.
+
 
 ## Prerequisites
 
@@ -197,10 +200,3 @@ You can update to a new release branch with
 
 In all cases this major upgrade requires additional changes in your layer and
 additional testing.
-
-
-## Example
-
-There is also an
-[example project based on Yocto](https://github.com/subpatch/example-yocto)
-that uses subpatch.
