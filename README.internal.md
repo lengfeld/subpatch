@@ -474,3 +474,21 @@ Document minimum python requirements. E.g. look at the latest debian stable rele
 -> So mybe use oldstable as a reference!
 - NOTE: maybe also look at the python version in Yocto LTS
 - NOTE: also document the minimum git requirement
+
+Error when "adding" a subproject instead another subproject
+
+Add learning: Reviewing the diff of a patch file is ugly/not nice
+- And subpatch uses patch files and there will be cause where there are diffs
+And add the section
+- Explain why this is not optimal, but ok. Subpatch helps wit checks that you
+  don't have to look at the details of the patch-file-diff
+
+Add docker/podman/debbootstrap contains to test different python3 versions,
+different git versions and different distros.
+
+The "version" argument/command should also print the verison of the use
+superproject and subproject tooling, e.g. git, svn, tar
+
+Add documentation how to update subpatch to a new version
+
+Recheck that ".gitignore" is not used on "subpatch add/update"
