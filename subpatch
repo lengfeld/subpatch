@@ -1076,7 +1076,7 @@ def ensure_superproject_is_git(superx):
 
 # TODO consolidate with unpack from cmd_add
 # TODO consolide function arguments
-def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
@@ -1096,35 +1096,35 @@ def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision
             if len(self._args) == 0:
                 return
             cmd = self._cmd + self._args
-            subprocess.run(cmd, check=True, cwd=paths.super_abspath)
+            subprocess.run(cmd, check=True, cwd=super_paths.super_abspath)
             self._args.clear()
 
     # Just quick and try remove and copy!
     # TODO convert this code to "superhelper" implementation
-    with cwd(paths.super_abspath):
+    with cwd(super_paths.super_abspath):
         git_rm = GitCommandBachter(["git", "rm", "-q"])
-        for path in git_ls_tree_in_dir(paths.super_to_sub_relpath):
+        for path in git_ls_tree_in_dir(sub_paths.super_to_sub_relpath):
             git_rm.add_and_maybe_exec(path)
         git_rm.exec_force()
 
     # and copy
     # TODO convert this code to "superhelper" implementation
-    os.makedirs(paths.cwd_to_sub_relpath, exist_ok=True)
+    os.makedirs(sub_paths.cwd_to_sub_relpath, exist_ok=True)
     with cwd(cache_abspath):
         git_add = GitCommandBachter(["git", "add", "-f"])
 
         for root, dirnames, files in os.walk(b"."):
             for dirname in dirnames:
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, dirname)
-                dest_path = join(paths.super_abspath, super_to_dest_relpath)
+                super_to_dest_relpath = join(sub_paths.super_to_sub_relpath, root, dirname)
+                dest_path = join(super_paths.super_abspath, super_to_dest_relpath)
                 os.makedirs(dest_path, exist_ok=True)
 
             for filename in files:
                 src_path = join(root, filename)
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
-                dest_path = join(paths.super_abspath, super_to_dest_relpath)
+                super_to_dest_relpath = join(sub_paths.super_to_sub_relpath, root, filename)
+                dest_path = join(super_paths.super_abspath, super_to_dest_relpath)
                 os.rename(src_path, dest_path)
-                super_to_dest_relpath = join(paths.super_to_sub_relpath, root, filename)
+                super_to_dest_relpath = join(sub_paths.super_to_sub_relpath, root, filename)
 
                 git_add.add_and_maybe_exec(super_to_dest_relpath)
 
@@ -1140,10 +1140,11 @@ def do_unpack_for_update(superx, paths, cache_abspath: bytes, url: str, revision
     os.rmdir(cache_abspath)
 
     # TODO update tree checksum in the config
-    do_unpack_update_metadata(paths, url, revision, object_id)
+    do_unpack_update_metadata(sub_paths, url, revision, object_id)
 
-    with cwd(paths.super_abspath):
-        superx.helper.add([paths.metadata_abspath])
+    with cwd(super_paths.super_abspath):
+        # TODO Absolute path to git-add is used. This is strange, but works!
+        superx.helper.add([sub_paths.metadata_abspath])
 
 
 def cmd_update(args, parser):
@@ -1157,29 +1158,31 @@ def cmd_update(args, parser):
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
     cwd_to_sub_relpath = os.fsencode(args.path)
-    paths = do_paths(superx.path, cwd_to_sub_relpath)
+
+    super_paths = gen_super_paths(superx.path)
+    sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, cwd_to_sub_relpath)
 
     # TODO Hardcoded assumption: subproject is also git
     cache_helper = CacheHelperGit()
 
-    config = read_config(paths.config_abspath)
+    config = read_config(super_paths.config_abspath)
 
     # NOTE two different error cases:
     # * no subproject path in config
     # * no subproject file in directory (TODO add code for that)
-    if paths.super_to_sub_relpath not in config.subprojects:
-        x = paths.super_to_sub_relpath.decode("utf8")
+    if sub_paths.super_to_sub_relpath not in config.subprojects:
+        x = sub_paths.super_to_sub_relpath.decode("utf8")
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
 
-    metadata = read_metadata(paths.metadata_abspath)
+    metadata = read_metadata(sub_paths.metadata_abspath)
 
     # TODO if some of the patches are deapply, it's ok to have changes in the
     # index! How to handle that here? In that case
-    if git_diff_in_dir(superx.path, paths.super_to_sub_relpath):
+    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath):
         # TODO add more explanations and commands to fix!
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There are unstaged changes in the subproject.")
 
-    if git_diff_in_dir(superx.path, paths.super_to_sub_relpath, staged=True):
+    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
         # TODO add more explanations and commands to fix!
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There are staged changes in the subproject.")
 
@@ -1212,7 +1215,7 @@ def cmd_update(args, parser):
     # subpatch download
     # TODO combine with cmd_add(). It also does the same!
     print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
-          (paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
+          (sub_paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
           end="")
     sys.stdout.flush()
 
@@ -1225,7 +1228,7 @@ def cmd_update(args, parser):
     # - use a bare repository! And ad-hoc checkouts
     # - And at best do not checkout, just import the git objects into the
     # current git and let git of the superproject check it out.
-    cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
+    cache_relpath = sub_paths.cwd_to_sub_relpath + b"-tmp"
 
     # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
     # download!
@@ -1239,14 +1242,14 @@ def cmd_update(args, parser):
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # subpatch unpack
-    do_unpack_for_update(superx, paths, cache_abspath, url, revision, object_id)
+    do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath, url, revision, object_id)
 
     # TODO reapply patches: subpatch push --all
 
     print(" Done.")
 
     # TODO think about this case. Maybe add an argument to make this an error.
-    if not git_diff_in_dir(superx.path, paths.super_to_sub_relpath, staged=True):
+    if not git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
         # There are no changes in the subproject directory and in the metadata.
         # Nothing has changed! And so there is nothing to commit!
         # NOTE: So also don't show the commands to commit and inspect the
@@ -1280,25 +1283,25 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_add(superx, paths, cache_relpath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
     # HACK for now
     # Check assumptions: We have just created the files ourselves
-    assert os.path.exists(paths.cwd_to_sub_relpath)
-    assert os.path.exists(paths.metadata_abspath)
+    assert os.path.exists(sub_paths.cwd_to_sub_relpath)
+    assert os.path.exists(sub_paths.metadata_abspath)
     # TODO always check that for subprojects
     assert not os.path.exists(join(cache_relpath, b".subproject"))
-    os.remove(paths.metadata_abspath)
-    os.rmdir(paths.cwd_to_sub_relpath)
-    os.rename(cache_relpath, paths.cwd_to_sub_relpath)
+    os.remove(sub_paths.metadata_abspath)
+    os.rmdir(sub_paths.cwd_to_sub_relpath)
+    os.rename(cache_relpath, sub_paths.cwd_to_sub_relpath)
 
-    superx.helper.add([paths.cwd_to_sub_relpath])
+    superx.helper.add([sub_paths.cwd_to_sub_relpath])
 
     # TODO in case of failure, remove download git dir!
 
-    do_unpack_update_metadata(paths, url, revision, object_id)
+    do_unpack_update_metadata(sub_paths, url, revision, object_id)
 
-    with cwd(paths.super_abspath):
-        superx.helper.add([paths.metadata_abspath])
+    with cwd(super_paths.super_abspath):
+        superx.helper.add([sub_paths.metadata_abspath])
 
 
 def cmd_add(args, parser):
@@ -1340,9 +1343,12 @@ def cmd_add(args, parser):
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
-    # TODO remove additional encode() here. Argument should be bytes object!
-    paths = do_paths(superx.path, cwd_to_sub_relpath.encode("utf8"))
     ensure_superproject_is_git(superx)
+
+    super_paths = gen_super_paths(superx.path)
+
+    # TODO remove additional encode() here. Argument should be bytes object!
+    sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, cwd_to_sub_relpath.encode("utf8"))
 
     if url_type == URLTypes.LOCAL_RELATIVE:
         # Check the current work directory of the call is the top level
@@ -1352,7 +1358,7 @@ def cmd_add(args, parser):
         # just enforce (like also git does) that the current work directory
         # is the top level repository in that case.
         # TODO This is a invalid argument execption
-        if not is_cwd_toplevel_directory(paths):
+        if not is_cwd_toplevel_directory(super_paths):
             raise AppException(ErrorCode.CUSTOM,
                                "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
     elif url_type == URLTypes.LOCAL_ABSOLUTE:
@@ -1377,13 +1383,13 @@ def cmd_add(args, parser):
     # TODO add notes how to revert if anything of the following fails!
 
     # subpatch init <path>
-    if os.path.exists(paths.cwd_to_sub_relpath):
+    if os.path.exists(sub_paths.cwd_to_sub_relpath):
         # There is already a directory
         # TODO add message how to solve the problem
         raise AppException(ErrorCode.CUSTOM,
-                           "Directory '%s' alreay exists. Cannot add subproject!" % (paths.cwd_to_sub_relpath.decode("utf8"),))
+                           "Directory '%s' alreay exists. Cannot add subproject!" % (sub_paths.cwd_to_sub_relpath.decode("utf8"),))
 
-    if os.path.exists(paths.metadata_abspath):
+    if os.path.exists(sub_paths.metadata_abspath):
         # There is already a subproject at this place
         # TODO also check git index if there is a file
         # TODO explain what can be done: Either remove the dir or use another name!
@@ -1391,24 +1397,24 @@ def cmd_add(args, parser):
         # TODO add tests for this!
         # TODO Add ErrorCode for invalid state of superproject.
         raise AppException(ErrorCode.CUSTOM,
-                           "File '%s' alreay exists. Cannot add subproject!" % (paths.metadata_abspath.decode("utf8"),))
+                           "File '%s' alreay exists. Cannot add subproject!" % (sub_paths.metadata_abspath.decode("utf8"),))
 
-    os.makedirs(paths.subproject_abspath)
-    with open(paths.metadata_abspath, "bw") as f:
+    os.makedirs(sub_paths.subproject_abspath)
+    with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(b"")
-    with cwd(paths.subproject_abspath):
+    with cwd(sub_paths.subproject_abspath):
         # TODO use helper!
         git_add([b".subproject"])
 
-    config_add_subproject(paths.config_abspath, paths.super_to_sub_relpath)
-    with cwd(paths.super_abspath):
+    config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
+    with cwd(super_paths.super_abspath):
         # TODO use helper!
         git_add([b".subpatch"])
 
     # subpatch cache init --git
     cache_helper = CacheHelperGit()
     # TODO split into directory and cache_name
-    cache_relpath = paths.cwd_to_sub_relpath + b"-tmp"
+    cache_relpath = sub_paths.cwd_to_sub_relpath + b"-tmp"
 
     # NOTE: Design decision: The output is relative to the current working dir.
     # The content of '%s' is the remote git name or the path relative to the
@@ -1416,7 +1422,7 @@ def cmd_add(args, parser):
     # TODO move this design decision to the website
     if not args.quiet:
         print("Adding subproject '%s' from URL '%s' at revision '%s'..." %
-              (paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
+              (sub_paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
               end="")
         sys.stdout.flush()
 
@@ -1429,7 +1435,7 @@ def cmd_add(args, parser):
         object_id = cache_helper.download(download_config, cache_relpath)
 
         # subpatch unpack # from cache into woktree
-        do_unpack_for_add(superx, paths, cache_relpath, url, revision, object_id)
+        do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath, url, revision, object_id)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
@@ -1524,28 +1530,6 @@ def is_abspath(path):
     return True
 
 
-@dataclass(frozen=True)
-class Paths:
-    super_abspath: bytes
-    config_abspath: bytes  # TODO Maybe just have a single abspath in super_abspath
-    super_to_cwd_relpath: bytes
-    # TODO split path into paths for superproject and paths for subproject
-    super_to_sub_relpath: bytes
-    cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
-    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory (but this is not supported for now)
-    subproject_abspath: bytes
-    metadata_abspath: bytes  # Path to ".subproject" file
-    patches_abspath: bytes  # Path to "patches" directory
-
-
-# TODO refactor function order!
-def is_inside_subproject_and_return_path(config: Config, paths: Paths) -> Optional[bytes]:
-    for relpath in config.subprojects:
-        if paths.super_to_sub_relpath.startswith(relpath):
-            return relpath
-    return None
-
-
 # Paths documentation and naming
 #
 #     Example              ../folder/superproject/dirA/dirB/subproject/
@@ -1572,30 +1556,68 @@ def is_inside_subproject_and_return_path(config: Config, paths: Paths) -> Option
 #  e.g. cwd_to_sub_relpath="../symbolic-link/../../dir"
 #  - symbolic links
 #  - ".." pointing outside of repo
-# TODO fix function naming
-def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
-    assert is_abspath(super_abspath)
-    assert is_relpath(cwd_to_sub_relpath)
-    # TODO test and ensure that paths are normalized!!
+@dataclass(frozen=True)
+class SuperPaths:
+    super_abspath: bytes
+    config_abspath: bytes  # TODO Maybe just have a single abspath in super_abspath
+    super_to_cwd_relpath: bytes
 
+
+def gen_super_paths(super_abspath: bytes) -> SuperPaths:
+    assert is_abspath(super_abspath)
+
+    cwd_abspath = os.path.abspath(os.getcwdb())
+    assert cwd_abspath.startswith(super_abspath)
+    super_to_cwd_relpath = cwd_abspath[len(super_abspath) + 1:]
+
+    config_abspath = join(super_abspath, b".subpatch")
+
+    return SuperPaths(super_abspath, config_abspath, super_to_cwd_relpath)
+
+
+def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths) -> Optional[bytes]:
+    for relpath in config.subprojects:
+        if super_paths.super_to_cwd_relpath.startswith(relpath):
+            return relpath
+    return None
+
+
+@dataclass(frozen=True)
+class SubPaths:
+    super_to_sub_relpath: bytes
+    cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
+    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory (but this is not supported for now)
+    subproject_abspath: bytes
+    metadata_abspath: bytes  # Path to ".subproject" file
+    patches_abspath: bytes  # Path to "patches" directory
+
+
+def gen_sub_paths_from_relpath(super_paths: SuperPaths, super_to_sub_relpath: bytes) -> SubPaths:
+    # Returns a relative paht from the current work directory
+    cwd_to_sub_relpath = os.path.relpath(join(super_paths.super_abspath, super_to_sub_relpath))
+    if cwd_to_sub_relpath == b".":
+        cwd_to_sub_relpath = b""
+
+    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
+
+
+def gen_sub_paths_from_cwd_and_relpath(super_paths: SuperPaths, cwd_to_sub_relpath: bytes) -> SubPaths:
     # Sanitize input path
     if cwd_to_sub_relpath != b"":
         cwd_to_sub_relpath = os.path.relpath(cwd_to_sub_relpath)
         if cwd_to_sub_relpath == b".":
             cwd_to_sub_relpath = b""
 
-    # Assert that super_path matches, so stripping is ok
-    cwd_abspath = os.path.abspath(os.getcwdb())
-    assert cwd_abspath.startswith(super_abspath)
-    super_to_cwd_relpath = cwd_abspath[len(super_abspath) + 1:]
+    super_to_sub_relpath = join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
 
-    super_to_sub_relpath = join(super_to_cwd_relpath, cwd_to_sub_relpath)
+    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
 
+
+def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes, cwd_to_sub_relpath: bytes) -> SubPaths:
     # Remove trailing slash if there is any
-    if super_to_cwd_relpath != b"":
+    # TODO is this correct? Does this makes sense?
+    if super_paths.super_to_cwd_relpath != b"":
         super_to_sub_relpath = os.path.relpath(super_to_sub_relpath)
-
-    sub_name = os.path.basename(super_to_sub_relpath)
 
     def my_join(a, b):
         if a == b"":
@@ -1606,17 +1628,17 @@ def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
         # adding ".."
         return os.path.relpath(join(a, b))
 
-    assert super_to_sub_relpath == my_join(super_to_cwd_relpath, cwd_to_sub_relpath)
+    assert super_to_sub_relpath == my_join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
 
-    config_abspath = join(super_abspath, b".subpatch")
+    sub_name = os.path.basename(super_to_sub_relpath)
 
-    subproject_abspath = join(super_abspath, super_to_sub_relpath)
+    subproject_abspath = join(super_paths.super_abspath, super_to_sub_relpath)
 
     metadata_abspath = join(subproject_abspath, b".subproject")
 
     patches_abspath = join(subproject_abspath, b"patches")
 
-    return Paths(super_abspath, config_abspath, super_to_cwd_relpath, super_to_sub_relpath, cwd_to_sub_relpath, sub_name, subproject_abspath, metadata_abspath, patches_abspath)
+    return SubPaths(super_to_sub_relpath, cwd_to_sub_relpath, sub_name, subproject_abspath, metadata_abspath, patches_abspath)
 
 
 # TODO currently this always uses "\t" for indention. Try to use the style
@@ -1626,9 +1648,9 @@ def do_paths(super_abspath: bytes, cwd_to_sub_relpath: bytes) -> Paths:
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(paths: Paths, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: Optional[str], object_id: bytes) -> None:
     try:
-        with open(paths.metadata_abspath, "br") as f:
+        with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
@@ -1640,13 +1662,14 @@ def do_unpack_update_metadata(paths: Paths, url: str, revision: Optional[str], o
     metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"objectId", object_id)
 
     metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
+    with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(metadata_config)
 
 
-def do_pop_push_update_metadata(paths: Paths, applied_index: int) -> None:
+# TODO maybe use metadata_abspath instead of SubPaths
+def do_pop_push_update_metadata(sub_paths: SubPaths, applied_index: int) -> None:
     try:
-        with open(paths.metadata_abspath, "br") as f:
+        with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
@@ -1655,13 +1678,14 @@ def do_pop_push_update_metadata(paths: Paths, applied_index: int) -> None:
     metadata_lines = config_set_key_value2(metadata_lines, b"patches", b"appliedIndex", b"%d" % (applied_index,))
 
     metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
+    with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(metadata_config)
 
 
-def do_pop_update_metadata_drop(paths: Paths) -> None:
+# TODO maybe use metadata_abspath instead of SubPaths
+def do_pop_update_metadata_drop(sub_paths: SubPaths) -> None:
     try:
-        with open(paths.metadata_abspath, "br") as f:
+        with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
@@ -1670,12 +1694,12 @@ def do_pop_update_metadata_drop(paths: Paths) -> None:
     metadata_lines = config_drop_section_if_empty(metadata_lines, b"patches")
 
     metadata_config = config_unparse2(metadata_lines)
-    with open(paths.metadata_abspath, "bw") as f:
+    with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(metadata_config)
 
 
-def is_cwd_toplevel_directory(paths: Paths) -> bool:
-    return paths.super_to_cwd_relpath == b""
+def is_cwd_toplevel_directory(super_paths: SuperPaths) -> bool:
+    return super_paths.super_to_cwd_relpath == b""
 
 
 # TODO add "-z" option to be safe againts any chars in the path
@@ -1686,9 +1710,9 @@ def cmd_list(args, parser):
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
-    paths = do_paths(superx.path, b"")
+    super_paths = gen_super_paths(superx.path)
 
-    config = read_config(paths.config_abspath)
+    config = read_config(super_paths.config_abspath)
 
     for path in config.subprojects:
         # TODO Maybe avoid the decoded and encode dance
@@ -1697,7 +1721,7 @@ def cmd_list(args, parser):
     return 0
 
 
-def checks_for_cmds_apply_pop_push(args) -> tuple[Any, Paths]:
+def checks_for_cmds_apply_pop_push(args) -> tuple[Any, SuperPaths, SubPaths]:
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
@@ -1705,25 +1729,24 @@ def checks_for_cmds_apply_pop_push(args) -> tuple[Any, Paths]:
     ensure_superproject_is_git(superx)
 
     # Check whether the current cwd is inside a subproject
-    # TODO split Paths object into superproject and subproject parts!
-    paths = do_paths(superx.path, b"")
-    config = read_config(paths.config_abspath)
+    super_paths = gen_super_paths(superx.path)
+    config = read_config(super_paths.config_abspath)
 
     # NOTE: This function can be used to select the subproject based on cwd!
     # TODO Refactor!
-    super_to_sub_relpath = is_inside_subproject_and_return_path(config, paths)
+    super_to_sub_relpath = is_inside_subproject_and_return_path(config, super_paths)
     if super_to_sub_relpath is None:
         # TODO decided whether a wrong work directory is a invalid argument or a runtime error!
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Current work directory must be inside a subproject!")
 
-    if len(super_to_sub_relpath) == len(paths.super_to_cwd_relpath):
-        assert super_to_sub_relpath == paths.super_to_cwd_relpath
+    if len(super_to_sub_relpath) == len(super_paths.super_to_cwd_relpath):
+        assert super_to_sub_relpath == super_paths.super_to_cwd_relpath
         pass  # It's the same directory
     else:
-        assert len(super_to_sub_relpath) < len(paths.super_to_cwd_relpath)
-        assert paths.super_to_cwd_relpath.startswith(super_to_sub_relpath)
+        assert len(super_to_sub_relpath) < len(super_paths.super_to_cwd_relpath)
+        assert super_paths.super_to_cwd_relpath.startswith(super_to_sub_relpath)
         #  l = len(super_to_sub_relpath)
-        #  p = paths.super_to_cwd_relpath
+        #  p = super_paths.super_to_cwd_relpath
         #  assert p[l] == ord("/")
         #  sub_to_cwd_relpath = p[l + 1:]
         #  # NOTE: above code is just for later refactoring!
@@ -1731,7 +1754,9 @@ def checks_for_cmds_apply_pop_push(args) -> tuple[Any, Paths]:
         raise AppException(ErrorCode.INVALID_ARGUMENT,
                            "Current work directory must be the toplevel directory of the subproject for now!")
 
-    return superx, paths
+    sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"")
+
+    return superx, super_paths, sub_paths
 
 
 # NOTE: Must be executed in the subprojects work tree
@@ -1743,10 +1768,9 @@ def cmd_apply(args, parser):
     if not os.path.isfile(args.path):
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
 
-    superx, paths = checks_for_cmds_apply_pop_push(args)
-
-    metadata = read_metadata(paths.metadata_abspath)
-    patches_dim = read_patches_dim(paths, metadata)
+    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    patches_dim = read_patches_dim(sub_paths, metadata)
 
     if len(patches_dim.patches) != patches_dim.applied_index + 1:
         # TODO add message how to resolve it
@@ -1769,7 +1793,7 @@ def cmd_apply(args, parser):
                            "The patch filenames must be in order. The new patch filename '%s' does not sort latest!" % (patch_filename.decode("utf8"),))
 
     # TODO use "--check" to validate patch content before applying and committing
-    git_args = ["git", "apply", "--index", "--directory=%s" % (paths.super_to_sub_relpath.decode("utf8"),), args.path]
+    git_args = ["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
     p = Popen(git_args)
     p.communicate()
     if p.returncode != 0:
@@ -1777,15 +1801,15 @@ def cmd_apply(args, parser):
         raise Exception("git failure")
 
     # TODO write this code nicer!
-    if not os.path.exists(paths.patches_abspath):
-        os.makedirs(paths.patches_abspath)
+    if not os.path.exists(sub_paths.patches_abspath):
+        os.makedirs(sub_paths.patches_abspath)
 
     import shutil
-    shutil.copy(args.path.encode("utf8"), paths.patches_abspath)
-    super_to_patch_relpath = join(paths.super_to_sub_relpath, b"patches", patch_filename)
+    shutil.copy(args.path.encode("utf8"), sub_paths.patches_abspath)
+    super_to_patch_relpath = join(sub_paths.super_to_sub_relpath, b"patches", patch_filename)
 
     # TODO Thing about releative paths for SuperHelper
-    with cwd(paths.super_abspath):
+    with cwd(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
     if not args.quiet:
@@ -1793,26 +1817,26 @@ def cmd_apply(args, parser):
         # the path to the subproject is not relative to the cwd here!
         # TODO Having the subproject name is kind of reduntant, because the cwd
         # is already inside the subproject
-        print("Applied patch '%s' to subproject '%s' successfully!" % (args.path, paths.super_to_sub_relpath.decode("utf8")))
+        print("Applied patch '%s' to subproject '%s' successfully!" %
+              (args.path, sub_paths.super_to_sub_relpath.decode("utf8")))
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
 
 def cmd_pop(args, parser):
-    superx, paths = checks_for_cmds_apply_pop_push(args)
-
-    metadata = read_metadata(join(paths.super_abspath, paths.super_to_sub_relpath, b".subproject"))
-    patches_dim = read_patches_dim(paths, metadata)
+    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    patches_dim = read_patches_dim(sub_paths, metadata)
 
     if patches_dim.applied_index == -1:
         # TODO make better error messages
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to pop!")
 
     patch_filename = patches_dim.patches[patches_dim.applied_index]
-    patch_abspath = join(paths.patches_abspath, patch_filename)
+    patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
-    p = Popen(["git", "apply", "--reverse", "--index", "--directory=%s" % (paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
+    p = Popen(["git", "apply", "--reverse", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:
         # TODO explain how to recover!
@@ -1821,23 +1845,23 @@ def cmd_pop(args, parser):
     applied_index_new = patches_dim.applied_index - 1
 
     # TODO make naming schema for update metadata functions
-    do_pop_push_update_metadata(paths, applied_index_new)
-    with cwd(paths.super_abspath):
-        superx.helper.add([paths.metadata_abspath])
+    do_pop_push_update_metadata(sub_paths, applied_index_new)
+    with cwd(super_paths.super_abspath):
+        # TODO here is not relative path used for git. This seems also to work!
+        superx.helper.add([sub_paths.metadata_abspath])
 
     if not args.quiet:
-        print("Poped patch '%s' from subproject '%s' successfully!" % (patch_filename.decode("utf8"),
-                                                                       paths.super_to_sub_relpath.decode("utf8")))
+        print("Poped patch '%s' from subproject '%s' successfully!" %
+              (patch_filename.decode("utf8"), sub_paths.super_to_sub_relpath.decode("utf8")))
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
 
 def cmd_push(args, parser):
-    superx, paths = checks_for_cmds_apply_pop_push(args)
-
-    metadata = read_metadata(join(paths.super_abspath, paths.super_to_sub_relpath, b".subproject"))
-    patches_dim = read_patches_dim(paths, metadata)
+    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    patches_dim = read_patches_dim(sub_paths, metadata)
 
     if patches_dim.applied_index + 1 == len(patches_dim.patches):
         # TODO when there are not patches, make a better error messages
@@ -1847,9 +1871,9 @@ def cmd_push(args, parser):
     applied_index_new = patches_dim.applied_index + 1
 
     patch_filename = patches_dim.patches[applied_index_new]
-    patch_abspath = join(paths.patches_abspath, patch_filename)
+    patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
-    p = Popen(["git", "apply", "--index", "--directory=%s" % (paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
+    p = Popen(["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:
         # TODO explain how to recover!
@@ -1858,16 +1882,16 @@ def cmd_push(args, parser):
     if applied_index_new + 1 == len(patches_dim.patches):
         # Now all patches are applied. Drop the information from the metadata.
         # The default value is that all patches are applied!
-        do_pop_update_metadata_drop(paths)
+        do_pop_update_metadata_drop(sub_paths)
     else:
-        do_pop_push_update_metadata(paths, applied_index_new)
+        do_pop_push_update_metadata(sub_paths, applied_index_new)
 
-    with cwd(paths.super_abspath):
-        superx.helper.add([paths.metadata_abspath])
+    with cwd(super_paths.super_abspath):
+        superx.helper.add([sub_paths.metadata_abspath])
 
     if not args.quiet:
         print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
-                                                                      paths.super_to_sub_relpath.decode("utf8")))
+                                                                      sub_paths.super_to_sub_relpath.decode("utf8")))
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
@@ -2000,9 +2024,9 @@ class PatchesDim:
     applied_index: int
 
 
-def read_patches_dim(paths: Paths, metadata: Metadata) -> PatchesDim:
+def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
     try:
-        patches = os.listdir(paths.patches_abspath)
+        patches = os.listdir(sub_paths.patches_abspath)
         patches = [p for p in patches if p.endswith(b".patch")]
         patches.sort()
     except FileNotFoundError:
@@ -2031,9 +2055,10 @@ def cmd_status(args, parser):
     # TODO add argument for a path to a single subproject and then only list
     # the status of this subproject
     # TODO allow the cwd to select the subproject
-    paths = do_paths(superx.path, b"")
 
-    if not is_cwd_toplevel_directory(paths):
+    super_paths = gen_super_paths(superx.path)
+
+    if not is_cwd_toplevel_directory(super_paths):
         print_warning = True
     else:
         print_warning = False
@@ -2042,7 +2067,7 @@ def cmd_status(args, parser):
     # TODO add colorscheme for output, e.g. like git status does
     # TODO handle stdout fd is pipe/file and not tty.
 
-    config = read_config(paths.config_abspath)
+    config = read_config(super_paths.config_abspath)
 
     # These are relative paths: super_to_sub_relpath
     subprojects = config.subprojects
@@ -2059,7 +2084,7 @@ def cmd_status(args, parser):
 
     # NOTE git_ls_files_untracked() depends on the cwd for now! Cwd must be the
     # root of the directory for now.
-    with cwd(paths.super_abspath):
+    with cwd(super_paths.super_abspath):
         ls_files_untrack = git_ls_files_untracked()
 
     # TODO refactor this struct and the following code to a function! And make
@@ -2104,7 +2129,9 @@ def cmd_status(args, parser):
         # for git superprojects. And look like svn for svn superprojects.
         # NOTE: these two ideas are conflicting!
 
-        metadata = read_metadata(join(paths.super_abspath, subproject, b".subproject"))
+        sub_paths = gen_sub_paths_from_relpath(super_paths, subproject)
+
+        metadata = read_metadata(sub_paths.metadata_abspath)
 
         # TODO again some bytes to string decoding. Annoying!
         subproject_str = subproject.decode("utf8")
@@ -2123,9 +2150,7 @@ def cmd_status(args, parser):
         changes = subproject_changes[subproject]
 
         # Get count of patches for subproject and other information
-        # TODO "paths_sub" is kind of guly here!
-        paths_sub = do_paths(superx.path, subproject)
-        patches_dim = read_patches_dim(paths_sub, metadata)
+        patches_dim = read_patches_dim(sub_paths, metadata)
 
         p = subproject_str
 

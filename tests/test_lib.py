@@ -19,7 +19,9 @@ from subpatch import (AppException, ConfigLine, ErrorCode,
                       URLTypes, check_superproject_data, config_add_section2,
                       config_add_subproject, config_parse2, config_drop_key2,
                       config_drop_section_if_empty,
-                      config_set_key_value2, config_unparse2, do_paths,
+                      config_set_key_value2, config_unparse2,
+                      gen_super_paths, gen_sub_paths_from_cwd_and_relpath,
+                      gen_sub_paths_from_relpath,
                       find_superproject, get_name_from_repository_url,
                       get_url_type, git_diff_in_dir, git_diff_name_only,
                       git_get_object_type, git_get_sha1, git_get_toplevel,
@@ -794,66 +796,135 @@ class TestFuncs(unittest.TestCase):
         self.assertEqual([b"xx", b"yy"], parse_z(b"xx\0yy\0"))
 
 
-class TestDoPaths(TestCaseTempFolder):
+class TestGenSuperPaths(TestCaseTempFolder):
     def test_multiple_level_of_subdirectories(self):
         super_abspath = os.getcwdb()
-        paths = do_paths(super_abspath, b"sub1/sub2")
+        paths = gen_super_paths(super_abspath)
         self.assertEqual(paths.super_abspath, super_abspath)
         self.assertEqual(paths.super_to_cwd_relpath, b"")
-        self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
-        self.assertEqual(paths.cwd_to_sub_relpath, b"sub1/sub2")
-        self.assertEqual(paths.sub_name, b"sub2")
 
         with cwd("sub1", create=True):
-            paths = do_paths(super_abspath, b"sub2")
+            paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1")
-            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
-            self.assertEqual(paths.cwd_to_sub_relpath, b"sub2")
-            self.assertEqual(paths.sub_name, b"sub2")
 
         with cwd("sub1/sub2", create=True):
-            paths = do_paths(super_abspath, b"")
+            paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2")
+
+        with cwd("sub1/sub2/sub3", create=True):
+            paths = gen_super_paths(super_abspath)
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3")
+
+        with cwd("sub1/sub2/sub3/sub4", create=True):
+            paths = gen_super_paths(super_abspath)
+            self.assertEqual(paths.super_abspath, super_abspath)
+            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3/sub4")
+
+
+class TestGenSubPaths(TestCaseTempFolder):
+    def test_gen_sub_paths_from_relpath(self):
+        super_abspath = os.getcwdb()
+        super_paths = gen_super_paths(super_abspath)
+
+        sub_paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
+        self.assertEqual(sub_paths.super_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(sub_paths.cwd_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(sub_paths.sub_name, b"sub2")
+
+        with cwd("sub1", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            sub_paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
+            self.assertEqual(sub_paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(sub_paths.cwd_to_sub_relpath, b"sub2")
+            self.assertEqual(sub_paths.sub_name, b"sub2")
+
+        with cwd("sub1/sub2", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"")
             self.assertEqual(paths.sub_name, b"sub2")
 
         with cwd("sub1/sub2/sub3", create=True):
-            paths = do_paths(super_abspath, b"..")
-            self.assertEqual(paths.super_abspath, super_abspath)
-            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3")
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
             self.assertEqual(paths.sub_name, b"sub2")
 
         with cwd("sub1/sub2/sub3/sub4", create=True):
-            paths = do_paths(super_abspath, b"../..")
-            self.assertEqual(paths.super_abspath, super_abspath)
-            self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3/sub4")
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"../..")
             self.assertEqual(paths.sub_name, b"sub2")
 
         # Special case for sub_name: superproject at the toplevel directory
-        paths = do_paths(super_abspath, b"")
-        self.assertEqual(paths.super_abspath, super_abspath)
-        self.assertEqual(paths.super_to_cwd_relpath, b"")
+        super_paths = gen_super_paths(super_abspath)
+        paths = gen_sub_paths_from_relpath(super_paths, b"")
+        self.assertEqual(paths.super_to_sub_relpath, b"")
+        self.assertEqual(paths.cwd_to_sub_relpath, b"")
+        self.assertEqual(paths.sub_name, b"")
+
+    def test_multiple_level_of_subdirectories(self):
+        super_abspath = os.getcwdb()
+
+        super_paths = gen_super_paths(super_abspath)
+        paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"sub1/sub2")
+        self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(paths.cwd_to_sub_relpath, b"sub1/sub2")
+        self.assertEqual(paths.sub_name, b"sub2")
+
+        with cwd("sub1", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"sub2")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"sub2")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        with cwd("sub1/sub2", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        with cwd("sub1/sub2/sub3", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"..")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"..")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        with cwd("sub1/sub2/sub3/sub4", create=True):
+            super_paths = gen_super_paths(super_abspath)
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"../..")
+            self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
+            self.assertEqual(paths.cwd_to_sub_relpath, b"../..")
+            self.assertEqual(paths.sub_name, b"sub2")
+
+        # Special case for sub_name: superproject at the toplevel directory
+        super_paths = gen_super_paths(super_abspath)
+        paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"")
         self.assertEqual(paths.super_to_sub_relpath, b"")
         self.assertEqual(paths.cwd_to_sub_relpath, b"")
         self.assertEqual(paths.sub_name, b"")
 
     def test_argument_is_normalized(self):
         super_abspath = os.getcwdb()
+        super_paths = gen_super_paths(super_abspath)
+
         with cwd("sub1/sub2/", create=True):
-            paths = do_paths(super_abspath, b"..")
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"..")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
 
-            paths = do_paths(super_abspath, b"../.")
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"../.")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
 
-            paths = do_paths(super_abspath, b".")
+            paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b".")
             self.assertEqual(paths.cwd_to_sub_relpath, b"")
 
 

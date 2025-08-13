@@ -442,8 +442,7 @@ WARNING: The paths in this console output are wrong (for now)!
 
 * was integrated from URL: ../subproject
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-""",
-                             p.stdout)
+""", p.stdout)
 
     def test_one_subproject_with_modified_files(self):
         with cwd("subproject", create=True):
