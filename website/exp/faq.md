@@ -14,7 +14,7 @@ maintain a linear patch stack on top of the subproject. As far as I know, this
 is a unique feature for multi repository management tools like subpatch.
 
 
-## Subpatch is just another wrapper around git, right?
+## subpatch is just another wrapper around git, right?
 
 No, subpatch is not another wrapper around git. Like git submodules or git
 subtree, subpatch is an extension to git.
@@ -54,3 +54,65 @@ some of my coworkers and I coded our own tool. See
 That's why I call repo and other tools "a wrapper around git", because existing
 features of a SCM tool are reimplemented or need to be reimplemented. And
 subpatch is carefully designed to not be a wrapper around git.
+
+
+## Does subpatch increase the storage requirements on the source control servers?
+
+Yes, it does!
+
+If you previously used git submodules, repo or other tools for our superproject and now
+start to use subpatch, your repository will grow in size. The files of your
+dependencies are directly in our repository (superproject) now. So they are
+downloaded when you do a `git clone` or a co-worker does a `git fetch`.
+
+In the case of git submodules, repo, ... _and_ you have __not__ mirrored the
+subprojects on our own source control servers, you clone the subprojects from
+the original upstream servers. So the files are not your repository, but only
+in the upstream repositories.
+
+So yes, the storage requirements on your source control servers increases.
+
+But … is mostly a good thing! Reasons:
+
+* When using CI (continuous integration) and forgetting to configure a cache,
+  git submodules, repo and others would continuously pull the dependencies from
+  upstream. This increases the ingress traffic of your CI infrastructure and
+  causes traffic for the upstream project. That is not nice.
+* When building a product, relying (open source) upstream to provide and
+  maintaining the source code for a long time is risky. You should be able to
+  reproduce the exact source code for compliance and bug-fixing reasons for all
+  of your software releases.
+
+And your local storage requirement on your development machine and in your CI
+pipeline will __not__ change. Also git submodules, repo and others tools
+download and checkout the subprojects, e.g. git repositories, for building the
+software.
+
+subpatch mostly will even reduce the storage size because of DD6: The history
+of the upstream project is not included in the superproject. When using git
+submodules, repo or others and you don't configure anything, git repositories
+are not cloned with `--depth=1` by default. So you get the full history in your
+local checkout.
+
+
+## No need for (atomic) cross repository changes!
+
+tdb
+
+
+## Subpatch makes the checkout bigger!
+
+No. It may even make it smaller. See previous answer!
+
+
+## subpatch promotes vendoring of dependencies. I have heard that this is bad!
+
+Yes and no.
+
+TODO explain
+
+## Are you a fan of monorepos?
+
+## I'm using subpatch for my 200 GB source code project and I have git scaling issues now! What should I do?
+
+tbd
