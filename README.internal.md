@@ -101,8 +101,29 @@ Test installation locally
     # Remove it for later install with testpypi
     $ pipx uninstall subpatch
 
+There is some issue with `twine` for now. I get the error
+
+    $ twine upload --repository testpypi dist/*
+    Uploading distributions to https://test.pypi.org/legacy/
+    ERROR    InvalidDistribution: Metadata is missing required fields: Name, Version.
+             Make sure the distribution includes the files where those fields
+             are specified, and is using a supported Metadata-Version: 1.0,
+             1.1, 1.2, 2.0,  2.1, 2.2.
+    $ twine --version
+    twine version 5.0.0 (importlib-metadata: 4.12.0, keyring: 24.3.1, pkginfo:
+    1.9.6, requests: 2.31.0, requests-toolbelt: 1.0.0, urllib3: 2.0.7)
+
+My current solution, using twine in a venv. That has a newer version:
+
+    $ python3 -m venv env
+    $ . env/bin/activate
+    $ pip install twine
+    $ twine --version
+    twine version 6.1.0 (keyring: 25.6.0, packaging: 25.0, requests: 2.32.4, requests-toolbelt: 1.0.0, urllib3: 2.5.0, id: 1.5.0)
+
 Publish release on testpypi website
 
+    $ . env/bin/activate
     # TODO ensure API token in ~/.pypirc
     $ twine upload --repository testpypi dist/*
     # Check website
@@ -148,7 +169,6 @@ Publish release on website:
     $ vim website/ref/releases.md   # write release notes and changelog
     $ git add website/downloads/ website/ref/releases.md
     $ git diff --cached
-    $ git commit
     $ git commit -m "add v0.1aX release to website"
     $ mkdocs serve
     $ git push origin main --dry-run
