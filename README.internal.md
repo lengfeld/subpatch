@@ -495,3 +495,9 @@ Recheck that ".gitignore" is not used on "subpatch add/update"
 
 Add "-q" to update and refactor tests. stdout=PIPE should not be used to
 slience the command.
+
+Add plumbing command for scripting
+- get toplevel of superproject
+- get type of superproject
+- get current path of subproject if any!
+- get state of subproject, e.g. populated, all-paches-appleyed (yes-no)

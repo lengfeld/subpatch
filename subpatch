@@ -1532,7 +1532,7 @@ class Paths:
     # TODO split path into paths for superproject and paths for subproject
     super_to_sub_relpath: bytes
     cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
-    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory
+    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory (but this is not supported for now)
     subproject_abspath: bytes
     metadata_abspath: bytes  # Path to ".subproject" file
     patches_abspath: bytes  # Path to "patches" directory
