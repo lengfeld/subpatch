@@ -492,3 +492,6 @@ superproject and subproject tooling, e.g. git, svn, tar
 Add documentation how to update subpatch to a new version
 
 Recheck that ".gitignore" is not used on "subpatch add/update"
+
+Add "-q" to update and refactor tests. stdout=PIPE should not be used to
+slience the command.

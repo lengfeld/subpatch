@@ -363,12 +363,12 @@ class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_one_and_two_subproject(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            self.run_subpatch_ok(["add", "../subproject", "first"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject", "first"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(b"first\n", p.stdout)
 
-            self.run_subpatch_ok(["add", "../subproject", "external/second"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject", "external/second"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(b"external/second\nfirst\n", p.stdout)
@@ -403,8 +403,8 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_two_clean_subprojects(self):
         create_super_and_subproject()
         with cwd("superproject"):
-            self.run_subpatch_ok(["add", "../subproject", "subproject1"], stdout=DEVNULL)
-            self.run_subpatch_ok(["add", "../subproject", "subproject2"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject1"])
+            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject2"])
             git = Git()
             git.commit("add two subprojects")
 
@@ -461,7 +461,7 @@ WARNING: The paths in this console output are wrong (for now)!
             git = Git()
             git.init()
 
-            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
             git.commit("add subproject")
 
             with cwd("subproject"):
@@ -895,7 +895,7 @@ Now use 'git commit' to finalized your change.
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"")
 
-            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"subproject\n")
@@ -915,7 +915,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "dir/subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "dir/subproject"])
             git.commit("add subproject")
             self.assertFileContent("dir/subproject/file", b"initial")
 
@@ -983,7 +983,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "dir/subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "dir/subproject"])
             self.assertFileContent(".subpatch", b"""\
 [subprojects]
 \tpath = dir/subproject
@@ -1075,7 +1075,7 @@ index 0000000..e019be0
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-r", "v1", "../subproject", "subproject"], stdout=DEVNULL)
+            p = self.run_subpatch(["add", "-q", "-r", "v1", "../subproject", "subproject"])
             self.assertEqual(p.returncode, 0)
             git.commit("add subproject")
 
@@ -1133,7 +1133,7 @@ The following changes are recorded in the git index:
         with LocalWebserver(7000, FileRequestHandler), cwd("superproject", create=True):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-r", "v1", "http://localhost:7000/subproject/.git/", "dir/subproject"], stdout=DEVNULL, hack=True)
+            p = self.run_subpatch(["add", "-q", "-r", "v1", "http://localhost:7000/subproject/.git/", "dir/subproject"], hack=True)
             self.assertEqual(p.returncode, 0)
             git.commit("add subproject")
 
@@ -1169,7 +1169,7 @@ The following changes are recorded in the git index:
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "../subproject"], stdout=DEVNULL)
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
             self.assertFileContent("subproject/.subproject", b"""\
 [upstream]
 \tobjectId = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
@@ -1198,7 +1198,7 @@ The following changes are recorded in the git index:
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subproject"], stdout=PIPE)
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
             git.commit("add subproject")
 
             p = self.run_subpatch_ok(["update", "-r", "v1", "subproject"], stdout=PIPE)
