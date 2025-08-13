@@ -594,6 +594,7 @@ class SuperHelperGit:
         git_add(paths)
 
     def print_instructions_to_commit_and_inspect(self):
+        # TODO handle the case, e.g. after "push" that there are _no_ changes in the index!
         print("The following changes are recorded in the git index:")
         shortstat = git_diff_staged_shortstat()
         print("%s" % (shortstat.decode("ascii"),))
@@ -2129,8 +2130,10 @@ def cmd_status(args, parser):
         # for git superprojects. And look like svn for svn superprojects.
         # NOTE: these two ideas are conflicting!
 
-        sub_paths = gen_sub_paths_from_relpath(super_paths, subproject)
+        # TODO use the term "dimensions" also in the output to make the
+        # dimension for understandable for the user.
 
+        sub_paths = gen_sub_paths_from_relpath(super_paths, subproject)
         metadata = read_metadata(sub_paths.metadata_abspath)
 
         # TODO again some bytes to string decoding. Annoying!
@@ -2201,6 +2204,7 @@ def cmd_status(args, parser):
             print("* There are n=%d patches." % (patches_count,))
             if patches_dim.applied_index + 1 != patches_count:
                 print("* There are only n=%d patches applied." % (patches_dim.applied_index + 1,))
+                # TODO add messages "Use 'subpatch push -a' to apply them!"
 
             # TODO Maybe add commands to push/pop patches, if not everything is applied
             # TODO implement subpatch patch list

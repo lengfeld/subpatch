@@ -134,6 +134,49 @@ For some software projects, e.g. the [Linux kernel](https://kernel.org), patch f
 sent to a *mailing list* are an integral part of the development model even today.
 
 
+# source code reproducabilty
+
+I use the term *souce code reproducabilty* to describe to process and tools to
+be able to restore and checkout the full source code of our software project
+for all previous releases.
+
+E.g. if you use embedded build systems like *buildroot* and *Yocto*, your local
+repositories do not contain the source code of the software packages. buildroot
+and Yocto download the source code from the upstream download servers or
+repositories (or mirrors) only in the build process. The source is not added to
+your source repository.
+
+Without extra actions a buildroot or Yocto build is not source code
+reproducable. If a upstream project shuts down it's infrastructure and there
+are no mirrors maintained by other parties on the internet, you cannot
+reproduce the build. You cannot redownload the source code.
+
+TODO add archive features by buildroot and Yocto
+
+But nevertheless it's an additional process/action you have to perform to
+retain the source code of our dependencies on your own infrastructure.
+
+Because upstream services can disappear Linux distirbution like debian maintain
+their or copy/mirror of the source code for their packages.
+
+TODO add link
+
+TODO explain that this means independent from external parties
+
+
 # vendoring
 
 TODO Explain
+
+
+# reproducilbe builds
+
+Apart from source code reproducabilty, there is also a property for the buid
+process. It's called *reproducilbe builds*.
+
+TODO explain, link to website
+
+
+# atomic cross repository changes
+
+tbd

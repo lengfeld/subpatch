@@ -87,10 +87,12 @@ describes the differences in more detail.
 
 On the [subpatch website](https://subpatch.net)
 you find more information and the documentation, e.g. explanations, tutorials,
-how-to guides and references. New software releases are announced on the
+how-to guides and references. This structure is taken from the
+[The Grand Unified Theory of Documentation](https://docs.divio.com/documentation-system/).
+
+New software releases are announced on the
 [release notes page](https://subpatch.net/ref/releases/),
 including the release notes and changelog.
-
 For support, dicussions and feature requests you can
 
 * join the [matrix](https://matrix.org/) room
@@ -117,11 +119,10 @@ When you contribute, please add your sign-off. See [Developer's Certificate of
 Origin](https://developercertificate.org/) for details. It's used in the Linux
 kernel and other projects.
 
-**Note**: For now the project does *not* welcome code contributions __yet__.
-The code is in a very rough state (in average one TODO comment per 10 lines of
-code). So don't waste our time trying to implement features. I want to get the
-internal architecture right first. Nevertheless, feedback and comments to the
-tool and concepts is very welcome.
+**Note**: The code is in a very rough state (in average one TODO comment per 10
+lines of code). So there are still a lot of moving parts. Before submitting too
+large pull requests, please provide an RFC or idea draft first. I don't want
+that you are wasting your time ;-)
 
 
 ## Warranty disclaimer
