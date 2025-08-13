@@ -65,7 +65,7 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
@@ -97,6 +97,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
@@ -184,16 +186,83 @@ and integrated them to the cmake build system.
 In this example the git repository <em>android-glass-to-glass-latency</em> is the
 superproject and the source dependency <em>aminilog</em> is the subproject.</p>
 <h2 id="example-2-embedded-linux-firmware-based-on-yocto">Example 2: Embedded Linux firmware based on Yocto</h2>
-<p>This example illustrates a multi repository setup of a Yocto project.</p>
-<p>TODO add example</p>
+<p>This example illustrates a multi repository setup of a Yocto project.
+The <a href="https://yoctoproject.org">Yocto project</a> is a build system to build
+a Linux embedded distribution and firmware. It's based on OpenEmbedded.</p>
+<p>The core consists of</p>
+<ul>
+<li>bitbake (recipe parser and build orchestration)</li>
+<li>meta-oecore (base recipes and toolchain)</li>
+<li>documentation</li>
+<li>the poky distro</li>
+</ul>
+<p>All of this is bundled in the <a href="https://git.yoctoproject.org/poky/">poky repository</a>.
+Poky is often used as a based for embedded Linux firmware projects, but you can
+also add the different components separately.</p>
+<p>Furthermore the Yocto project has the concept of layers. These are git repositories
+by external parties that contains additional recipes, bbappends, machines and
+distros. These add additional hardware support, software and other features.
+E.g. <a href="https://github.com/meta-qt5/meta-qt5">meta-qt</a>
+adds support for the QT graphics framework and
+<a href="https://git.yoctoproject.org/meta-raspberrypi/about/">meta-raspperypi</a> adds
+support for the RaspberryPI hardware.</p>
+<p>In general building an embedded firmware with Yocto consists of using poky and
+2 or more additional external layers. And mostly also maintaining your own
+layer with build configurations, additional patches and recipes for your own
+applications.</p>
+<p>As a developer you would clone multiple repositories . An
+example:</p>
+<pre><code>$ git clone https://git.yoctoproject.org/poky
+$ git clone git://git.openembedded.org/meta-openembedded
+$ git clone https://git.yoctoproject.org/meta-raspberrypi
+</code></pre>
+<p>Then you would configure the build and add the layers.</p>
+<pre><code>$ . poky/oe-init-build-env
+$ vim conf/bblayers.conf
+$ vim conf/local.conf
+$ bitbake some-image
+</code></pre>
+<p>Then adding our own layer for your modifications:</p>
+<pre><code>$ bitbake-layers create-layer ../meta-mylayer
+$ cd ../meta-mylayer
+$ git init
+# e.g. add an image recipe
+$ git commit -m "add image reipce"
+</code></pre>
+<p>And finally you start the build</p>
+<pre><code>$ bitbake my-image
+</code></pre>
+<p>and use the firmware files in the build artifacts to flash your device.</p>
+<p>This is also an example of a <em>multi repository management</em> problem.  To make a
+firmware build for the device you, a coworker and the continuous integration
+pipeline needs to clone four different repositories, namely</p>
+<ul>
+<li>poky,</li>
+<li>meta-openembedded,</li>
+<li>meta-raspperypi and</li>
+<li>meta-mylayer.</li>
+</ul>
+<p>The first three repos are maintained by external parties. The last repo is
+maintained by you.</p>
+<p>Since everyone is facing the multi repository problem when working on Yocto
+projects, there are already some attempts to handle it. E.g. some use
+<a href="https://gerrit.googlesource.com/git-repo/+/HEAD/README.md">repo</a> or
+<a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">git submodules</a>
+as generic solutions to the multi repository problem.  But
+there is also the <a href="https://kas.readthedocs.io/en/latest/intro.html">kas</a>
+project.  It allows to checkout multi external git repos and provides a lot
+additional feature for maintaining Yocto projects. E.g. to assemble the
+<code>local.conf</code> and <code>bblayers.conf</code> dynamically.</p>
 <h2 id="recap">Recap</h2>
-<p>TODO write recap</p>
+<p>The two examples show the multi repository problem. Now you can continue
+reading my <a href="../learnings/">learnings and history</a> of the past years dealing with
+this problem.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../history/" class="btn btn-neutral float-right" title="Pre-subpatch history">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../learnings/" class="btn btn-neutral float-right" title="Learnings">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -220,7 +289,7 @@ superproject and the source dependency <em>aminilog</em> is the subproject.</p>
       <span><a href="../.." style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../history/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../learnings/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

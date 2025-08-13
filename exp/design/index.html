@@ -57,7 +57,7 @@
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
@@ -91,6 +91,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
@@ -148,6 +150,8 @@ here.</p>
 <li>[+] A single file avoids a search in all sub directories. Can be expensive
   for big projects.</li>
 </ul>
+<p>TODO: Update this DD. subpatch has <code>.subproject</code> files now that are seperate
+from the subpatch config file.</p>
 <p><strong>DD4</strong>: Published as a standalone and single python script</p>
 <p>TODO add [+] points here</p>
 <p><strong>DD5</strong>: Filenames and file system paths are python bytes objects, not strings</p>
@@ -156,6 +160,13 @@ here.</p>
 <p>TODO E.g. git-subtree and combo-layers are doing this</p>
 <p>TODO Including the history is against learing L4 (minimize accidentally complexity)</p>
 <p>TODO add [+],[-] points here</p>
+<p><strong>DD7</strong>: The naming convention in config and metadata is the git config style.</p>
+<p>In the config file <code>.subpatch</code> and metadata files <code>.subproject</code> (that are
+git config files) the naming convention is <em>camelCase</em>. See
+<a href="https://git-scm.com/docs/git-config#_example">these example from the git documentation.</a></p>
+<ul>
+<li>[+] Consistency, since supatch is using the same style as git itself.</li>
+</ul>
 <p><em>Note</em>: This list is not completed yet and should grow while supbatch is developed.</p>
               
             </div>

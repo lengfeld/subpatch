@@ -57,15 +57,15 @@
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Requirements</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#list-of-requirements">List of requirements</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#change-history">Change history</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
     </li>
     </ul>
                   </li>
@@ -97,6 +97,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
@@ -132,7 +134,7 @@
                 <h1 id="requirements">Requirements</h1>
 <p>I based subpatch on my experiences and learnings as a (embedded) software
 engineer. Everything that I have seen and done in the last ten years feeds into
-the following list of requirements. See the <a href="../history/">history page</a> for
+the following list of requirements. See the <a href="../learnings/">learnings</a> for
 details.</p>
 <p><em>Note</em>: For now the implementation of subpatch not complete. Please read the
 requirement list as a vision for the first major release of subpatch, not as a
@@ -164,12 +166,6 @@ for updates or for CVEs.</p>
 <p>(<strong>R11</strong>) should support every development platform that also supports git and
 python, like Linux, unixes, Windows and MacOS.</p>
 <p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>The list of requirements is the design goal of subpatch. It describes the
-properties and capabilities an implementation should fulfil and provide for its
-users.</p>
-<p>If you want to find more about the development and implementation, you can
-continue reading on the page <a href="../design/">design decisions</a>.</p>
 <h2 id="change-history">Change history</h2>
 <p>Update to <em>R1</em> on 2025-01-12: subpatch only supports git as a superproject with
 all features.</p>
@@ -181,13 +177,19 @@ calculating a tree checksum, maintaining and listing tracked (and non-tracked)
 files. If the superproject is not git or not a scm at all, these functions need
 to be implemented in subpatch. Why reimplementing existing functionality?</p>
 <p>This learning I had already in the past. See learning L1 on
-<a href="../history/">history</a>: The solution is inside a scm tool. subpatch should not
+<a href="../learnings/">learnings</a>: The solution is inside a scm tool. subpatch should not
 try or need to reimplementing existing functionality.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>The list of requirements is the design goal of subpatch. It describes the
+properties and capabilities an implementation should fulfil and provide for its
+users.</p>
+<p>If you want to find more about the development and implementation, you can
+continue reading on the page <a href="../design/">design decisions</a>.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../history/" class="btn btn-neutral float-left" title="Pre-subpatch history"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../learnings/" class="btn btn-neutral float-left" title="Learnings"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../design/" class="btn btn-neutral float-right" title="Design decisions">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -212,7 +214,7 @@ try or need to reimplementing existing functionality.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../history/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../learnings/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../design/" style="color: #fcfcfc">Next &raquo;</a></span>

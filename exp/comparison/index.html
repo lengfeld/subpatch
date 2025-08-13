@@ -57,7 +57,7 @@
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
@@ -67,7 +67,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#technical-comparison">Technical comparison</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#other-multi-repository-management-tools">Other multi repository management tools</a>
+    <li class="toctree-l2"><a class="reference internal" href="#even-more-multi-repository-management-tools">Even more multi repository management tools</a>
     </li>
     </ul>
                   </li>
@@ -95,6 +95,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
@@ -189,6 +191,15 @@ problem. Other tools are</p>
 <td>python</td>
 <td>shell</td>
 </tr>
+<tr>
+<td>agnostic</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>yes</td>
+</tr>
 </tbody>
 </table>
 <p>Explanations of the rows:</p>
@@ -201,6 +212,9 @@ problem. Other tools are</p>
 <li><em>subprojects</em>: The type of cvs that is support as a subproject. For all
   other tools, except subpatch, only other git repositories are supported.</li>
 <li><em>language</em>: The main programming language that the tool is written in.</li>
+<li><em>agnostic</em>: Whether the tool is project/tooling agnostic or tailored to a
+  specific project or usecase. E.g. <em>kas</em> is designed for the Yocto project and
+  <em>west</em> is designed for Zephyr.</li>
 </ul>
 <p>Legend:</p>
 <ul>
@@ -213,7 +227,7 @@ problem. Other tools are</p>
   this repository is not part of the directory hierarchy when the project is
   checked out. It does not sit at the top level of the superproject.</li>
 </ul>
-<h2 id="other-multi-repository-management-tools">Other multi repository management tools</h2>
+<h2 id="even-more-multi-repository-management-tools">Even more multi repository management tools</h2>
 <p>Apart from the above already mentioned tools there exits a long list of other
 attempts to solve the multi repository problem. The following list should
 list all the other tools I have found so far:</p>

@@ -57,7 +57,7 @@
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/history/">Pre-subpatch history</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/requirements/">Requirements</a>
                   </li>
@@ -81,6 +81,22 @@
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Project based on Yocto</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adding-poky">Adding poky</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adding-additional-layers">Adding additional layers</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adding-your-own-layer">Adding your own layer</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#adding-default-build-configuration">Adding default build configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#updating-layers-to-a-new-stable-release">Updating layers to a new stable release</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#how-to-make-a-release">How to make a release</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#upgrading-to-a-new-release-branch">Upgrading to a new release branch</a>
+    </li>
     </ul>
                   </li>
               </ul>
@@ -91,6 +107,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
@@ -124,8 +142,157 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="project-based-on-yocto">Project based on Yocto</h1>
-<p>TODO Write explanation how to use subpatch for a Project based on Yocto (poky
-and openembedded).</p>
+<p>This how-to guide explains how to use subpatch to maintain an embedded Linux
+firmware based on the <a href="https://yoctoproject.org/">Yocto project</a>.</p>
+<p>A full feature example of a Yocto project maintained with subpatch is available
+here: <a href="https://github.com/subpatch/example-yocto">yocto-example</a></p>
+<p>Note: There are maybe some mistakes in the following commands. There are no
+automated tests yet.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>This how-to guide is not a tutorial. You should have install subpatch already
+and learned the basic usage of subpatch. If not, please work trough the
+tutorials.</p>
+<p>The preconditions are</p>
+<ul>
+<li>subpatch installed</li>
+<li>Basic usage of subpatch known</li>
+<li>Basic usage of Yocto known</li>
+</ul>
+<h2 id="adding-poky">Adding poky</h2>
+<p>First you need add the <a href="https://git.yoctoproject.org/poky/">poky</a> repository.
+This how-to guide adds all layers in a sub directory called <code>sources</code>. You may
+also just add the repos at the toplevel directory.</p>
+<p>This guide uses a fresh git repository, but you can also use a existing one.
+Execute:</p>
+<pre><code>$ git init
+$ mkdir sources
+$ cd sources
+$ subpatch add https://git.yoctoproject.org/poky -r scarthgap
+$ git commit -m "adding poky"
+</code></pre>
+<p>The above commands add poky from the branch <code>scarthgap</code> into the directory
+<code>sources/poky/</code>. At the time of writing, this branch is the latest long term
+support branch. See
+<a href="https://wiki.yoctoproject.org/wiki/Releases">Releases</a> on the Yocto wiki for
+more details.</p>
+<p>Now you can already initialize the build environment:</p>
+<pre><code>$ cd ..
+$ . sources/poky/oe-init-build-env
+</code></pre>
+<p>This will create a <code>build</code> directory with the default configurations for
+local.conf and bblayers.conf</p>
+<h2 id="adding-additional-layers">Adding additional layers</h2>
+<p>To find recipes and layers you can use the
+<a href="https://layers.openembedded.org">OpenEmbedded Layer Index</a>.
+When you want to add a layer, you use subpatch's <code>add</code> command .</p>
+<p>The following example adds the git repository <code>meta-openembedded</code> that contains
+multiple layers:</p>
+<pre><code># Starting in the `build/` subdirectory
+$ cd ../sources
+$ subpatch add git://git.openembedded.org/meta-openembedded -r scarthgap
+$ git commit -m "add meta-openembedded"
+</code></pre>
+<p>subpatch adds all files of the layer in the directory
+<code>sources/meta-openembedded</code>.  After that, you can update your bblayers.conf to
+include the new layer(s).</p>
+<pre><code>$ cd ../build
+$ bitbake-layers add-layer ../meta-openembedded/meta-oe
+$ bitbake-layers add-layer ../meta-openembedded/meta-python
+</code></pre>
+<p>Repeat this for all external layers you want to add.</p>
+<h2 id="adding-your-own-layer">Adding your own layer</h2>
+<p>To maintain your local recipes, bbappends, distro and default build
+configuration it's good to add your own layer.</p>
+<p>This example calls the layer <code>mylayer</code> and places it next to <code>poky</code> into the
+<code>sources/</code> subdirectory.</p>
+<pre><code># Starting in the `build/` subdirectory
+$ bitbake-layers create-layer ../sources/meta-mylayer
+</code></pre>
+<p>Don't forget to add this layer to your bblayers.conf and to commit your changes</p>
+<pre><code>$ bitbake-layers add-layer ../sources/meta-mylayer
+$ git add ../sources/meta-mylayer
+$ git commit -m "add mylayer"
+</code></pre>
+<p>See</p>
+<ul>
+<li><a href="https://docs.yoctoproject.org/dev/dev-manual/layers.html#understanding-and-creating-layers">Understanding and Creating Layers</a> and</li>
+<li><a href="https://docs.yoctoproject.org/dev/bsp-guide/bsp.html#creating-a-new-bsp-layer-using-the-bitbake-layers-script">Creating a new BSP Layer Using the bitbake-layers Script</a></li>
+</ul>
+<p>in the official Yocto documentation for further details.</p>
+<h2 id="adding-default-build-configuration">Adding default build configuration</h2>
+<p>To share your local.conf and bblayers.conf with other developers, you can store
+a default local.conf and bblayers.conf in our own layer.</p>
+<pre><code># Starting in the `build/` subdirectory
+$ bitbake-layers save-build-conf ../sources/meta-mylayer/ myconf
+</code></pre>
+<p>The above command stores the template config in the directory
+<code>sources/meta-mylayer/conf/templates/myconf/</code>. To share it with other
+developers also commit it:</p>
+<pre><code>$ git add ../sources/meta-mylayer/conf/templates/myconf/
+$ git commit -m "add my template"
+</code></pre>
+<p>New developers can use the following command to initialized their build
+configuration from the template after a fresh checkout of the superproject.</p>
+<pre><code>$ TEMPLATECONF=../meta-mylayer/conf/templates/myconf . sources/poky/oe-init-build-env
+</code></pre>
+<p>See <a href="https://docs.yoctoproject.org/next/dev-manual/custom-template-configuration-directory.html">Creating a Custom Template Configuration Directory</a>
+in the official Yocto Documentation for more details.</p>
+<h2 id="updating-layers-to-a-new-stable-release">Updating layers to a new stable release</h2>
+<p>From time to time you should update the subprojects (= the Yocto layers and
+poky) to the newest stable version. For Yocto layers it means to update
+to the newest commit on the specific stable branch.  For that you can use
+subpatch's <code>update</code> command.</p>
+<p>First get an overview of all the subprojects (=layers and poky in this how-to)
+the superproject uses:</p>
+<pre><code> # In the toplevel directory
+ $ subpatch list
+
+ # and for more information about the subprojects
+ $ subpatch status
+</code></pre>
+<p>Then you can update every layer one by one.</p>
+<pre><code> $ subpatch update sources/poky
+ $ git commit -m "updating poky"
+
+ $ subpatch update sources/meta-openembedded
+ $ git commit -m "updating meta-openembedded
+</code></pre>
+<p>Before publishing your changes for review, you should make a local build and
+run some smoke tests of course.</p>
+<p><em>Note 1</em>: For now subpatch does not have a <code>foreach</code> command. So you need to
+update every layer separately.</p>
+<p><em>Note 2</em>: For now subpatch does not have a <code>update --dry-run</code> command. So just
+checking for updates means downloading the remote repository. subpatch already
+uses <code>--depth 1</code>, but it can be a expensive network operation nevertheless.</p>
+<h2 id="how-to-make-a-release">How to make a release</h2>
+<p>If you want to make a release of your firmware, you can just tag the
+superproject like any project that is using git. Of course your project setup
+may need additional steps, e.g. updating a version number or adding release
+notes.</p>
+<p>But since subpatch is only an addition to git, you can use the standard git
+workflow for releasing. Some example commands:</p>
+<pre><code># Increase version number
+$ vim sources/meta-mylayer/ TODO add file here
+$ git commit -a -m "Makeing release vX.Y"
+$ git tag -m "release vX.Y vX.Y
+$ git push --follow-tags --dry-run
+$ git push --follow-tags
+</code></pre>
+<h2 id="upgrading-to-a-new-release-branch">Upgrading to a new release branch</h2>
+<p>To update all layers to a new release branch, e.g., from <code>scarthgap</code> to
+<code>styhead</code>, you can also use subpatch's <code>update</code> command.</p>
+<p>First execute</p>
+<pre><code>$ subpatch status
+</code></pre>
+<p>It will list all subprojects with additional information, e.g. the upstream
+branch that the subproject uses.</p>
+<p>You can update to a new release branch with</p>
+<pre><code>$ subpatch update sources/poky -r styhead
+$ subpatch update sources/meta-openembedded -r styhead
+$ git commit -m "upgrade to new release branch"
+</code></pre>
+<p>In all cases this major upgrade requires additional changes in your layer and
+additional testing.</p>
               
             </div>
           </div><footer>
