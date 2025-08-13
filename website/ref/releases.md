@@ -13,6 +13,25 @@ production environments! E.g. the config format will change. Nevertheless
 please try it out. Any feedback is welcome.
 
 
+## v0.1a6
+
+Fifth release of subpatch.
+
+* Add output for commands `pop` and `push`
+* Add instruction output for using git after commands `apply`, `pop` and `push`
+* Adding `git diff --staged --shortstat` to every command
+* Fix bug in pop
+* Some internal refactorings
+
+Further links:
+
+* [github release page](https://github.com/lengfeld/subpatch/releases/tag/v0.1a6)
+* standalone python script for download:
+  [https://subpatch.net/downloads/v0.1a5/subpatch](https://subpatch.net/downloads/v0.1a6/subpatch)
+
+Date: 2025-08-13
+
+
 ## v0.1a5
 
 Forth release of subpatch.
