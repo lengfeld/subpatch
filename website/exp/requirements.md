@@ -14,13 +14,13 @@ status of the implementation.
 
 The tool …
 
-(**R1**) should support git as the primary scm tool for the superproject and
-cvs, mercurial, subversion and non-scm environment as functional but limited
-superprojects.
-
-(**R2**) do not interfere with the vcs. The existing workflows
+(**R1**) do not interfere with the vcs. The existing workflows
 like checking out, cloning, switching branches, updating, rebasing, tagging,
 forking, bisecting, releasing and … should stay the same.
+
+(**R2**) should support git as the primary scm tool for the superproject and
+cvs, mercurial, subversion and non-scm environment as functional but limited
+superprojects.
 
 (**R3**) should support git, cvs, mercurial, subversion and source
 code archives (like tarballs or zip files) as source dependencies/subprojects.
@@ -54,10 +54,10 @@ python, like Linux, unixes, Windows and MacOS.
 
 ## Change history
 
-Update to *R1* on 2025-01-12: subpatch only supports git as a superproject with
+Update to *R2* on 2025-01-12: subpatch only supports git as a superproject with
 all features.
 
-Background: The requirement R1 was modified. Not all scm tools are supported
+Background: The requirement R2 was modified. Not all scm tools are supported
 fully anymore.  The full functionality will only be available if the
 superproject is a git repository.
 
