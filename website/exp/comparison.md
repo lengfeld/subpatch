@@ -50,6 +50,17 @@ Legend:
   checked out. It does not sit at the top level of the superproject.
 
 
+## Issues with the existing solutions
+
+TODO This section should explain that all existing solutions do not fullfill
+all of the requirements listed in the previous page (and therefore I created
+subpatch), e.g. repo does not fullfill R1
+
+TODO this section should also describe all the pitfalls of the existing
+solutions as a reference for that can go wrong. (or maybe this should go into
+the learnings sections)
+
+
 ## Even more multi repository management tools
 
 Apart from the above already mentioned tools there exits a long list of other
