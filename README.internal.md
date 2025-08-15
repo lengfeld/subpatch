@@ -521,3 +521,24 @@ Add plumbing command for scripting
 - get state of subproject, e.g. populated, all-paches-appleyed (yes-no)
 
 Add "build-system" agnostic to learnings or requirements (not like kas or west)
+
+Add/extend tests to allow testing a "subpatch" command in the PATH. Useful for
+pre-release testing, e.g. when getting subpatch for the testpypi
+- Also add a more extended real word tests cases, e.g. yocto project, tutorials
+  and cmake-examples
+
+Fix bug: After "subpatch push" (the latest) patch, there are often no changes
+in the index! In this case don't print the helper to use "git diff" and other
+stuff.
+
+Add check that subproject does not have a ".subproject" file and a "patches"
+dir. In that case "subpatch" does not work for now!
+
+Add check in update that the update does not work yet, when patches are
+applied!
+
+Also explain why patching is needed in the intro page. Currently it only explains
+the local patching
+
+Add https://lobste.rs/s/cts5fi/modifying_other_people_s_software to existing
+tools. It's a patch tracker.
