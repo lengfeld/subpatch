@@ -61,11 +61,15 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/requirements/">Requirements</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
-                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/comparison/">Comparison to other tools</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/benefits/">Benefits</a>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/faq/">Frequently asked questions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../exp/impl/">Implementation details</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -269,8 +273,34 @@ index 5dae49e..dca35b8 100644
 Developers used them even before SCM tools like cvs, svn, and git existed.
 For some software projects, e.g. the <a href="https://kernel.org">Linux kernel</a>, patch files
 sent to a <em>mailing list</em> are an integral part of the development model even today.</p>
+<h1 id="source-code-reproducabilty">source code reproducabilty</h1>
+<p>I use the term <em>souce code reproducabilty</em> to describe to process and tools to
+be able to restore and checkout the full source code of our software project
+for all previous releases.</p>
+<p>E.g. if you use embedded build systems like <em>buildroot</em> and <em>Yocto</em>, your local
+repositories do not contain the source code of the software packages. buildroot
+and Yocto download the source code from the upstream download servers or
+repositories (or mirrors) only in the build process. The source is not added to
+your source repository.</p>
+<p>Without extra actions a buildroot or Yocto build is not source code
+reproducable. If a upstream project shuts down it's infrastructure and there
+are no mirrors maintained by other parties on the internet, you cannot
+reproduce the build. You cannot redownload the source code.</p>
+<p>TODO add archive features by buildroot and Yocto</p>
+<p>But nevertheless it's an additional process/action you have to perform to
+retain the source code of our dependencies on your own infrastructure.</p>
+<p>Because upstream services can disappear Linux distirbution like debian maintain
+their or copy/mirror of the source code for their packages.</p>
+<p>TODO add link</p>
+<p>TODO explain that this means independent from external parties</p>
 <h1 id="vendoring">vendoring</h1>
 <p>TODO Explain</p>
+<h1 id="reproducilbe-builds">reproducilbe builds</h1>
+<p>Apart from source code reproducabilty, there is also a property for the buid
+process. It's called <em>reproducilbe builds</em>.</p>
+<p>TODO explain, link to website</p>
+<h1 id="atomic-cross-repository-changes">atomic cross repository changes</h1>
+<p>tbd</p>
               
             </div>
           </div><footer>

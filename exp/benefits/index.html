@@ -54,18 +54,46 @@
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Explanations</span></p>
-              <ul>
+              <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
-                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Benefits</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#easier-to-use-than-other-solutions">Easier to use than other solutions</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#source-code-reproductabilty-by-design-mirroringvendoring">Source code reproductabilty by design (=mirroring,=vendoring)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#no-need-for-atomic-cross-repo-change-requests">No need for atomic cross repo change requests</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#built-in-patching">Built-in patching</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-right-tradeoff-for-the-subproject-history">The right tradeoff for the subproject history</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#better-caching-and-reduced-ingress-traffic">Better caching and reduced ingress traffic</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#better-visiblity-in-size-of-upgrades-of-dependencies">Better visiblity in size of upgrades of dependencies</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#drawbacks">Drawbacks</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#increased-storage-size-on-git-forgesservers">Increased storage size on git forges/servers</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monorepo-problems">Monorepo problems</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../impl/">Implementation details</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -113,6 +141,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Explanations</li>
       <li class="breadcrumb-item active">Benefits</li>
     <li class="wy-breadcrumbs-aside">
     </li>
@@ -123,15 +152,31 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="benefits">Benefits</h1>
-<p>This page lists all the benefits you</p>
-<h2 id="right-tradeoffs-for-users">Right tradeoffs for users</h2>
-<p>tdb To explain that maintainer use it, not contributors!</p>
+<p>This page lists all the benefits for you when you use subpatch instead of a
+different solution.</p>
+<h2 id="easier-to-use-than-other-solutions">Easier to use than other solutions</h2>
 <p>No pitfalls like in repo or git-submodules</p>
 <ul>
 <li>easy branch swichting</li>
-<li>no git-submodules headeaches
-   no way to forget to init a submodule</li>
+<li>no git-submodules headeaches</li>
 </ul>
+<p>And subpatch does the right thing for L4. It minimizes the accidentally
+complexity.</p>
+<p>There are different personas in an opensource project or software team. In a
+simply view there are two different kinds of people. There are</p>
+<ul>
+<li>core developers or maintainers of a project and</li>
+<li>occassional contributors or distribution maintainers, just building the software.</li>
+</ul>
+<p>With supbatch only the first group, the core developers, must have subpatch
+install, know it's commands and use it.  So the people that are already more
+knowledgeable about the project and are working full time on it.</p>
+<p>For the occassional contributors or distribution maintainers, subpatch is at
+first totally transparent. They can just checkout out the git repo or download
+the tarball and build the software. They do <em>not</em> need to know or learn
+subpatch.</p>
+<p>This is in heavy contrast to repo or git-submodules. For both even the later group must
+understand repo or git submoudles and use it.</p>
 <h2 id="source-code-reproductabilty-by-design-mirroringvendoring">Source code reproductabilty by design (=mirroring,=vendoring)</h2>
 <p>Since of DDX, the files of the subprojects are added directly to your source
 control management system (=git). This means that you don't rely on the
@@ -145,29 +190,53 @@ software releases.</p>
 <p>If you use git submodules, repo or other tools <em>and</em> you don't want to depend
 on upstream, you have to implement our own mirror and infrastructure. With
 subpatch you get it for free.</p>
+<h2 id="no-need-for-atomic-cross-repo-change-requests">No need for atomic cross repo change requests</h2>
+<ul>
+<li>When using repo or git-submodules you want cross repo change requests</li>
+<li>Subpatch does not need it, because cross repo change requests are a pain (L1).</li>
+<li>There is no establied tooling for atomic cross repo change requests and it's
+  a pain.</li>
+</ul>
+<h2 id="built-in-patching">Built-in patching</h2>
+<ul>
+<li>For repo, git-submodules this needs forking/mirroring</li>
+<li>subpatch has this built-in an easy to use without hassel of extra repos.</li>
+</ul>
+<h2 id="the-right-tradeoff-for-the-subproject-history">The right tradeoff for the subproject history</h2>
+<ul>
+<li>The history of the subproject is not included in the superproject</li>
+<li>less clutter in the superproject history</li>
+<li>But still source code reproducible by default</li>
+<li>SHA1sums for reference to upstream saved in the metadata to restore it if
+  necessary.</li>
+</ul>
 <h2 id="better-caching-and-reduced-ingress-traffic">Better caching and reduced ingress traffic</h2>
 <ul>
 <li>no additional downloading in CI</li>
 </ul>
-<h2 id="built-in-patching">Built-in patching</h2>
-<p>For repo, git-submodules this needs forking/mirroro</p>
-<p>subpatch has this built-in an easy to use without hassel of extra repos.</p>
 <h2 id="better-visiblity-in-size-of-upgrades-of-dependencies">Better visiblity in size of upgrades of dependencies</h2>
 <ul>
-<li>currently you don't see it in the diff-size</li>
+<li>After <code>subpatch update</code>, you see the changes in <code>git diff</code></li>
+<li>Package managers like yarn, npm, rust, hide the code changes</li>
 </ul>
-<h2 id="the-right-tradeoffs">The right tradeoffs</h2>
-<p>no direct history, but documented</p>
-<h2 id="conclusion">Conclusion</h2>
-<p>see FAQ</p>
-<h2 id="drawbags">Drawbags</h2>
-<h2 id="increased-storage-size-of-git-forgegit-server">increased storage size of git forge/git server</h2>
-<h2 id="monorepo-problems">Monorepo problems</h2>
-<p>For very big projects, git does not scale well. But has improved</p>
-<h2 id="_1"></h2>
+<h2 id="drawbacks">Drawbacks</h2>
+<h3 id="increased-storage-size-on-git-forgesservers">Increased storage size on git forges/servers</h3>
+<ul>
+<li>Since upstream source code is stored on your servers/orga by default with
+  subpatch, the size increases. But this should be a good thing!</li>
+</ul>
+<h3 id="monorepo-problems">Monorepo problems</h3>
+<ul>
+<li>For very big projects, git does not scale well. But git has also improved.
+  See Microsoft efforts!</li>
+</ul>
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../design/" class="btn btn-neutral float-left" title="Design decisions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../faq/" class="btn btn-neutral float-right" title="Frequently asked questions">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -190,6 +259,10 @@ subpatch you get it for free.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
+      <span><a href="../design/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../faq/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
