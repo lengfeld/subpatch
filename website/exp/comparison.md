@@ -7,7 +7,7 @@ problem. Other tools are
 * [repo](https://gerrit.googlesource.com/git-repo/+/HEAD/README.md)
 * [kas](https://kas.readthedocs.io/en/latest/)
 * [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
-* [git-subtree](https://git.kernel.org/cgit/git/git.git/tree/contrib/subtree/git-subtree.txt)
+* [git-subtree](https://git.kernel.org/cgit/git/git.git/tree/contrib/subtree/git-subtree.adoc)
 
 This page will compare these tools with subpatch.
 
