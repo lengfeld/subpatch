@@ -88,7 +88,7 @@ submodules*, but there is also *git subtree*.
 
 I already knew [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
 and also knew that has its own set of usability challenges. So I looked at
-[git subtree](https://git.kernel.org/cgit/git/git.git/tree/contrib/subtree/git-subtree.txt)
+[git subtree](https://git.kernel.org/cgit/git/git.git/tree/contrib/subtree/git-subtree.adoc)
 and its
 [subtree merge strategy](https://mirrors.edge.kernel.org/pub/software/scm/git/docs/howto/using-merge-subtree.html).
 Maybe it's a viable solution.
