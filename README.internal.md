@@ -530,3 +530,13 @@ the local patching
 
 Add https://lobste.rs/s/cts5fi/modifying_other_people_s_software to existing
 tools. It's a patch tracker.
+
+Integrated a link checker into the linting and CI pipline. I had one external PR to fix a broken link.
+E.g. use
+    mkdocs build
+    lychee/lychee --base-url https://subpatch.net site/
+NOTE: The relative URLs to not work correctly with this command yet.
+
+Add comment with short info and url into the toplevel config. This should be
+users of a project that never heard of subpatch, when they find the ".subpatch"
+file. (Suggestion by a user)
