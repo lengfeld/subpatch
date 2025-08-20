@@ -1102,13 +1102,24 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
 
     # Just quick and try remove and copy!
     # TODO convert this code to "superhelper" implementation
+    # TODO This code is "subpatch worktree drop"
     with cwd(super_paths.super_abspath):
         git_rm = GitCommandBachter(["git", "rm", "-q"])
+        # NOTE: git_ls_tree_in_dir() also lists files non-worktree files E.g.
+        # the folder "patches" and the file ".subproject". These must be
+        # skipped.
+        # TODO Add a custom/plumping command for that "subpatch worktree list"
         for path in git_ls_tree_in_dir(sub_paths.super_to_sub_relpath):
+            if path.startswith(sub_paths.super_to_sub_relpath + b"/patches/"):
+                continue
+            if path == (sub_paths.super_to_sub_relpath + b"/.subproject"):
+                continue
             git_rm.add_and_maybe_exec(path)
         git_rm.exec_force()
 
     # and copy
+
+    # TODO This code is "subpatch unpack" but even bit lower
     # TODO convert this code to "superhelper" implementation
     os.makedirs(sub_paths.cwd_to_sub_relpath, exist_ok=True)
     with cwd(cache_abspath):
@@ -1171,25 +1182,12 @@ def cmd_update(args, parser):
     # NOTE two different error cases:
     # * no subproject path in config
     # * no subproject file in directory (TODO add code for that)
+    # TODO make this check generic!
     if sub_paths.super_to_sub_relpath not in config.subprojects:
         x = sub_paths.super_to_sub_relpath.decode("utf8")
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' does not point to a subproject" % (x,))
 
     metadata = read_metadata(sub_paths.metadata_abspath)
-
-    # TODO if some of the patches are deapply, it's ok to have changes in the
-    # index! How to handle that here? In that case
-    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath):
-        # TODO add more explanations and commands to fix!
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There are unstaged changes in the subproject.")
-
-    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
-        # TODO add more explanations and commands to fix!
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There are staged changes in the subproject.")
-
-    # TODO deapply all patches
-
-    # TODO check that the subproject is in a clean state
 
     if args.url is not None:
         # TODO verify URL
@@ -1197,6 +1195,9 @@ def cmd_update(args, parser):
     else:
         if metadata.url is None:
             # TODO this is an error case. There should always be an URL
+            # TODO but actually this might depend on the Cache/SubHelper. Maybe
+            # there is an implementetion that does not need a URL.  Or maybe the
+            # field should be mandertory.
             url = None
         else:
             url = metadata.url.decode("utf8")
@@ -1212,6 +1213,26 @@ def cmd_update(args, parser):
 
     assert isinstance(url, str)
     assert revision is None or isinstance(revision, str)
+
+    # TODO if some of the patches are deapply, it's ok to have changes in the
+    # index! How to handle that here? In that case
+    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath):
+        # TODO add more explanations and commands to fix!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "There are unstaged changes in the subproject.")
+
+    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
+        # TODO add more explanations and commands to fix!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "There are staged changes in the subproject.")
+
+    # TODO check that the subproject is in a clean state
+
+    # For now check whether all patches are deapplied!
+    patches_dim = read_patches_dim(sub_paths, metadata)
+    if len(patches_dim.patches) > 0:
+        if patches_dim.applied_index != -1:
+            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subproject has patches applied. Please pop first!")
+
+    # TODO deapply all patches
 
     # subpatch download
     # TODO combine with cmd_add(). It also does the same!

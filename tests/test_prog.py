@@ -24,6 +24,16 @@ sys.path.append(join(dirname(path), "../"))
 from subpatch import ObjectType, git_get_object_type, git_ls_files_untracked
 
 
+# TODO Move to helper. Find better name
+def get_prop_from_ini(filename, prop):
+    p = Popen(["git", "config", "-f", filename, prop], stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("hwere")
+
+    return stdout.rstrip(b"\n")
+
+
 class TestSubpatch:
     def run_subpatch(self, args, stderr=None, stdout=None, hack=False):
         if os.environ.get("DEBUG", "0") == "1":
@@ -746,6 +756,8 @@ The following changes are recorded in the git index:
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
                              p.stderr)
+            # TODO: Rework subpatch to recovery nicely. There should be no
+            # changes to the superproject when this operation fails!
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             invalid_object_id = b"0" * 40
@@ -1202,6 +1214,70 @@ The following changes are recorded in the git index:
 Updating subproject 'subproject' from URL '../subproject' to revision 'v1'... Done.
 Note: There are no changes in the subproject. Nothing to commit!
 """)
+
+    def test_update_error_with_patches_applied(self):
+        self.create_subproject()
+        with cwd("subproject"):
+            git = Git()
+            touch("extra-file", b"extra-content\n")
+            git.add("extra-file")
+            git.commit("add extra file")
+            git.call(["format-patch", "-q", "-1", "HEAD"])
+            self.assertFileExists("0001-add-extra-file.patch")
+
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            git.commit("add subproject")
+
+            with cwd("subproject"):
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
+                git.commit("subproject: add patch")
+
+            p = self.run_subpatch(["update", "-r", "v2", "subproject"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"""\
+Error: Feature not implemented yet: subproject has patches applied. Please pop first!
+""")
+
+    def test_update_with_local_patches(self):
+        self.create_subproject()
+        with cwd("subproject"):
+            git = Git()
+            touch("extra-file", b"extra-content\n")
+            git.add("extra-file")
+            git.commit("add extra file")
+            git.call(["format-patch", "-q", "-1", "HEAD"])
+            self.assertFileExists("0001-add-extra-file.patch")
+
+        with cwd("superproject", create=True):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            git.commit("add subproject")
+
+            with cwd("subproject"):
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
+                git.commit("subproject: add patch")
+
+            with cwd("subproject"):
+                self.run_subpatch_ok(["pop", "-q"])
+            git.commit("subproject: pop")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
+
+            # TODO use "-q" argument
+            self.run_subpatch_ok(["update", "-r", "v2", "subproject"], stdout=PIPE)
+            git.commit("subproject: update")
+
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
+
+            self.assertFileDoesNotExist("subproject/extra-file")
+            with cwd("subproject"):
+                self.run_subpatch_ok(["push", "-q"])
+
+            # Ensure that the changes of the patch are still there
+            self.assertFileContent("subproject/extra-file", b"extra-content\n")
 
 
 class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
