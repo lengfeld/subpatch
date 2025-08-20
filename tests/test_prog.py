@@ -988,6 +988,13 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git.commit("second commit")
             git.tag("v2", "v2")
 
+            touch("extra-file", b"extra-content\n")
+            git.add("extra-file")
+            git.commit("add extra file")
+            git.call(["format-patch", "-q", "-1", "HEAD"])
+            self.assertFileExists("0001-add-extra-file.patch")
+            git.call(["reset", "--hard", "HEAD^", "-q"])
+
     def test_simple_update(self):
         self.create_subproject()
 
@@ -1217,13 +1224,6 @@ Note: There are no changes in the subproject. Nothing to commit!
 
     def test_update_error_with_patches_applied(self):
         self.create_subproject()
-        with cwd("subproject"):
-            git = Git()
-            touch("extra-file", b"extra-content\n")
-            git.add("extra-file")
-            git.commit("add extra file")
-            git.call(["format-patch", "-q", "-1", "HEAD"])
-            self.assertFileExists("0001-add-extra-file.patch")
 
         with cwd("superproject", create=True):
             git = Git()
@@ -1243,13 +1243,6 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 
     def test_update_with_local_patches(self):
         self.create_subproject()
-        with cwd("subproject"):
-            git = Git()
-            touch("extra-file", b"extra-content\n")
-            git.add("extra-file")
-            git.commit("add extra file")
-            git.call(["format-patch", "-q", "-1", "HEAD"])
-            self.assertFileExists("0001-add-extra-file.patch")
 
         with cwd("superproject", create=True):
             git = Git()
