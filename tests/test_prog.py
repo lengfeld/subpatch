@@ -1074,8 +1074,7 @@ index 0000000..e019be0
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-q", "-r", "v1", "../subproject", "subproject"])
-            self.assertEqual(p.returncode, 0)
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
             git.commit("add subproject")
 
             # Testing that a non-tracked file in the subproject is not removed on the update
@@ -1084,7 +1083,7 @@ index 0000000..e019be0
             self.assertEqual(git_ls_files_untracked(),
                              [b"subproject/dir/untracked-file"])
 
-            p = self.run_subpatch(["update", "subproject", "-r", "v2"], stdout=PIPE)
+            self.run_subpatch_ok(["update", "subproject", "-r", "v2"], stdout=PIPE)
 
             # Second: Checking that the untracked file is still untracked and
             # still there and not modified.
@@ -1097,8 +1096,7 @@ index 0000000..e019be0
         with cwd("superproject", create=True):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-r", "v1", "../subproject", "subproject"], stdout=PIPE)
-            self.assertEqual(p.returncode, 0)
+            p = self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subproject"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'v1'... Done.
 The following changes are recorded in the git index:
@@ -1110,7 +1108,6 @@ The following changes are recorded in the git index:
             git.commit("adding subproject")
 
             p = self.run_subpatch_ok(["update", "subproject", "-r", "v2"], stdout=PIPE)
-            self.assertEqual(p.returncode, 0)
             self.assertEqual(p.stdout, b"""\
 Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Done.
 The following changes are recorded in the git index:
