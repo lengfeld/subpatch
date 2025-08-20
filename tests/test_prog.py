@@ -1019,7 +1019,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                               b"A\tdir/subproject/dir/dir1/f"])
             git.commit("add subproject")
 
-            p = self.run_subpatch(["update", "dir/subproject", "-r", "v2"], stdout=DEVNULL)
+            p = self.run_subpatch(["update", "-q", "dir/subproject", "-r", "v2"])
             self.assertEqual(0, p.returncode)
 
             self.assertFileContent(".subpatch", b"""\
@@ -1095,7 +1095,7 @@ index 0000000..e019be0
             self.assertEqual(git_ls_files_untracked(),
                              [b"subproject/dir/untracked-file"])
 
-            self.run_subpatch_ok(["update", "subproject", "-r", "v2"], stdout=PIPE)
+            self.run_subpatch_ok(["update", "-q", "subproject", "-r", "v2"])
 
             # Second: Checking that the untracked file is still untracked and
             # still there and not modified.
@@ -1146,7 +1146,7 @@ The following changes are recorded in the git index:
             git.commit("add subproject")
 
             # Get reference diff
-            p = self.run_subpatch(["update", "dir/subproject", "-r", "v2"], stdout=DEVNULL, hack=True)
+            p = self.run_subpatch(["update", "-q", "dir/subproject", "-r", "v2"], hack=True)
             self.assertEqual(p.returncode, 0)
 
             diff_ok = git.diff(staged=True)
@@ -1186,7 +1186,7 @@ The following changes are recorded in the git index:
             git.commit("add subproject")
 
             # There are no changes in the subproject yet
-            self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
+            self.run_subpatch_ok(["update", "-q", "subproject"])
             self.assertEqual(git.diff_staged_files(), [])
 
         with cwd("subproject"):
@@ -1197,7 +1197,7 @@ The following changes are recorded in the git index:
 
         with cwd("superproject"):
             # Now there are changes in the subproject
-            self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
+            self.run_subpatch_ok(["update", "-q", "subproject"])
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/.subproject", b"A\tsubproject/b"])
 
@@ -1266,8 +1266,7 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
             git.commit("subproject: pop")
             self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
 
-            # TODO use "-q" argument
-            self.run_subpatch_ok(["update", "-r", "v2", "subproject"], stdout=PIPE)
+            self.run_subpatch_ok(["update", "-q", "-r", "v2", "subproject"])
             git.commit("subproject: update")
 
             self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")

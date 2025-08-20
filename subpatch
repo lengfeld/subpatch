@@ -1234,12 +1234,13 @@ def cmd_update(args, parser):
 
     # TODO deapply all patches
 
+    if not args.quiet:
+        print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
+              (sub_paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
+              end="")
+        sys.stdout.flush()
+
     # subpatch download
-    # TODO combine with cmd_add(). It also does the same!
-    print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
-          (sub_paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
-          end="")
-    sys.stdout.flush()
 
     # TODO if git, and revision is a commit or tag id, check that the new sha1/id
     # is the same as the already integrated (not yet saved to config). If they are
@@ -1268,7 +1269,8 @@ def cmd_update(args, parser):
 
     # TODO reapply patches: subpatch push --all
 
-    print(" Done.")
+    if not args.quiet:
+        print(" Done.")
 
     # TODO think about this case. Maybe add an argument to make this an error.
     if not git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
@@ -1276,12 +1278,14 @@ def cmd_update(args, parser):
         # Nothing has changed! And so there is nothing to commit!
         # NOTE: So also don't show the commands to commit and inspect the
         # changes.
-        print("Note: There are no changes in the subproject. Nothing to commit!")
+        if not args.quiet:
+            print("Note: There are no changes in the subproject. Nothing to commit!")
         return 0
 
-    # TODO Idea "subpatch status" should print the info/help text. The status
-    # command should be command to get help if a user is lost.
-    superx.helper.print_instructions_to_commit_and_inspect()
+    if not args.quiet:
+        # TODO Idea "subpatch status" should print the info/help text. The status
+        # command should be command to get help if a user is lost.
+        superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
 
@@ -2299,6 +2303,8 @@ def main_wrapped() -> int:
                                help="URL or path to the remote git repo")
     parser_update.add_argument("-r", "--revision", dest="revision", type=str,
                                help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
+    parser_update.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                               help="Suppress output to stdout")
 
     # TODO add argument <path> to print the status of only a single subproject
     parser_status = subparsers.add_parser("status",
