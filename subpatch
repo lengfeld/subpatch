@@ -1818,12 +1818,23 @@ def cmd_apply(args, parser):
         raise AppException(ErrorCode.INVALID_ARGUMENT,
                            "The patch filenames must be in order. The new patch filename '%s' does not sort latest!" % (patch_filename.decode("utf8"),))
 
-    # TODO use "--check" to validate patch content before applying and committing
+    # Test whether the patch applies to the working tree
+    git_args = ["git", "apply", "--check", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
+    p = Popen(git_args, stderr=DEVNULL)
+    p.communicate()
+    if p.returncode != 0:
+        if p.returncode == 1:
+            # TODO print infos how to test yourself and how to fix
+            raise AppException(ErrorCode.INVALID_ARGUMENT,
+                               "The patch '%s' does not apply to the working tree." % (patch_filename.decode("utf8"),))
+        else:
+            raise Exception("git failure")
+
     git_args = ["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
     p = Popen(git_args)
     p.communicate()
     if p.returncode != 0:
-        # TODO explain how to recover!
+        # TODO add a nicer error message
         raise Exception("git failure")
 
     # TODO write this code nicer!
@@ -1862,6 +1873,7 @@ def cmd_pop(args, parser):
     patch_filename = patches_dim.patches[patches_dim.applied_index]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
+    # TODO check whether patchs applys fully before applying
     p = Popen(["git", "apply", "--reverse", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:
@@ -1899,6 +1911,7 @@ def cmd_push(args, parser):
     patch_filename = patches_dim.patches[applied_index_new]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
+    # TODO check whether patchs applys fully before applying
     p = Popen(["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:

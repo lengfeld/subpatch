@@ -282,6 +282,24 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stderr,
                              b"Error: Invalid argument: The patch filenames must be in order. The new patch filename '0000-changing-hello.patch' does not sort latest!\n")
 
+    def test_apply_fails(self):
+        self.create_super_and_subproject_for_class()
+        with cwd("superproject"):
+            # Create a conflict for the patch
+            git = Git()
+            touch("subproject/hello", b"conflicting-content")
+            git.add("subproject/hello")
+            git.commit("changing hello")
+
+            with cwd("subproject"):
+                p = self.run_subpatch(["apply", "../../subproject/0001-changing-hello.patch"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"""\
+Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to the working tree.
+""")
+            self.assertEqual(git.diff_staged_files(), [])
+            self.assertFileContent("subproject/hello", b"conflicting-content")
+
     def test_pop_push_simple_case(self):
         self.create_super_and_subproject_for_class()
         with cwd("superproject"):
