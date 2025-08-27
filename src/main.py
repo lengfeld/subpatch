@@ -847,7 +847,8 @@ def cmd_add(args, parser):
         # TODO This is a invalid argument execption
         if not is_cwd_toplevel_directory(super_paths):
             raise AppException(ErrorCode.CUSTOM,
-                               "When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!")
+                               "When using relative repository URLs, you current work directory "
+                               "must be the toplevel folder of the superproject!")
     elif url_type == URLTypes.LOCAL_ABSOLUTE:
         # TODO add reason why it's not supported
         raise AppException(ErrorCode.CUSTOM, "Absolute local paths to a remote repository are not supported!")
@@ -1267,7 +1268,8 @@ def cmd_apply(args, parser):
 
     if patch_filename in patches_dim.patches:
         raise AppException(ErrorCode.INVALID_ARGUMENT,
-                           "The filename '%s' must be unique. There is already a patch with the same name!" % (patch_filename.decode("utf8"),))
+                           "The filename '%s' must be unique. There is already a patch with the same name!" %
+                           (patch_filename.decode("utf8"),))
 
     # TODO Add DDx that patch file names must be in order for now!
     # TODO make DD: wether to keep name/number of patch or to rename/renumber it
@@ -1277,7 +1279,8 @@ def cmd_apply(args, parser):
     if patches_new_sorted[-1] != patch_filename:
         # TODO add more info out to resolve the issue!
         raise AppException(ErrorCode.INVALID_ARGUMENT,
-                           "The patch filenames must be in order. The new patch filename '%s' does not sort latest!" % (patch_filename.decode("utf8"),))
+                           "The patch filenames must be in order. The new patch filename '%s' does not sort latest!" %
+                           (patch_filename.decode("utf8"),))
 
     # Test whether the patch applies to the working tree
     git_args = ["git", "apply", "--check", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]

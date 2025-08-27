@@ -139,7 +139,8 @@ def config_unparse2(config_lines: GeneratorConfigLine) -> bytes:
 # Requirement: section already exists
 # Optional arguments
 #  - "append": Whether to replace a existing key with the value or
-def config_set_key_value2(config_lines: GeneratorConfigLine, section_name: bytes, key: bytes, value: bytes, append: bool = False) -> GeneratorConfigLine:
+def config_set_key_value2(config_lines: GeneratorConfigLine, section_name: bytes, key: bytes, value: bytes,
+                          append: bool = False) -> GeneratorConfigLine:
     # TODO sanitize 'key' and 'value'
     # HACK: Use list to have a mutable value
     was_emit = [False]

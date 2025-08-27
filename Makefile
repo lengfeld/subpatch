@@ -36,6 +36,9 @@ lint: check-index-md
 .PHONY: lint
 lint:                 ### Runs linters (ruff, self-made) on the source code
 	ruff check src/*.py tests/*.py scripts/*.py
+	@# Running pycodestyle again, because ruff does not check everything
+	@# TODO also enable for tests
+	pycodestyle src/*.py scripts/*.py --max-line-length=140
 
 .PHONY: reformat
 reformat:

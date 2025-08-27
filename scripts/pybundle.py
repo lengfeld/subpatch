@@ -18,7 +18,7 @@ def do_file(filename):
         # Cannot use sys.stdout.write because that's a different internal
         # buffer than sys.stdout.buffer.write.
         sys.stdout.buffer.write(b"\n")
-        sys.stdout.buffer.write(b"# bundler: file " +  filename.encode("ascii") + b'\n')
+        sys.stdout.buffer.write(b"# bundler: file " + filename.encode("ascii") + b'\n')
         sys.stdout.buffer.write(b"\n")
 
         cut_on = False
@@ -33,7 +33,7 @@ def do_file(filename):
                 cut_on = not cut_on
             else:
                 if not cut_on:
-                    # cannot use print, beacuse print accepts only a string.  a
+                    # cannot use print, beacuse print accepts only a string. A
                     # byte object converted with repr before.
                     sys.stdout.buffer.write(line)
 
