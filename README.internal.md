@@ -81,6 +81,7 @@ version number.
 Build release
 
     # TODO Rework section for new pybundle.py script
+    # TODO Check for changes in pyproject.toml
     $ make dist
 
 Test installation locally

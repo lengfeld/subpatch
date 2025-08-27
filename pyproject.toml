@@ -23,8 +23,7 @@ name = "subpatch"
 dynamic = ["version"]
 dependencies = []
 
-# TODO set on correct python version
-requires-python = ">= 3.8"
+requires-python = ">= 3.11"
 authors = [
   {name = "Stefan Lengfeld", email = "stefan@lengfeld.xyz"}
 ]
@@ -36,16 +35,16 @@ description = "fearless multi repository management - stay relaxed!"
 readme = "README.md"
 
 # It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-only.html
-license = {text = "GPL-2.0-only"}
+license = "GPL-2.0-only"
+license-files = ["LICENSE_*"]
 
 # See https://pypi.org/classifiers/ for all classifiers
 classifiers = [
-    # TODO Update Status at some point
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Environment :: Console",
-    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [project.urls]

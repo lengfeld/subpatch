@@ -3,15 +3,15 @@
 
 all:
 
-subpatch: src/config.py src/git.py src/main.py
+subpatch.py: src/config.py src/git.py src/main.py
 	scripts/pybundle.py $^ > $@.tmp
 	mv $@.tmp $@
 	chmod +x $@
 
 .PHONY: tests
-tests:  subpatch     ### Runs the unit and integration tests
+tests:  subpatch.py    ### Runs the unit and integration tests
 	python3 -m unittest discover -s tests
-	TEST_BIN_PATH=$$PWD/subpatch tests/test_prog.py
+	TEST_BIN_PATH=$$PWD/subpatch.py tests/test_prog.py
 	@# Also test executing the scripts by hand
 	cd tests && for s in ./test_*.py; do $$s ; done
 
@@ -45,14 +45,13 @@ reformat:
 	isort src/*.py tests/*.py scripts/*.py
 
 .PHONY: dist
-dist:
+dist: subpatch.py
 	rm -rf dist
 	python3 -m build
 
 .PHONY: clean
 clean:
-	rm -rf dist
-	rm -f subpatch
+	rm -rf dist subpatch.py
 	# Clean left over temp directories. Can happen when the test scripts
 	# crash.
 	find tests/ -maxdepth 1 -type d -name "Test*" -exec rm -fr "{}" \;
