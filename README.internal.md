@@ -541,6 +541,10 @@ E.g. use
     lychee/lychee --base-url https://subpatch.net site/
 NOTE: The relative URLs to not work correctly with this command yet.
 
+Write a test to verify that '/// scripts' comment in final subpatch.py file is
+working. E.g. with "uv run subpatch.py"
+See https://github.com/lengfeld/subpatch/issues/2
+
 Add comment with short info and url into the toplevel config. This should be
 users of a project that never heard of subpatch, when they find the ".subpatch"
 file. (Suggestion by a user)

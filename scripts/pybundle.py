@@ -39,10 +39,17 @@ def do_file(filename):
 
 
 def main():
+    # TODO make this script more generic and move this, e.g. into a external
+    # file.
     sys.stdout.buffer.write(b"""\
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
+#
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
 """)
     for filename in sys.argv[1:]:
         do_file(filename)

@@ -1,9 +1,9 @@
 diff --git a/README.md b/website/index.md
-index 38a951c..58025a9 100644
+index 6b77d01..0ff5917 100644
 --- a/README.md
 +++ b/website/index.md
-@@ -33,7 +33,7 @@ instructions:
-     $ ./subpatch status
+@@ -35,7 +35,7 @@ instructions:
+ Currently subpatch requires python version 3.11 or later and git.
  
  If you are interested in finding out more, please see the text below and the
 -[website](https://subpatch.net).
@@ -11,7 +11,7 @@ index 38a951c..58025a9 100644
  It contains explanations, tutorials, how-to guides and references about
  subpatch.
  
-@@ -79,19 +79,19 @@ These tools manage multiple git repositories at once. Based on a manifest file
+@@ -81,19 +81,19 @@ These tools manage multiple git repositories at once. Based on a manifest file
  multiple git repositories are cloned from different upstream sources into your
  local checkout.
  

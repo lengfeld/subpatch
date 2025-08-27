@@ -32,6 +32,8 @@ instructions:
     $ git commit -m "adding googletest"
     $ ./subpatch status
 
+Currently subpatch requires python version 3.11 or later and git.
+
 If you are interested in finding out more, please see the text below and the
 [website](https://subpatch.net).
 It contains explanations, tutorials, how-to guides and references about
