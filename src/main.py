@@ -17,17 +17,18 @@ from subprocess import DEVNULL, Popen
 from typing import Any, List, Optional, Union
 
 # ----8<----
-from config import (split_with_ts_bytes, config_parse2, config_add_section2,
+from config import (LineDataHeader, LineDataKeyValue, LineType,
+                    config_add_section2, config_drop_key2,
+                    config_drop_section_if_empty, config_parse2,
                     config_set_key_value2, config_unparse2, empty_config_lines,
-                    LineType, LineDataHeader, LineDataKeyValue, config_drop_key2,
-                    config_drop_section_if_empty)
-from git import (git_add, get_name_from_repository_url,
-                 git_ls_files_untracked, git_diff_name_only, git_clone,
-                 git_get_sha1, git_diff_staged_shortstat,
-                 is_valid_revision, is_sha1, git_ls_remote_guess_ref,
-                 git_init_and_fetch, git_reset_hard, git_verify,
-                 git_get_object_type, ObjectType, git_diff_in_dir,
-                 git_ls_tree_in_dir)
+                    split_with_ts_bytes)
+from git import (ObjectType, get_name_from_repository_url, git_add, git_clone,
+                 git_diff_in_dir, git_diff_name_only,
+                 git_diff_staged_shortstat, git_get_object_type, git_get_sha1,
+                 git_init_and_fetch, git_ls_files_untracked,
+                 git_ls_remote_guess_ref, git_ls_tree_in_dir, git_reset_hard,
+                 git_verify, is_sha1, is_valid_revision)
+
 # ----8<----
 
 # See https://peps.python.org/pep-0440/ for details about the version format.

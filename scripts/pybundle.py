@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2016 Stefan Lengfeld
 
-import sys
 import re
+import sys
 
 p = re.compile(b"#\\s*-+8<-+")
 

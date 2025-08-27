@@ -4,16 +4,17 @@
 
 import sys
 import unittest
-from os.path import join, dirname, realpath
+from os.path import dirname, join, realpath
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from src.config import (split_with_ts, split_with_ts_bytes,
-                        config_parse2, config_drop_key2, ConfigLine,
-                        config_drop_section_if_empty, LineType, LineDataEmpty, LineDataHeader,
-                        LineDataKeyValue, config_add_section2, config_unparse2,
-                        config_set_key_value2)
+from src.config import (ConfigLine, LineDataEmpty, LineDataHeader,
+                        LineDataKeyValue, LineType, config_add_section2,
+                        config_drop_key2, config_drop_section_if_empty,
+                        config_parse2, config_set_key_value2, config_unparse2,
+                        split_with_ts, split_with_ts_bytes)
+
 
 class TestSplitWithTs(unittest.TestCase):
     def test_split_with_ts(self):

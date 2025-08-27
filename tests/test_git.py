@@ -5,20 +5,20 @@
 import os
 import sys
 import unittest
-from os.path import join, dirname, realpath
-from helpers import (Git, TestCaseHelper, TestCaseTempFolder, cwd, touch,
-                     create_git_repo_with_branches_and_tags, mkdir)
+from os.path import dirname, join, realpath
+
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
+                     create_git_repo_with_branches_and_tags, cwd, mkdir, touch)
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from src.git import (get_name_from_repository_url,
-                     git_diff_in_dir, git_diff_name_only,
-                     git_get_object_type, git_get_sha1, git_get_toplevel,
-                     git_init_and_fetch, git_ls_files_untracked,
-                     git_ls_remote, git_ls_remote_guess_ref,
-                     git_ls_tree_in_dir, git_verify, is_sha1,
-                     is_valid_revision, parse_sha1_names, parse_z, ObjectType)
+from src.git import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
+                     git_diff_name_only, git_get_object_type, git_get_sha1,
+                     git_get_toplevel, git_init_and_fetch,
+                     git_ls_files_untracked, git_ls_remote,
+                     git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
+                     is_sha1, is_valid_revision, parse_sha1_names, parse_z)
 
 
 class TestGit(TestCaseTempFolder):

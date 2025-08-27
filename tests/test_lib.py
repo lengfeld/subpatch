@@ -7,17 +7,15 @@ import sys
 import unittest
 from os.path import abspath, dirname, join, realpath
 
-from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
-                     cwd, touch)
+from helpers import Git, TestCaseHelper, TestCaseTempFolder, cwd, touch
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
 from main import (AppException, ErrorCode, FindSuperprojectData, SCMType,
-                  URLTypes, check_superproject_data, gen_super_paths,
-                  gen_sub_paths_from_cwd_and_relpath,
-                  gen_sub_paths_from_relpath, config_add_subproject,
-                  find_superproject, get_url_type)
+                  URLTypes, check_superproject_data, config_add_subproject,
+                  find_superproject, gen_sub_paths_from_cwd_and_relpath,
+                  gen_sub_paths_from_relpath, gen_super_paths, get_url_type)
 
 
 class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
