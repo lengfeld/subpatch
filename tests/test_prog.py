@@ -181,7 +181,8 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                 p = self.run_subpatch(["apply", "../../test.patch"], stderr=PIPE)
                 self.assertEqual(p.returncode, 4)
                 self.assertEqual(p.stderr,
-                                 b"Error: Invalid argument: Current work directory must be the toplevel directory of the subproject for now!\n")
+                                 b"Error: Invalid argument: Current work directory must be the toplevel "
+                                 b"directory of the subproject for now!\n")
 
     def test_apply_simple_case(self):
         self.create_super_and_subproject_for_class()
@@ -275,7 +276,8 @@ The following changes are recorded in the git index:
             p = self.run_subpatch(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
-                             b"Error: Invalid argument: The filename '0001-changing-hello.patch' must be unique. There is already a patch with the same name!\n")
+                             b"Error: Invalid argument: The filename '0001-changing-hello.patch' must be unique. "
+                             b"There is already a patch with the same name!\n")
 
             # Second test that the patch filename is in order (=higher)
             # -> Rename the second patch file to provoke the error
@@ -284,7 +286,8 @@ The following changes are recorded in the git index:
             p = self.run_subpatch(["apply", "-q", "../../subproject/0000-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
-                             b"Error: Invalid argument: The patch filenames must be in order. The new patch filename '0000-changing-hello.patch' does not sort latest!\n")
+                             b"Error: Invalid argument: The patch filenames must be in order. The new patch "
+                             b"filename '0000-changing-hello.patch' does not sort latest!\n")
 
     def test_apply_fails(self):
         self.create_super_and_subproject_for_class()
@@ -631,7 +634,8 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                 # NOTE: This also tests that "/.git/" is not used as the local
                 # directory name.
                 p = self.run_subpatch_ok(["add", "http://localhost:7000/subproject/.git/"], stdout=PIPE)
-                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' at revision 'HEAD'... Done",
+                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' "
+                              b"at revision 'HEAD'... Done",
                               p.stdout)
                 self.assertTrue(os.path.isdir("subproject"))
 
@@ -759,7 +763,8 @@ The following changes are recorded in the git index:
         with cwd("superproject/sub", create=True):
             p = self.run_subpatch(["add", "../../subproject"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: When using relative repository URLs, you current work directory must be the toplevel folder of the superproject!\n",
+            self.assertEqual(b"Error: When using relative repository URLs, you current work directory must "
+                             b"be the toplevel folder of the superproject!\n",
                              p.stderr)
 
     def test_with_invalid_revision(self):
@@ -785,13 +790,15 @@ The following changes are recorded in the git index:
             invalid_object_id = b"0" * 40
             p = self.run_subpatch(["add", "-q", "../subproject", "-r", invalid_object_id], stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' does not point to a valid object!\n",
+            self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' "
+                             b"does not point to a valid object!\n",
                              p.stderr)
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             p = self.run_subpatch(["add", "-q", "../subproject", "-r", object_id_file], stderr=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' does not point to a commit or tag object!\n",
+            self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' "
+                             b"does not point to a commit or tag object!\n",
                              p.stderr)
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 

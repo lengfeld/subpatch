@@ -46,8 +46,6 @@ class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
 """)
 
 
-
-
 class TestFindSuperproject(TestCaseTempFolder):
     def test_search_ends_on_filesystem_boundary(self):
         # NOTE: Assumption that "/run/" is a tmpfs and "/" is not!
@@ -166,6 +164,7 @@ class TestFuncs(unittest.TestCase):
 
         self.assertRaises(NotImplementedError, get_url_type, "rsync://xx")
         self.assertRaises(ValueError, get_url_type, "")
+
 
 class TestGenSuperPaths(TestCaseTempFolder):
     def test_multiple_level_of_subdirectories(self):
