@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 from os.path import abspath, join
 from subprocess import DEVNULL, Popen
-from typing import Any, List, Optional, Union
+from typing import Any
 
 # ----8<----
 from config import (LineDataHeader, LineDataKeyValue, LineType,
@@ -62,13 +62,13 @@ def is_section_name(b):
 @dataclass
 class Subproject:
     path: str
-    url: Optional[str] = None
-    revision: Optional[str] = None
+    url: str | None = None
+    revision: str | None = None
 
 
 @dataclass(frozen=True)
 class Config:
-    subprojects: List[bytes]
+    subprojects: list[bytes]
 
 
 def parse_config(config_lines) -> Config:
@@ -254,7 +254,7 @@ def find_superproject() -> FindSuperprojectData:
 class CheckedSuperprojectData:
     super_path: bytes
     configured: bool
-    scm_type: Optional[SCMType]
+    scm_type: SCMType | None
 
 
 # There can be four cases
@@ -266,7 +266,7 @@ class CheckedSuperprojectData:
 # For the last cases there are two sub-cases:
 #  - super_path matches scm_path
 #  - both paths do not match
-def check_superproject_data(data: FindSuperprojectData) -> Optional[CheckedSuperprojectData]:
+def check_superproject_data(data: FindSuperprojectData) -> CheckedSuperprojectData | None:
     if data.scm_type is not None:
         # There is a SCM tool
         if data.super_path is None:
@@ -348,12 +348,12 @@ class SuperHelperGit:
 @dataclass(frozen=True)
 class Superproject:
     path: bytes
-    helper: Union[SuperHelperGit, SuperHelperPlain]
+    helper: SuperHelperGit | SuperHelperPlain
     configured: bool
     typex: SuperprojectType   # TODO same information is in 'helper'. Refactor!
 
 
-def check_and_get_superproject_from_checked_data(checked_data: Optional[CheckedSuperprojectData]) -> Superproject:
+def check_and_get_superproject_from_checked_data(checked_data: CheckedSuperprojectData | None) -> Superproject:
     # TODO maybe move outside of this function
     if checked_data is None:
         # And there is no subpatch config file and no SCM
@@ -401,17 +401,17 @@ def check_and_get_superproject_from_checked_data(checked_data: Optional[CheckedS
 @dataclass(frozen=True)
 class DownloadConfig:
     url: Any
-    revision: Optional[Any] = None
+    revision: Any | None = None
 
 
 @dataclass(frozen=True)
 class CloneConfig:
     full_clone: bool
-    object_id: Optional[str] = None
-    ref: Optional[bytes] = None
+    object_id: str | None = None
+    ref: bytes | None = None
 
 
-def git_resolve_to_clone_config(url: str, revision: Optional[str]) -> CloneConfig:
+def git_resolve_to_clone_config(url: str, revision: str | None) -> CloneConfig:
     # Some heuristics to sort out branch, commit/tag id or tag
     if revision is not None:
 
@@ -442,7 +442,7 @@ def git_resolve_to_clone_config(url: str, revision: Optional[str]) -> CloneConfi
 # TODO finalize of naming convention for helper code for subprojects and
 # superprojects.
 class CacheHelperGit:
-    def get_revision_as_str(self, revision: Optional[str]) -> str:
+    def get_revision_as_str(self, revision: str | None) -> str:
         # The revision is of type Optional<str>. It's either None or a str.
         # Convert to a printable string for stdout
         if revision is None:
@@ -538,7 +538,7 @@ def ensure_superproject_is_git(superx):
 
 # TODO consolidate with unpack from cmd_add
 # TODO consolide function arguments
-def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
@@ -770,7 +770,7 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
     # HACK for now
     # Check assumptions: We have just created the files ourselves
     assert os.path.exists(sub_paths.cwd_to_sub_relpath)
@@ -805,7 +805,7 @@ def cmd_add(args, parser):
         # TODO think about relative paths, whether the must be relative to the
         # remote origin url! Repo and git-submodule do that
 
-    revision: Optional[str] = args.revision
+    revision: str | None = args.revision
     url = args.url
 
     if revision is not None:
@@ -1063,7 +1063,7 @@ def gen_super_paths(super_abspath: bytes) -> SuperPaths:
     return SuperPaths(super_abspath, config_abspath, super_to_cwd_relpath)
 
 
-def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths) -> Optional[bytes]:
+def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths) -> bytes | None:
     for relpath in config.subprojects:
         if super_paths.super_to_cwd_relpath.startswith(relpath):
             return relpath
@@ -1136,7 +1136,7 @@ def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes,
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: Optional[str], object_id: bytes) -> None:
+def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | None, object_id: bytes) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -1403,10 +1403,10 @@ def cmd_push(args, parser):
 @dataclass(frozen=True)
 class Metadata:
     # TODO introduce seperation between sections (worktree, upstream, patches)
-    url: Optional[bytes]
-    revision: Optional[bytes]
-    object_id: Optional[bytes]
-    patches_applied_index: Optional[bytes]
+    url: bytes | None
+    revision: bytes | None
+    object_id: bytes | None
+    patches_applied_index: bytes | None
 
 
 def read_metadata(path: bytes) -> Metadata:
@@ -1440,7 +1440,7 @@ def read_metadata(path: bytes) -> Metadata:
 # dimension of a subproject.
 @dataclass(frozen=True)
 class PatchesDim:
-    patches: List[bytes]
+    patches: list[bytes]
     # Range: -1 <= applied_index < len(patches)
     # - -1 := no applied patch
     # -  0 := first patch applied, ...

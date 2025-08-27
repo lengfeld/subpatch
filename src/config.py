@@ -1,6 +1,7 @@
+from collections.abc import Generator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Generator, Optional, TypeAlias, Union
+from typing import TypeAlias
 
 
 # Split with terminator semantics
@@ -46,7 +47,7 @@ class LineDataKeyValue:
 @dataclass(frozen=True)
 class LineDataHeader:
     section_name: bytes
-    subsection_name: Optional[bytes]
+    subsection_name: bytes | None
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ class ConfigLine:
     # union approach is just a work around.
     # TODO hmm, maybe I should use "instanceof" instead?
     line_type: LineType
-    line_data: Union[LineDataKeyValue, LineDataHeader, LineDataEmpty]
+    line_data: LineDataKeyValue | LineDataHeader | LineDataEmpty
 
 
 GeneratorConfigLine: TypeAlias = Generator[ConfigLine, None, None]
@@ -83,7 +84,7 @@ GeneratorConfigLine: TypeAlias = Generator[ConfigLine, None, None]
 #   Only the last line may not have a trailing "\n" character.
 # TODO add errors on invalid syntax
 def config_parse2(lines: Generator[bytes, None, None]) -> GeneratorConfigLine:
-    def get_first(b: bytes) -> Optional[int]:
+    def get_first(b: bytes) -> int | None:
         if len(b) == 0:
             return None
         return b[0]

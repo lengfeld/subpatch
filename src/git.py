@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Dict, Optional
 from subprocess import PIPE
 # ----8<----
 import os
@@ -116,7 +115,7 @@ def is_valid_revision(revision: str) -> bool:
 
 # TODO add example of input
 # TODO add more tests, e.g. with syntax errors or duplicated refs.
-def parse_sha1_names(lines: bytes, sep=b' ') -> Dict[bytes, bytes]:
+def parse_sha1_names(lines: bytes, sep=b' ') -> dict[bytes, bytes]:
     # remove the last new line character
     # Should only be one character
     lines = lines.rstrip(b'\n')
@@ -152,7 +151,7 @@ def git_get_sha1(rev):
 
 # git_ls_remote ::  string(url) -> dict<ref_name, sha1>
 # Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
-def git_ls_remote(url: str) -> Dict[bytes, bytes]:
+def git_ls_remote(url: str) -> dict[bytes, bytes]:
     # NOTE Subpress stderr output of 'ls-remote'. In case of a fetch failure
     # stuff is written to stderr.
 
@@ -176,7 +175,7 @@ def git_ls_remote(url: str) -> Dict[bytes, bytes]:
 # Returns
 #  - None if ref could not be resolved
 # TODO also return the matched object
-def git_ls_remote_guess_ref(url: str, ref_str: str) -> Optional[bytes]:
+def git_ls_remote_guess_ref(url: str, ref_str: str) -> bytes | None:
     # TODO "git ls-remote" also allows to query a single ref or a pattern of
     # refs!
     refs_sha1 = git_ls_remote(url)
