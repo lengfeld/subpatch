@@ -1790,7 +1790,7 @@ def checks_for_cmds_apply_pop_push(args) -> tuple[Any, SuperPaths, SubPaths]:
 # TODO look at quilt. Mabye "apply" is the wrong term. But it would match "git apply"
 def cmd_apply(args, parser):
     if args.path is None:
-        raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "Must give a path to a patch file")
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Must give a path to a patch file")
 
     if not os.path.isfile(args.path):
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
