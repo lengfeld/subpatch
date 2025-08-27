@@ -3,9 +3,15 @@
 
 all:
 
+subpatch: src/config.py src/git.py src/main.py
+	scripts/pybundle.py $^ > $@.tmp
+	mv $@.tmp $@
+	chmod +x $@
+
 .PHONY: tests
-tests:       ### Runs the unit and integration tests
+tests:  subpatch     ### Runs the unit and integration tests
 	python3 -m unittest discover -s tests
+	TEST_BIN_PATH=$$PWD/subpatch tests/test_prog.py
 	@# Also test executing the scripts by hand
 	cd tests && for s in ./test_*.py; do $$s ; done
 
@@ -23,19 +29,17 @@ check-index-md:
 # For now just hook this up to the "lint" target.
 lint: check-index-md
 
-
 # for README.md, TODO.md and CHANGELOG.md
 %.html: %.md
 	pandoc --toc -s $< > $@
 
-
 .PHONY: lint
 lint:                 ### Runs linters (ruff, self-made) on the source code
-	ruff check *.py tests/*.py
+	ruff check src/*.py tests/*.py scripts/*.py
 
 .PHONY: reformat
 reformat:
-	isort *.py tests/*.py
+	isort src/*.py tests/*.py scripts/*.py
 
 .PHONY: dist
 dist:
@@ -45,10 +49,10 @@ dist:
 .PHONY: clean
 clean:
 	rm -rf dist
+	rm -f subpatch
 	# Clean left over temp directories. Can happen when the test scripts
 	# crash.
 	find tests/ -maxdepth 1 -type d -name "Test*" -exec rm -fr "{}" \;
-
 
 # see http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help

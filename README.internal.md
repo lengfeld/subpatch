@@ -37,7 +37,9 @@ Note: Use `make lint` to also check the python code in the folder `tests/`.
 
 The codebase also starts to use type annotations. Check these with
 
-    $ mypy subpatch.py
+    $ mypy src/*.py
+
+But it's not yet type error free.
 
 The codebase uses unit and integration tests extensively. To execute a single
 tests
@@ -78,6 +80,7 @@ version number.
 
 Build release
 
+    # TODO Rework section for new pybundle.py script
     $ make dist
 
 Test installation locally

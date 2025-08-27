@@ -15,13 +15,15 @@ from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
 from localwebserver import FileRequestHandler, LocalWebserver
 
 path = realpath(__file__)
-SUBPATCH_PATH = join(dirname(path), "..", "subpatch")
 
 # TODO This is ugly. The test for the command line tool "subpatch" should not
 # need to include Subpatch itself. The git tooling should be moved into a
 # seperated file.
 sys.path.append(join(dirname(path), "../"))
-from subpatch import ObjectType, git_get_object_type, git_ls_files_untracked
+from src.git import ObjectType, git_get_object_type, git_ls_files_untracked
+
+# TODO make this more generic and an API for also testing subpatch in the PATH
+SUBPATCH_PATH = os.environ.get("TEST_BIN_PATH", join(dirname(path), "../src/main.py"))
 
 
 # TODO Move to helper. Find better name
@@ -50,6 +52,7 @@ class TestSubpatch:
         # TODO introduce result tuple/class
         if os.environ.get("DEBUG", "0") == "1":
             if stdout_output is not None:
+                # TODO make this more generic and an API for also testing subpatch in the PATH
                 sys.stdout.flush()
                 print("stdout:", stdout_output.decode("utf8"), file=sys.stderr)
                 sys.stderr.flush()
@@ -116,7 +119,8 @@ license:   GPL-2.0-only
 class TestHelp(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_help(self):
         p = self.run_subpatch_ok(["help"], stdout=PIPE)
-        self.assertTrue(p.stdout.startswith(b"usage: subpatch"))
+        self.assertTrue(p.stdout.startswith(b"usage: "))
+        # TODO add more checks for usage output
         # TODO compare the outout with "--help". Should be the same.
 
 
