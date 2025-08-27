@@ -540,3 +540,110 @@ NOTE: The relative URLs to not work correctly with this command yet.
 Add comment with short info and url into the toplevel config. This should be
 users of a project that never heard of subpatch, when they find the ".subpatch"
 file. (Suggestion by a user)
+
+Clearifiy wording
+"pop" and "push": for patches
+
+Add to table
+* whether a command uses the superproject data or not!
+* whether a command uses the CacheHelper code
+* whether a command uses the SuperHelper Code
+
+Fix mkdocs deploy error. burger menu on remote did not work!
+
+    $ git diff a7e9a58..5b1b5b8 --name-status
+    M       404.html
+    M       css/theme.css
+    M       exp/benefits/index.html
+    M       exp/comparison/index.html
+    M       exp/design/index.html
+    M       exp/faq/index.html
+    M       exp/intro/index.html
+    M       exp/learnings/index.html
+    M       exp/requirements/index.html
+    D       fonts/Lato-Bold.ttf
+    D       fonts/Lato-Bold.woff2
+    D       fonts/Lato-BoldItalic.ttf
+    D       fonts/Lato-BoldItalic.woff2
+    D       fonts/Lato-Italic.ttf
+    D       fonts/Lato-Italic.woff2
+    D       fonts/Lato-Regular.ttf
+    D       fonts/Lato-Regular.woff2
+    D       fonts/RobotoSlab-Bold.woff2
+    D       fonts/RobotoSlab-Regular.woff2
+    D       fonts/fontawesome-webfont.eot
+    D       fonts/fontawesome-webfont.svg
+    D       fonts/fontawesome-webfont.ttf
+    D       fonts/fontawesome-webfont.woff
+    D       fonts/fontawesome-webfont.woff2
+    M       howto/yocto/index.html
+    M       imprint/index.html
+    M       index.html
+    A       index.rst.away
+    A       js/html5shiv.min.js
+    D       js/jquery-2.1.1.min.js
+    A       js/jquery-3.6.0.min.js
+    D       js/modernizr-2.8.3.min.js
+    M       js/theme.js
+    A       js/theme_extra.js
+    A       list.sh
+    A       mkdocs.list
+    M       ref/command-line/index.html
+    R079    exp/impl/index.html     ref/config-format/index.html
+    M       ref/fosdem25/index.html
+    M       ref/froscon25/index.html
+    A       ref/glossary.md.todo
+    M       ref/glossary/index.html
+    M       ref/releases/index.html
+    M       search.html
+    M       search/lunr.js
+    M       search/search_index.json
+    M       sitemap.xml
+    M       sitemap.xml.gz
+    A       sphinx.list
+    M       tut/applying-patches/index.html
+    M       tut/basic-usage/index.html
+    M       tut/installation/index.html
+
+Add envirnoment variable and/or argument to select superproject type. E.g. to
+select plain even inside a git repo.
+
+NOTE: "subptach unpack" is really a unpack step. with "subpatch download" it's not expected to
+have a working tree on disk in the cache directory. Currently subhelper git does it so. But
+it's not expected!
+
+The cache is "persistent=yes" by default. So "supatch status" should show it
+without a line "persistent=yes" if it's there. In a "persistent=no" case and
+every goes right, it's delted anyways.  and no "subpatch status" can be exected
+in between.
+
+Note: about concurrency. Supatch is no thread-safe. But maybe we can make
+subpatch per subproject thread-safe/concurrent.  E.g. unpack,download patch
+multi subprojects at once.
+
+Feedback from the unconference session at OSSE 2025:
+* work on git-submodules on upstream has stalled
+* can it be integrated into git
+* Idea of sem-ver for git-submodules or subpatch.
+* disk usage of superproject is an issue. E.g. when you have a upstream project
+  that is integrated into multiple superprojects of your own.
+  -> Monorepo is not a solution here, because you want to versionized the
+     superprojects independently
+  My thoughts: make decision diagram (and only care if the upstream project is bigger)
+  My thoughts: Make a distinction between your own projects and external/non-controlled projects
+       -> make the distinctin between good stable API and not.
+* Answer the question: Why do not integrated the subprojects pages
+* Note: Why I don't use the terms "parent" and "child" for super and subprojcets
+  -> it's already overloaded by git commits. But htere it's also anchestor
+  -> Just stick to one convetion. And I already decided.
+* My thoughts (afterwards): Have a good git-submodules to subpatch migration guide!
+  Also raised on FrOSCon.
+* Have you looked at jj as a version control system
+* Looking at umpf from pengutronix
+   using a octo-merge, but just with the tree-ids from kkk
+* Question from the audience, why don't use separate commits and a merge commit for
+  maintaining the patch files of a subprojects.
+* My thoughts:
+
+Looking at west talk:
+   https://osseu2025.sched.com/event/25VrA/demystifying-west-carles-cufi-nordic-semiconductor
