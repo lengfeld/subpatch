@@ -24,7 +24,8 @@ __version__ = "0.1a6"
 __LICENSE__ = "GPL-2.0-only"
 
 
-# TODO refactor. copyied from helpers
+# TODO Use https://docs.python.org/3/library/contextlib.html#contextlib.chdir
+# TODO copied from helpers. Unify!
 @contextlib.contextmanager
 def cwd(path, create=False):
     if create:
