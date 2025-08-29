@@ -26,7 +26,6 @@ class SuperprojectType(Enum):
 
 
 # NOTE: In both cases it's the path to the toplevel directory!
-# TODO Use Optional[T]
 @dataclass
 class FindSuperprojectData:
     super_path: bytes | None = None
@@ -34,9 +33,8 @@ class FindSuperprojectData:
     scm_path: bytes | None = None
 
 
-# Based on the current work directory search for a subpatch project
-# and SCM system.
-# Returns: FindSuperprojectData
+# Based on the current work directory search for a ".subpatch" file and SCM
+# system.
 #
 # TODO support svn, mercurial and others in the future
 # TODO thinking about symlinks!
@@ -154,6 +152,7 @@ class SuperHelperPlain:
         raise NotImplementedError("TODO think about this case!")
 
 
+# TODO think about the data structure every super_helper method gets!
 class SuperHelperGit:
     # Add the file in 'path' to the index
     # TODO not all version control systems have the notion of a index!
@@ -169,7 +168,7 @@ class SuperHelperGit:
         print("- If you want to keep the changes, commit them with `git commit`.")
         print("- If you want to revert the changes, execute `git reset --merge`.")
 
-    # TODO think about the data structure every super_helper method gets!
+    # TODO move this code to "main.py" it's generic for all SCMs
     def configure(self, scm_path: bytes) -> None:
         config_abspath = join(scm_path, b".subpatch")
         assert not os.path.exists(config_abspath)
