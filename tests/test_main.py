@@ -13,7 +13,6 @@ from helpers import (TestCaseHelper, TestCaseTempFolder, create_and_chdir,
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
-# TODO rename "test_lib.py" to "test_main.py"
 from main import (config_add_subproject, gen_sub_paths_from_cwd_and_relpath,
                   gen_sub_paths_from_relpath, gen_super_paths)
 
