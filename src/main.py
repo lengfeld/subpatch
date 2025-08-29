@@ -573,8 +573,6 @@ def cmd_configure(args, parser):
         # TODO Use check_and_get_superproject_from_checked_data to get rid of
         # SCMType.GIT here in main.py
         if checked_data.scm_type == SCMType.GIT:
-            # TODO for other commands, subpatch checks whether there are
-            # already staged files and errors out/warns!
             # TODO see above. Use other function to switch between super implementations.
             super_helper = SuperHelperGit()
 
