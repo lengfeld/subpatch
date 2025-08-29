@@ -94,12 +94,12 @@ def read_config(path: bytes) -> Config:
 #  ... -> then should should be "parse_config_parts_to_subprojects
 
 
-def nocommand(args, parser):
+def nocommand(args, parser) -> int:
     parser.print_help(file=sys.stderr)
     return 2  # TODO why 2?
 
 
-def cmd_help(args, parser):
+def cmd_help(args, parser) -> int:
     parser.print_help()
     return 0
 
@@ -227,12 +227,12 @@ class SuperprojectType(Enum):
 
 
 class SuperHelperPlain:
-    def add(self, paths):
+    def add(self, paths: list[bytes]) -> None:
         # Nothing to do here. There is no SCM system. So the code can also not add
         # files to the SCM
         pass
 
-    def print_instructions_to_commit_and_inspect(self):
+    def print_instructions_to_commit_and_inspect(self) -> None:
         raise NotImplementedError("TODO think about this case!")
 
     def configure(self, scm_path: bytes) -> None:
@@ -242,10 +242,10 @@ class SuperHelperPlain:
 class SuperHelperGit:
     # Add the file in 'path' to the index
     # TODO not all version control systems have the notion of a index!
-    def add(self, paths):
+    def add(self, paths: list[bytes]) -> None:
         git_add(paths)
 
-    def print_instructions_to_commit_and_inspect(self):
+    def print_instructions_to_commit_and_inspect(self) -> None:
         # TODO handle the case, e.g. after "push" that there are _no_ changes in the index!
         print("The following changes are recorded in the git index:")
         shortstat = git_diff_staged_shortstat()
@@ -266,7 +266,7 @@ class SuperHelperGit:
         with chdir(scm_path):
             git_add([b".subpatch"])
 
-    def print_configure_success(self):
+    def print_configure_success(self) -> None:
         print("The file .subpatch was created in the toplevel directory.")
         print("Now use 'git commit' to finalized your change.")
         # TODO maybe use the same help text as "add" and "update".
@@ -635,6 +635,7 @@ def cmd_add(args, parser):
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_git(superx)
+    super_helper = SuperHelperGit()
 
     super_paths = gen_super_paths(superx.path)
 
@@ -695,13 +696,11 @@ def cmd_add(args, parser):
     with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(b"")
     with chdir(sub_paths.subproject_abspath):
-        # TODO use helper!
-        git_add([b".subproject"])
+        super_helper.add([b".subproject"])
 
     config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
     with chdir(super_paths.super_abspath):
-        # TODO use helper!
-        git_add([b".subpatch"])
+        super_helper.add([b".subpatch"])
 
     # subpatch cache init --git
     cache_helper = CacheHelperGit()
@@ -751,12 +750,12 @@ def cmd_add(args, parser):
     return 0
 
 
-def show_version(args):
+def show_version(args) -> int:
     print("subpatch version %s" % (__version__,))
     return 0
 
 
-def show_info(args):
+def show_info(args) -> int:
     print("homepage:  https://subpatch.net")
     print("git repo:  https://github.com/lengfeld/subpatch")
     print("license:   %s" % (__LICENSE__,))
