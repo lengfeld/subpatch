@@ -17,9 +17,6 @@ from localwebserver import FileRequestHandler, LocalWebserver
 
 path = realpath(__file__)
 
-# TODO This is ugly. The test for the command line tool "subpatch" should not
-# need to include Subpatch itself. The git tooling should be moved into a
-# seperated file.
 sys.path.append(join(dirname(path), "../"))
 from src.git import ObjectType, git_get_object_type, git_ls_files_untracked
 
