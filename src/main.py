@@ -425,7 +425,6 @@ def cmd_add(args, parser):
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_git(superx)
-    super_helper = SuperHelperGit()
 
     super_paths = gen_super_paths(superx.path)
 
@@ -486,11 +485,11 @@ def cmd_add(args, parser):
     with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(b"")
     with chdir(sub_paths.subproject_abspath):
-        super_helper.add([b".subproject"])
+        superx.helper.add([b".subproject"])
 
     config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
     with chdir(super_paths.super_abspath):
-        super_helper.add([b".subpatch"])
+        superx.helper.add([b".subpatch"])
 
     # subpatch cache init --git
     cache_helper = CacheHelperGit()
@@ -571,7 +570,8 @@ def cmd_configure(args, parser):
     else:
         # There is no ".subpatch" file (=the superproject is not configured)
 
-        # TODO check_and_get_superproject_from_checked_data
+        # TODO Use check_and_get_superproject_from_checked_data to get rid of
+        # SCMType.GIT here in main.py
         if checked_data.scm_type == SCMType.GIT:
             # TODO for other commands, subpatch checks whether there are
             # already staged files and errors out/warns!
