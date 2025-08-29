@@ -46,13 +46,6 @@ def is_section_name(b):
     raise NotImplementedError()
 
 
-@dataclass
-class Subproject:
-    path: str
-    url: str | None = None
-    revision: str | None = None
-
-
 @dataclass(frozen=True)
 class Config:
     subprojects: list[bytes]
