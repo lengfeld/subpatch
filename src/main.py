@@ -5,14 +5,12 @@
 import argparse
 import os
 import shutil
-import stat
 import subprocess
 import sys
 import time
 from contextlib import chdir
 from dataclasses import dataclass
-from enum import Enum
-from os.path import abspath, join
+from os.path import join
 from subprocess import DEVNULL, Popen
 from typing import Any
 
@@ -25,10 +23,13 @@ from config import (LineDataHeader, LineDataKeyValue, LineType,
                     split_with_ts_bytes)
 # TODO main.py should not depend on any git command. They all should be in cache.py
 # or in a new super.py module
-from git import (get_name_from_repository_url, git_add, git_diff_in_dir,
-                 git_diff_name_only, git_diff_staged_shortstat,
-                 git_ls_files_untracked, git_ls_tree_in_dir, is_valid_revision)
+from git import (get_name_from_repository_url, git_diff_in_dir,
+                 git_diff_name_only, git_ls_files_untracked,
+                 git_ls_tree_in_dir, is_valid_revision)
 from util import AppException, ErrorCode, URLTypes, get_url_type
+from super import (find_superproject, SCMType, check_superproject_data,
+                   check_and_get_superproject_from_checked_data, SuperprojectType,
+                   SuperHelperGit)
 
 # ----8<----
 
@@ -95,210 +96,6 @@ def nocommand(args, parser) -> int:
 def cmd_help(args, parser) -> int:
     parser.print_help()
     return 0
-
-
-class SCMType(Enum):
-    GIT = b"git"
-
-
-# NOTE: In both cases it's the path to the toplevel directory!
-# TODO Use Optional[T]
-@dataclass
-class FindSuperprojectData:
-    super_path: bytes | None = None
-    scm_type: SCMType | None = None
-    scm_path: bytes | None = None
-
-
-# Based on the current work directory search for a subpatch project
-# and SCM system.
-# Returns: FindSuperprojectData
-#
-# TODO support svn, mercurial and others in the future
-# TODO thinking about symlinks!
-def find_superproject() -> FindSuperprojectData:
-    abs_cwd = abspath(os.getcwdb())
-
-    # TODO refactory this self-made and hacky approach of a directory walk
-    # The first element is empty, because of the absolute path.  But using a
-    # empty element in "join" does not work. It's the reverse operation!
-    assert abs_cwd[0] == ord("/")
-    abs_cwd_parts = os.path.normpath(abs_cwd).split(b"/")
-    assert abs_cwd_parts[0] == b""
-    abs_cwd_parts.pop(0)
-
-    statinfo = os.stat(abs_cwd)
-    assert stat.S_ISDIR(statinfo.st_mode)
-
-    cwd_st_dev = statinfo.st_dev
-
-    data = FindSuperprojectData()
-
-    while True:
-        abs_cur_path = join(b"/", *abs_cwd_parts)
-
-        statinfo = os.stat(abs_cur_path)
-        if statinfo.st_dev != cwd_st_dev:
-            # The directory walk leaves the current filesystem. This is a stop
-            # condition for now.
-            # TODO Maybe implement 'GIT_DISCOVERY_ACROSS_FILESYSTEM'
-            # See https://git-scm.com/docs/git.html#Documentation/git.txt-codeGITDISCOVERYACROSSFILESYSTEMcode
-            break
-
-        if data.super_path is None:
-            if os.path.exists(join(abs_cur_path, b".subpatch")):
-                # Configuration file found
-                data.super_path = abs_cur_path
-
-        if data.scm_type is None:
-            # NOTE Simple implementation. Check whether there is a ".git"
-            # folder next to it.
-            # Does not work for worktrees! ... really? TODO check it!
-            if os.path.exists(join(abs_cur_path, b".git")):
-                data.scm_type = SCMType.GIT
-                data.scm_path = abs_cur_path
-
-        if data.super_path is not None and data.scm_type is not None:
-            # If both is already found, stop the directory walk
-            break
-
-        if len(abs_cwd_parts) == 0:
-            break
-
-        abs_cwd_parts.pop()
-
-    return data
-
-
-# TODO There is still reduance in the structure!
-@dataclass(frozen=True)
-class CheckedSuperprojectData:
-    super_path: bytes
-    configured: bool
-    scm_type: SCMType | None
-
-
-# There can be four cases
-#  - no ".subpatch" config and no SCM
-#     -> function returns None
-#  - ".subpatch" config and no SCM
-#  - no ".subpach" config and SCM
-#  - ".subpach" config and SCM
-# For the last cases there are two sub-cases:
-#  - super_path matches scm_path
-#  - both paths do not match
-def check_superproject_data(data: FindSuperprojectData) -> CheckedSuperprojectData | None:
-    if data.scm_type is not None:
-        # There is a SCM tool
-        if data.super_path is None:
-            # And there is no subpatch config file
-            assert data.scm_path is not None
-            return CheckedSuperprojectData(data.scm_path, False, data.scm_type)
-        else:
-            # And there is a subpatch config file!
-
-            # Check if the paths match up:
-            if data.super_path != data.scm_path:
-                # TODO add text here!
-                # TODO rename "root" to "toplevel" to be consistent.
-                raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subpatch config file is not at the root of the SCM repository!")
-
-            return CheckedSuperprojectData(data.super_path, True, data.scm_type)
-    else:
-        # Current working directory is not in a SCM system
-        if data.super_path is None:
-            # And there is no subpatch config file
-            return None
-        else:
-            # And there is a subpatch config file
-            return CheckedSuperprojectData(data.super_path, True, data.scm_type)
-
-
-class SuperprojectType(Enum):
-    PLAIN = b"plain"
-    GIT = b"git"
-
-
-class SuperHelperPlain:
-    def add(self, paths: list[bytes]) -> None:
-        # Nothing to do here. There is no SCM system. So the code can also not add
-        # files to the SCM
-        pass
-
-    def print_instructions_to_commit_and_inspect(self) -> None:
-        raise NotImplementedError("TODO think about this case!")
-
-    def configure(self, scm_path: bytes) -> None:
-        raise NotImplementedError("TODO think about this case!")
-
-
-class SuperHelperGit:
-    # Add the file in 'path' to the index
-    # TODO not all version control systems have the notion of a index!
-    def add(self, paths: list[bytes]) -> None:
-        git_add(paths)
-
-    def print_instructions_to_commit_and_inspect(self) -> None:
-        # TODO handle the case, e.g. after "push" that there are _no_ changes in the index!
-        print("The following changes are recorded in the git index:")
-        shortstat = git_diff_staged_shortstat()
-        print("%s" % (shortstat.decode("ascii"),))
-        print("- To inspect the changes, use `git status` and `git diff --staged`.")
-        print("- If you want to keep the changes, commit them with `git commit`.")
-        print("- If you want to revert the changes, execute `git reset --merge`.")
-
-    # TODO think about the data structure every super_helper method gets!
-    def configure(self, scm_path: bytes) -> None:
-        config_abspath = join(scm_path, b".subpatch")
-        assert not os.path.exists(config_abspath)
-        with open(config_abspath, "bw"):
-            pass
-
-        # TODO: Using cwd to the toplevel directory is just a hack because
-        # the helper is cwd-aware.
-        with chdir(scm_path):
-            git_add([b".subpatch"])
-
-    def print_configure_success(self) -> None:
-        print("The file .subpatch was created in the toplevel directory.")
-        print("Now use 'git commit' to finalized your change.")
-        # TODO maybe use the same help text as "add" and "update".
-
-
-# TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor
-@dataclass(frozen=True)
-class Superproject:
-    path: bytes
-    helper: SuperHelperGit | SuperHelperPlain
-    configured: bool
-    typex: SuperprojectType   # TODO same information is in 'helper'. Refactor!
-
-
-def check_and_get_superproject_from_checked_data(checked_data: CheckedSuperprojectData | None) -> Superproject:
-    # TODO maybe move outside of this function
-    if checked_data is None:
-        # And there is no subpatch config file and no SCM
-        raise AppException(ErrorCode.SUPERPROJECT_NOT_FOUND)
-
-    if checked_data.scm_type is not None:
-        # There is a SCM tool
-        # And there is either a subpatch config file or not: See value of 'configured'
-        if checked_data.scm_type == SCMType.GIT:
-            super_type = SuperprojectType.GIT
-            helper = SuperHelperGit()
-        else:
-            raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "SCM tool '%s' not implemented yet" % (checked_data.scm_type,))
-    else:
-        # Current working directory is not in a SCM system.  But there is a
-        # config file. Ensured by the caller!
-        assert checked_data.configured
-        helper = SuperHelperPlain()
-        super_type = SuperprojectType.PLAIN
-
-    super_path = checked_data.super_path
-    configured = checked_data.configured
-
-    return Superproject(super_path, helper, configured, super_type)
 
 
 # TODO clarify naming: path, filename, url
