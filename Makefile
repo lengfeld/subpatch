@@ -3,7 +3,7 @@
 
 all:
 
-subpatch.py: src/config.py src/git.py src/main.py
+subpatch.py: src/util.py src/config.py src/git.py src/cache.py src/main.py
 	scripts/pybundle.py $^ > $@.tmp
 	mv $@.tmp $@
 	chmod +x $@

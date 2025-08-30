@@ -3,7 +3,6 @@
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
 import argparse
-import contextlib
 import os
 import shutil
 import stat
@@ -22,13 +21,13 @@ from config import (LineDataHeader, LineDataKeyValue, LineType,
                     config_drop_section_if_empty, config_parse2,
                     config_set_key_value2, config_unparse2, empty_config_lines,
                     split_with_ts_bytes)
-from git import (ObjectType, get_name_from_repository_url, git_add, git_clone,
-                 git_diff_in_dir, git_diff_name_only,
-                 git_diff_staged_shortstat, git_get_object_type, git_get_sha1,
-                 git_init_and_fetch, git_ls_files_untracked,
-                 git_ls_remote_guess_ref, git_ls_tree_in_dir, git_reset_hard,
-                 git_verify, is_sha1, is_valid_revision)
-
+from util import AppException, ErrorCode, cwd, get_url_type, URLTypes
+# TODO main.py should not depend on any git command. They all should be in cache.py
+# or in a new super.py module
+from git import (get_name_from_repository_url, git_add, git_diff_in_dir,
+                 git_diff_name_only, git_diff_staged_shortstat,
+                 git_ls_files_untracked, git_ls_tree_in_dir, is_valid_revision)
+from cache import CacheHelperGit, DownloadConfig
 # ----8<----
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
@@ -37,20 +36,6 @@ __version__ = "0.1a6"
 
 # It's the SPDX identifier. See https://spdx.org/licenses/GPL-2.0-only.html
 __LICENSE__ = "GPL-2.0-only"
-
-
-# TODO Use https://docs.python.org/3/library/contextlib.html#contextlib.chdir
-# TODO copied from helpers. Unify!
-@contextlib.contextmanager
-def cwd(path, create=False):
-    if create:
-        os.makedirs(path)
-    old_path = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(old_path)
 
 
 # "Section names are case-insensitive. Only alphanumeric characters, - and .
@@ -105,65 +90,6 @@ def read_config(path: bytes) -> Config:
 # TODO is it "<object>_<verb>" or "<verb>_<object>"?
 #  "subprojects_parse" vs "parse_subprojects"
 #  ... -> then should should be "parse_config_parts_to_subprojects
-
-
-# TODO Write blogpost about common error categories, e.g. in HTTP and errno
-# E.g. there is also
-#  * invalid argument/Bad request
-#  * (generic) runtime error (maybe the same as IO error)
-#  * permission denied
-#  * NotImplemented/Does not exists
-class ErrorCode(Enum):
-    UNKNOWN = 1
-    # TODO distinguish between "not implemented" and "not implemented __yet__"!
-    # Not implemented should mostly be a invalid argument then
-    NOT_IMPLEMENTED_YET = 2
-    SUPERPROJECT_NOT_FOUND = 3  # if no scm system found and no config found
-    SUPERPROJECT_NOT_CONFIGURED = 4
-    # The user has given an invalid argument on the command line
-    INVALID_ARGUMENT = 5
-    # TODO remove this type. Every ErrorCode should support a message.
-    CUSTOM = 6
-
-
-class AppException(Exception):
-    def __init__(self, code, msg=None):
-        self._code = code
-        if msg is not None:
-            super().__init__(msg)
-        else:
-            super().__init__()
-
-    def get_code(self):
-        return self._code
-
-
-class URLTypes(Enum):
-    LOCAL_RELATIVE = 1
-    LOCAL_ABSOLUTE = 2
-    REMOTE = 3
-
-
-def get_url_type(url):
-    if len(url) == 0:
-        raise ValueError("The URL is empty!")
-
-    # TODO mabye using url parsing library?
-    # TODO Implemente "file://" prefix
-    if url.startswith("http"):
-        return URLTypes.REMOTE
-    elif url.startswith("git"):
-        return URLTypes.REMOTE
-    elif url.startswith("ssh"):
-        return URLTypes.REMOTE
-    if "://" in url:
-        raise NotImplementedError("The URL '%s' is not implemented yet" % (url,))
-
-    # Is mostly just a local path
-    if url[0] == "/":
-        return URLTypes.LOCAL_ABSOLUTE
-
-    return URLTypes.LOCAL_RELATIVE
 
 
 def nocommand(args, parser):
@@ -396,130 +322,6 @@ def check_and_get_superproject_from_checked_data(checked_data: CheckedSuperproje
 #    TODO add to glossary
 #  - "subproject": Idea: Is only the local directory and config
 #                  Not the remote repository
-
-
-@dataclass(frozen=True)
-class DownloadConfig:
-    url: Any
-    revision: Any | None = None
-
-
-@dataclass(frozen=True)
-class CloneConfig:
-    full_clone: bool
-    object_id: str | None = None
-    ref: bytes | None = None
-
-
-def git_resolve_to_clone_config(url: str, revision: str | None) -> CloneConfig:
-    # Some heuristics to sort out branch, commit/tag id or tag
-    if revision is not None:
-
-        # TODO Clean type missmatch
-        assert isinstance(revision, str)
-        revision_bytes = revision.encode("utf8")
-
-        if is_sha1(revision_bytes):
-            # NOTE Commit ids are bad! You cannot download just a single
-            # commit id. You can only clone everything and hope that the commit id
-            # is in there!
-            # TODO Handle tag ids special. They can be looked up by "git
-            # ls-remote".
-            return CloneConfig(full_clone=True, object_id=revision)
-        else:
-            # It looks like a ref to a branch or tag. Try to resolve it
-            ref_resolved = git_ls_remote_guess_ref(url, revision)
-            if ref_resolved is None:
-                raise AppException(ErrorCode.INVALID_ARGUMENT,
-                                   "The reference '%s' cannot be resolved to a branch or tag!" % (revision,))
-            return CloneConfig(full_clone=False, ref=ref_resolved)
-    else:
-        # Use HEAD of remote repository
-        # TODO optimize this by looking at the output of "git ls-remote".
-        return CloneConfig(full_clone=True)
-
-
-# TODO finalize of naming convention for helper code for subprojects and
-# superprojects.
-class CacheHelperGit:
-    def get_revision_as_str(self, revision: str | None) -> str:
-        # The revision is of type Optional<str>. It's either None or a str.
-        # Convert to a printable string for stdout
-        if revision is None:
-            return "HEAD"
-        return revision
-
-    # Download remote repository, checkout the request revision, remove
-    # repository metadata and leave the plan files in the dir 'cache_relpath'.
-    # NOTE: return value is either a object_id of a tag or of a commit!
-    def download(self, download_config: DownloadConfig, folder) -> bytes:
-        # NOTE "git submodule init" creates a bare repository in ".git/modules"
-        # TODO maybe also use that folder as a scrat pad.
-        # TODO clone only a single branch and maybe use --depth 1
-        #  - that is already partially implemented
-        # TODO handle potential submodules in the subproject correctly
-
-        url = download_config.url
-        revision = download_config.revision  # Can be None
-
-        clone_config = git_resolve_to_clone_config(url, revision)
-
-        # TODO optimization. If it's a local git repo, use --reference to share
-        # object store.
-
-        # There are three cases:
-        #   - full clone + with object id
-        #   - full clone + without object id
-        #   - fetch + with ref
-        if clone_config.full_clone:
-            git_clone(url, folder)
-            if clone_config.object_id is not None:
-                with cwd(folder):
-                    if not git_verify(clone_config.object_id):
-                        # TODO use context wrapper for cleanup!
-                        shutil.rmtree(b"../" + folder)
-                        raise AppException(ErrorCode.INVALID_ARGUMENT,
-                                           "Object id '%s' does not point to a valid object!" % (clone_config.object_id,))
-
-                    object_type = git_get_object_type(clone_config.object_id)
-                    if object_type not in (ObjectType.COMMIT, ObjectType.TAG):
-                        # TODO use context wrapper for cleanup!
-                        shutil.rmtree(b"../" + folder)
-                        raise AppException(ErrorCode.INVALID_ARGUMENT,
-                                           "Object id '%s' does not point to a commit or tag object!" % (clone_config.object_id,))
-
-                    git_reset_hard(clone_config.object_id)
-                object_id = clone_config.object_id.encode("ascii")
-            else:
-                with cwd(folder):
-                    object_id = git_get_sha1("HEAD")
-        else:
-            # TODO This is really ugly!
-            assert not os.path.isabs(folder)
-            assert b"//" not in folder  # sanitze path
-            folder_count = folder.rstrip(b"/").count(b"/") + 1
-
-            with cwd(folder, create=True):
-                # TODO Not work with relative paths, because a subdir is used!
-                if get_url_type(url) == URLTypes.LOCAL_RELATIVE:
-                    # This is ugly!
-                    # TODO fix str bs byte missmatch. encode should not be needed here!
-                    url_tmp = b"../" * folder_count + url.encode("utf8")
-                else:
-                    url_tmp = url
-                # TODO Rework DownloadConfig to avoid extra asser here
-                assert clone_config.ref is not None
-                object_id = git_init_and_fetch(url_tmp, clone_config.ref)
-                git_reset_hard(object_id)
-
-        # Remove ".git" folder in this repo
-        # TODO this must be moved outside of the download function. It should
-        # be persistent.
-        local_repo_git_dir = join(folder, b".git")
-        assert os.path.isdir(local_repo_git_dir)
-        shutil.rmtree(local_repo_git_dir)
-
-        return object_id
 
 
 def ensure_superproject_is_configured(superx):
@@ -1305,7 +1107,6 @@ def cmd_apply(args, parser):
     if not os.path.exists(sub_paths.patches_abspath):
         os.makedirs(sub_paths.patches_abspath)
 
-    import shutil
     shutil.copy(args.path.encode("utf8"), sub_paths.patches_abspath)
     super_to_patch_relpath = join(sub_paths.super_to_sub_relpath, b"patches", patch_filename)
 

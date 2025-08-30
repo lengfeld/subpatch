@@ -12,10 +12,11 @@ from helpers import Git, TestCaseHelper, TestCaseTempFolder, cwd, touch
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
+# TODO rename "test_lib.py" to "test_main.py"
 from main import (AppException, ErrorCode, FindSuperprojectData, SCMType,
-                  URLTypes, check_superproject_data, config_add_subproject,
+                  check_superproject_data, config_add_subproject,
                   find_superproject, gen_sub_paths_from_cwd_and_relpath,
-                  gen_sub_paths_from_relpath, gen_super_paths, get_url_type)
+                  gen_sub_paths_from_relpath, gen_super_paths)
 
 
 class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
@@ -150,20 +151,6 @@ class TestCheckSuperprojectData(TestCaseTempFolder):
             data = FindSuperprojectData(b"/a", SCMType.GIT, b"/b")
             check_superproject_data(data)
         self.assertEqual(context.exception.get_code(), ErrorCode.NOT_IMPLEMENTED_YET)
-
-
-class TestFuncs(unittest.TestCase):
-    def test_get_url_type(self):
-        self.assertEqual(URLTypes.REMOTE, get_url_type("https://xx"))
-        self.assertEqual(URLTypes.REMOTE, get_url_type("http://xx"))
-        self.assertEqual(URLTypes.REMOTE, get_url_type("git://xx"))
-        self.assertEqual(URLTypes.REMOTE, get_url_type("ssh://xx"))
-        self.assertEqual(URLTypes.LOCAL_RELATIVE, get_url_type("folder"))
-        self.assertEqual(URLTypes.LOCAL_RELATIVE, get_url_type("sub/folder"))
-        self.assertEqual(URLTypes.LOCAL_ABSOLUTE, get_url_type("/sub/folder"))
-
-        self.assertRaises(NotImplementedError, get_url_type, "rsync://xx")
-        self.assertRaises(ValueError, get_url_type, "")
 
 
 class TestGenSuperPaths(TestCaseTempFolder):
