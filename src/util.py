@@ -1,6 +1,4 @@
 from enum import Enum
-import contextlib
-import os
 
 
 class URLTypes(Enum):
@@ -29,20 +27,6 @@ def get_url_type(url):
         return URLTypes.LOCAL_ABSOLUTE
 
     return URLTypes.LOCAL_RELATIVE
-
-
-# TODO Use https://docs.python.org/3/library/contextlib.html#contextlib.chdir
-# TODO copied from helpers. Unify!
-@contextlib.contextmanager
-def cwd(path, create=False):
-    if create:
-        os.makedirs(path)
-    old_path = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(old_path)
 
 
 # TODO Write blogpost about common error categories, e.g. in HTTP and errno

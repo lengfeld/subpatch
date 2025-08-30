@@ -5,8 +5,8 @@
 import unittest
 from subprocess import PIPE, Popen
 
-from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
-                     create_git_repo_with_branches_and_tags, cwd, touch)
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder, create_and_chdir,
+                     create_git_repo_with_branches_and_tags, touch)
 from localwebserver import FileRequestHandler, LocalWebserver
 
 
@@ -20,11 +20,11 @@ def create_git_repo_with_single_commit():
 
 class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
     def test_add_with_head_and_branch(self):
-        with cwd("subproject", create=True):
+        with create_and_chdir("subproject"):
             create_git_repo_with_branches_and_tags()
             git = Git()
 
-        with cwd("superproject", create=True):
+        with create_and_chdir("superproject"):
             create_git_repo_with_single_commit()
             git = Git()
             git.submodule(["-q", "add", "../subproject/", "subproject1"])
@@ -64,16 +64,16 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
             git.commit_all("add subproject2")
 
     def test_add_in_subdir_fails(self):
-        with cwd("subproject", create=True):
+        with create_and_chdir("subproject"):
             create_git_repo_with_single_commit()
 
-        with cwd("superproject", create=True):
+        with create_and_chdir("superproject"):
             create_git_repo_with_single_commit()
             git = Git()
 
             # NOTE/LEARNING: 'git submodule add' with relative path only works
             # in the toplevel directory!
-            with cwd("folder", create=True):
+            with create_and_chdir("folder"):
                 # TODO "git.submodule()" and others methods do not have an
                 # interface for failing commands. So fallback to popen here.
                 p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS +
@@ -95,7 +95,7 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
 """)
 
     def test_add_from_url(self):
-        with cwd("subproject", create=True):
+        with create_and_chdir("subproject"):
             create_git_repo_with_single_commit()
             # Prepare repo for dump http protocol
             # See https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols
@@ -103,7 +103,7 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
             git = Git()
             git.call(["update-server-info"])
 
-        with LocalWebserver(7000, FileRequestHandler), cwd("superproject", create=True):
+        with LocalWebserver(7000, FileRequestHandler), create_and_chdir("superproject"):
             create_git_repo_with_single_commit()
             git = Git()
 

@@ -5,9 +5,11 @@
 import os
 import sys
 import unittest
+from contextlib import chdir
 from os.path import abspath, dirname, join, realpath
 
-from helpers import Git, TestCaseHelper, TestCaseTempFolder, cwd, touch
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder, create_and_chdir,
+                     touch)
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
@@ -50,7 +52,7 @@ class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
 class TestFindSuperproject(TestCaseTempFolder):
     def test_search_ends_on_filesystem_boundary(self):
         # NOTE: Assumption that "/run/" is a tmpfs and "/" is not!
-        with cwd("/run/"):
+        with chdir("/run/"):
             # TODO find a way to test this. The abort was done because the
             # filesystem boundary was hit!
             data = find_superproject()
@@ -74,7 +76,7 @@ class TestFindSuperproject(TestCaseTempFolder):
         self.assertEqual(data.scm_path, None)
 
         # A configuration file at a toplevel directory
-        with cwd("a/b/c", create=True):
+        with create_and_chdir("a/b/c"):
             data = find_superproject()
             self.assertEqual(data.super_path, abs_cwd)
             self.assertEqual(data.scm_type, None)
@@ -90,7 +92,7 @@ class TestFindSuperproject(TestCaseTempFolder):
         self.assertEqual(data.scm_path, abs_cwd)
 
         # Now check in a subdirectory
-        with cwd("a/b/c", create=True):
+        with create_and_chdir("a/b/c"):
             data = find_superproject()
             self.assertEqual(data.super_path, None)
             self.assertEqual(data.scm_type, SCMType.GIT)
@@ -103,7 +105,7 @@ class TestFindSuperproject(TestCaseTempFolder):
         self.assertEqual(data.scm_type, SCMType.GIT)
         self.assertEqual(data.scm_path, abs_cwd)
 
-        with cwd("a/b/c"):
+        with chdir("a/b/c"):
             data = find_superproject()
             self.assertEqual(data.super_path, abs_cwd)
             self.assertEqual(data.scm_type, SCMType.GIT)
@@ -160,22 +162,22 @@ class TestGenSuperPaths(TestCaseTempFolder):
         self.assertEqual(paths.super_abspath, super_abspath)
         self.assertEqual(paths.super_to_cwd_relpath, b"")
 
-        with cwd("sub1", create=True):
+        with create_and_chdir("sub1"):
             paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1")
 
-        with cwd("sub1/sub2", create=True):
+        with create_and_chdir("sub1/sub2"):
             paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2")
 
-        with cwd("sub1/sub2/sub3", create=True):
+        with create_and_chdir("sub1/sub2/sub3"):
             paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3")
 
-        with cwd("sub1/sub2/sub3/sub4", create=True):
+        with create_and_chdir("sub1/sub2/sub3/sub4"):
             paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3/sub4")
@@ -191,28 +193,28 @@ class TestGenSubPaths(TestCaseTempFolder):
         self.assertEqual(sub_paths.cwd_to_sub_relpath, b"sub1/sub2")
         self.assertEqual(sub_paths.sub_name, b"sub2")
 
-        with cwd("sub1", create=True):
+        with create_and_chdir("sub1"):
             super_paths = gen_super_paths(super_abspath)
             sub_paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(sub_paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(sub_paths.cwd_to_sub_relpath, b"sub2")
             self.assertEqual(sub_paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2", create=True):
+        with create_and_chdir("sub1/sub2"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"")
             self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2/sub3", create=True):
+        with create_and_chdir("sub1/sub2/sub3"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
             self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2/sub3/sub4", create=True):
+        with create_and_chdir("sub1/sub2/sub3/sub4"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_relpath(super_paths, b"sub1/sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
@@ -235,28 +237,28 @@ class TestGenSubPaths(TestCaseTempFolder):
         self.assertEqual(paths.cwd_to_sub_relpath, b"sub1/sub2")
         self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1", create=True):
+        with create_and_chdir("sub1"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"sub2")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"sub2")
             self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2", create=True):
+        with create_and_chdir("sub1/sub2"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"")
             self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2/sub3", create=True):
+        with create_and_chdir("sub1/sub2/sub3"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"..")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
             self.assertEqual(paths.sub_name, b"sub2")
 
-        with cwd("sub1/sub2/sub3/sub4", create=True):
+        with create_and_chdir("sub1/sub2/sub3/sub4"):
             super_paths = gen_super_paths(super_abspath)
             paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"../..")
             self.assertEqual(paths.super_to_sub_relpath, b"sub1/sub2")
@@ -274,7 +276,7 @@ class TestGenSubPaths(TestCaseTempFolder):
         super_abspath = os.getcwdb()
         super_paths = gen_super_paths(super_abspath)
 
-        with cwd("sub1/sub2/", create=True):
+        with create_and_chdir("sub1/sub2/"):
             paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"..")
             self.assertEqual(paths.cwd_to_sub_relpath, b"..")
 

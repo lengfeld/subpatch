@@ -9,7 +9,7 @@ from os.path import dirname, join, realpath
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
-from util import get_url_type, URLTypes
+from util import URLTypes, get_url_type
 
 
 class TestFuncs(unittest.TestCase):

@@ -1,15 +1,18 @@
 import os
 import shutil
+from contextlib import chdir
 from dataclasses import dataclass
 from os.path import join
 from typing import Any
+
 # ----8<----
 from git import (ObjectType, git_clone, git_get_object_type, git_get_sha1,
                  git_init_and_fetch, git_ls_remote_guess_ref, git_reset_hard,
                  git_verify, is_sha1)
 # TODO decide wether also CacheHelper can use the AppException or should use a
 # own exception
-from util import AppException, ErrorCode, cwd, get_url_type, URLTypes
+from util import AppException, ErrorCode, URLTypes, get_url_type
+
 # ----8<----
 
 
@@ -87,7 +90,7 @@ class CacheHelperGit:
         if clone_config.full_clone:
             git_clone(url, folder)
             if clone_config.object_id is not None:
-                with cwd(folder):
+                with chdir(folder):
                     if not git_verify(clone_config.object_id):
                         # TODO use context wrapper for cleanup!
                         shutil.rmtree(b"../" + folder)
@@ -104,7 +107,7 @@ class CacheHelperGit:
                     git_reset_hard(clone_config.object_id)
                 object_id = clone_config.object_id.encode("ascii")
             else:
-                with cwd(folder):
+                with chdir(folder):
                     object_id = git_get_sha1("HEAD")
         else:
             # TODO This is really ugly!
@@ -112,7 +115,8 @@ class CacheHelperGit:
             assert b"//" not in folder  # sanitze path
             folder_count = folder.rstrip(b"/").count(b"/") + 1
 
-            with cwd(folder, create=True):
+            os.makedirs(folder)
+            with chdir(folder):
                 # TODO Not work with relative paths, because a subdir is used!
                 if get_url_type(url) == URLTypes.LOCAL_RELATIVE:
                     # This is ugly!

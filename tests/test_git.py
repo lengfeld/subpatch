@@ -5,10 +5,11 @@
 import os
 import sys
 import unittest
+from contextlib import chdir
 from os.path import dirname, join, realpath
 
-from helpers import (Git, TestCaseHelper, TestCaseTempFolder,
-                     create_git_repo_with_branches_and_tags, cwd, mkdir, touch)
+from helpers import (Git, TestCaseHelper, TestCaseTempFolder, create_and_chdir,
+                     create_git_repo_with_branches_and_tags, mkdir, touch)
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
@@ -71,7 +72,7 @@ class TestGit(TestCaseTempFolder):
         self.assertIsNone(git_get_toplevel())
 
     def test_git_get_toplevel(self):
-        with cwd("subproject", create=True):
+        with create_and_chdir("subproject"):
             git = Git()
             git.init()
             touch("hello", b"content")
@@ -83,17 +84,17 @@ class TestGit(TestCaseTempFolder):
             self.assertEqual(git_path, cur_cwd)
             self.assertTrue(git_path.endswith(b"/subproject"))
 
-            with cwd("test", create=True):
+            with create_and_chdir("test"):
                 # It's still the toplevel dir, not the subdir "test"
                 git_path = git_get_toplevel()
                 self.assertEqual(git_path, cur_cwd)
                 self.assertTrue(git_path.endswith(b"/subproject"))
 
     def test_git_init_and_fetch(self):
-        with cwd("remote", create=True):
+        with create_and_chdir("remote"):
             create_git_repo_with_branches_and_tags()
 
-        with cwd("local", create=True):
+        with create_and_chdir("local"):
             sha1 = git_init_and_fetch("../remote", "refs/tags/v1.1")
             self.assertEqual(b"e85c40dcd26466c0052323eb767d1a44ef0a12c1", sha1)
             self.assertEqual(ObjectType.TAG, git_get_object_type(sha1))
@@ -107,7 +108,7 @@ class TestGit(TestCaseTempFolder):
                               "../remote", "refs/heads/does_not_exists")
 
     def test_depth_for_git_init_and_fetch(self):
-        with cwd("remote", create=True):
+        with create_and_chdir("remote"):
             git = Git()
             git.init()
             touch("file", b"a")
@@ -124,7 +125,7 @@ class TestGit(TestCaseTempFolder):
             sha1_second_tree = git.get_sha1("HEAD^{tree}")
             sha1_second_blob = git.get_sha1("HEAD:file")
 
-        with cwd("local", create=True):
+        with create_and_chdir("local"):
             git = Git()
             git.init()
             sha1 = git_init_and_fetch("../remote", "refs/heads/master")
@@ -142,7 +143,7 @@ class TestGit(TestCaseTempFolder):
             self.assertFalse(git.object_exists(sha1_first_commit))
 
     def test_git_ls_remote(self):
-        with cwd("remote", create=True):
+        with create_and_chdir("remote"):
             create_git_repo_with_branches_and_tags()
             refs_sha1 = git_ls_remote(".")
         self.assertEqual([b'HEAD',
@@ -175,7 +176,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         self.assertEqual(parse_sha1_names(b"\n\n\n"), {})
 
     def test_git_ls_remote_guess_ref(self):
-        with cwd("remote", create=True):
+        with create_and_chdir("remote"):
             create_git_repo_with_branches_and_tags()
 
             self.assertEqual(b"refs/heads/main",
@@ -251,14 +252,14 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         self.assertEqual([b"b"], git_ls_files_untracked())
 
         # Create a untracked file in a directory
-        with cwd("subdir", create=True):
+        with create_and_chdir("subdir"):
             touch("d")
 
         # NOTE: The config for "ls-files" only shows untracked dirs, not the
         # untracked files in the dirs.
         self.assertEqual([b"b", b"subdir/"], git_ls_files_untracked())
 
-        with cwd("subdir"):
+        with chdir("subdir"):
             # TODO: This is bad. It does not show the file "b" that is
             # untracked in the root of the git repo
             # "git ls-files" depends on the current work directory
@@ -271,7 +272,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         git = Git()
         git.init()
 
-        with cwd("__pycache__", create=True):
+        with create_and_chdir("__pycache__"):
             touch("subpatch.cpython-310.pyc", b"something")
         self.assertEqual([b"__pycache__/"], git_ls_files_untracked())
 
@@ -297,7 +298,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         # Without any changes
         self.assertFalse(git_diff_in_dir(top_dir, "dir"))
         self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertFalse(git_diff_in_dir(top_dir, "dir"))
             self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
 
@@ -305,7 +306,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         touch("b", b"changes")
         self.assertFalse(git_diff_in_dir(top_dir, "dir"))
         self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertFalse(git_diff_in_dir(top_dir, "dir"))
             self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
 
@@ -313,7 +314,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         git.add("b")
         self.assertFalse(git_diff_in_dir(top_dir, "dir"))
         self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertFalse(git_diff_in_dir(top_dir, "dir"))
             self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
 
@@ -321,7 +322,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         touch("dir/a", b"changes")
         self.assertTrue(git_diff_in_dir(top_dir, "dir"))
         self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertTrue(git_diff_in_dir(top_dir, "dir"))
             self.assertFalse(git_diff_in_dir(top_dir, "dir", staged=True))
 
@@ -329,7 +330,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
         git.add("dir/a")
         self.assertFalse(git_diff_in_dir(top_dir, "dir"))
         self.assertTrue(git_diff_in_dir(top_dir, "dir", staged=True))
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertFalse(git_diff_in_dir(top_dir, "dir"))
             self.assertTrue(git_diff_in_dir(top_dir, "dir", staged=True))
 
@@ -350,7 +351,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
 
         # If the cwd is a subdirectory, the output and the argument are still
         # relative to the toplevel of the repository.
-        with cwd("dir"):
+        with chdir("dir"):
             self.assertEqual([b"b", b"dir/a"], git_ls_tree_in_dir(b""))
             self.assertEqual([b"dir/a"], git_ls_tree_in_dir(b"dir"))
             self.assertEqual([], git_ls_tree_in_dir(b"does-not-exists-dir"))
@@ -377,7 +378,7 @@ dddddddddddddddddddddddddddddddddddddddd\trefs/tags/v0.1a2^{}
 
 class TestGitPatching(TestCaseTempFolder, TestCaseHelper):
     def test_apply(self):
-        with cwd("subproject", create=True):
+        with create_and_chdir("subproject"):
             git = Git()
             git.init()
 
@@ -448,7 +449,7 @@ X.YY.Z
 
 """.replace(b"X.YY.Z", git_version))
 
-        with cwd("superproject", create=True):
+        with create_and_chdir("superproject"):
             git = Git()
             git.init()
 

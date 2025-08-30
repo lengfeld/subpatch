@@ -9,6 +9,7 @@ import stat
 import subprocess
 import sys
 import time
+from contextlib import chdir
 from dataclasses import dataclass
 from enum import Enum
 from os.path import abspath, join
@@ -16,18 +17,19 @@ from subprocess import DEVNULL, Popen
 from typing import Any
 
 # ----8<----
+from cache import CacheHelperGit, DownloadConfig
 from config import (LineDataHeader, LineDataKeyValue, LineType,
                     config_add_section2, config_drop_key2,
                     config_drop_section_if_empty, config_parse2,
                     config_set_key_value2, config_unparse2, empty_config_lines,
                     split_with_ts_bytes)
-from util import AppException, ErrorCode, cwd, get_url_type, URLTypes
 # TODO main.py should not depend on any git command. They all should be in cache.py
 # or in a new super.py module
 from git import (get_name_from_repository_url, git_add, git_diff_in_dir,
                  git_diff_name_only, git_diff_staged_shortstat,
                  git_ls_files_untracked, git_ls_tree_in_dir, is_valid_revision)
-from cache import CacheHelperGit, DownloadConfig
+from util import AppException, ErrorCode, URLTypes, get_url_type
+
 # ----8<----
 
 # See https://peps.python.org/pep-0440/ for details about the version format.
@@ -261,7 +263,7 @@ class SuperHelperGit:
 
         # TODO: Using cwd to the toplevel directory is just a hack because
         # the helper is cwd-aware.
-        with cwd(scm_path):
+        with chdir(scm_path):
             git_add([b".subpatch"])
 
     def print_configure_success(self):
@@ -366,7 +368,7 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     # Just quick and try remove and copy!
     # TODO convert this code to "superhelper" implementation
     # TODO This code is "subpatch worktree drop"
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         git_rm = GitCommandBachter(["git", "rm", "-q"])
         # NOTE: git_ls_tree_in_dir() also lists files non-worktree files E.g.
         # the folder "patches" and the file ".subproject". These must be
@@ -385,7 +387,7 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     # TODO This code is "subpatch unpack" but even bit lower
     # TODO convert this code to "superhelper" implementation
     os.makedirs(sub_paths.cwd_to_sub_relpath, exist_ok=True)
-    with cwd(cache_abspath):
+    with chdir(cache_abspath):
         git_add = GitCommandBachter(["git", "add", "-f"])
 
         for root, dirnames, files in os.walk(b"."):
@@ -417,7 +419,7 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     # TODO update tree checksum in the config
     do_unpack_update_metadata(sub_paths, url, revision, object_id)
 
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         # TODO Absolute path to git-add is used. This is strange, but works!
         superx.helper.add([sub_paths.metadata_abspath])
 
@@ -589,7 +591,7 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
 
     do_unpack_update_metadata(sub_paths, url, revision, object_id)
 
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
 
@@ -692,12 +694,12 @@ def cmd_add(args, parser):
     os.makedirs(sub_paths.subproject_abspath)
     with open(sub_paths.metadata_abspath, "bw") as f:
         f.write(b"")
-    with cwd(sub_paths.subproject_abspath):
+    with chdir(sub_paths.subproject_abspath):
         # TODO use helper!
         git_add([b".subproject"])
 
     config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         # TODO use helper!
         git_add([b".subpatch"])
 
@@ -1111,7 +1113,7 @@ def cmd_apply(args, parser):
     super_to_patch_relpath = join(sub_paths.super_to_sub_relpath, b"patches", patch_filename)
 
     # TODO Thing about releative paths for SuperHelper
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
     if not args.quiet:
@@ -1149,7 +1151,7 @@ def cmd_pop(args, parser):
 
     # TODO make naming schema for update metadata functions
     do_pop_push_update_metadata(sub_paths, applied_index_new)
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         # TODO here is not relative path used for git. This seems also to work!
         superx.helper.add([sub_paths.metadata_abspath])
 
@@ -1190,7 +1192,7 @@ def cmd_push(args, parser):
     else:
         do_pop_push_update_metadata(sub_paths, applied_index_new)
 
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
     if not args.quiet:
@@ -1309,7 +1311,7 @@ def cmd_status(args, parser):
 
     # NOTE git_ls_files_untracked() depends on the cwd for now! Cwd must be the
     # root of the directory for now.
-    with cwd(super_paths.super_abspath):
+    with chdir(super_paths.super_abspath):
         ls_files_untrack = git_ls_files_untracked()
 
     # TODO refactor this struct and the following code to a function! And make

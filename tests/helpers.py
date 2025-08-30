@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from contextlib import chdir
 from dataclasses import dataclass
 from subprocess import DEVNULL, PIPE, Popen
 
@@ -251,12 +252,7 @@ class TestCaseHelper(unittest.TestCase):
 
 
 @contextlib.contextmanager
-def cwd(path, create=False):
-    if create:
-        os.makedirs(path)
-    old_path = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(old_path)
+def create_and_chdir(path):
+    os.makedirs(path)
+    with chdir(path):
+        yield 
