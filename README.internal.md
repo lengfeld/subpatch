@@ -55,6 +55,18 @@ to print stdout and stderr of the subpatch invocation to the console for
 further inspection.
 
 
+## Source file structure
+
+The source files are in the folder [src](src/). The include graph is:
+
+![source file include graph](src-files-graph.png)
+
+For testing and distribution the files are bundled together to a single
+`subpatch.py`.
+
+The tests are in the folder [tests](tests/).
+
+
 ## How to release
 
 *Note*: This section has still some rough edges.

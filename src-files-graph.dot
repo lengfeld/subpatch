@@ -1,0 +1,19 @@
+digraph files {
+  "util.py" [shape=box]
+  "git.py" [shape=box]
+  "cache.py" [shape=box]
+  "super.py" [shape=box]
+  "config.py" [shape=box]
+  "main.py" [shape=box]
+
+  "super.py" -> "git.py"
+  "super.py" -> "util.py"
+
+  "cache.py" -> "util.py"
+  "cache.py" -> "git.py"
+
+  "main.py"  -> "super.py"
+  "main.py"  -> "cache.py"
+  "main.py"  -> "config.py"
+  "main.py"  -> "util.py"
+}
