@@ -225,8 +225,8 @@ Show software/license disclaimer at more locations.
 
 Build and test for Windows (Setup windows VM in gnome boxes?)
 
-The command "subpatch update" (or how it's called) should be able to add the
-changelog or added commits automatically to the commit message.
+The command "subpatch update" should be able to add the changelog or added
+commits automatically to the commit message.
 
 Add checksum of subpatch script to release page. Sign with gpg key.
 
@@ -255,7 +255,8 @@ Common problems (why you should use subpatch)
 * dependend commits/atomic commits problem/two commits problem
 * Anti point: devs must be trained to honor code ownership, use tools.
   (General problem of monorepos)
-* disappearing of upstream recourses
+* disappearing of upstream resources
+* no-caching needed
 
 Write summary for every tool that stats what feature this tool
 does not implement compared to subpatch.
@@ -490,7 +491,7 @@ And add the section
 Add docker/podman/debbootstrap contains to test different python3 versions,
 different git versions and different distros.
 
-The "version" argument/command should also print the verison of the use
+The "version" argument/command should also print the version of the use
 superproject and subproject tooling, e.g. git, svn, tar
 
 Add documentation how to update subpatch to a new version
