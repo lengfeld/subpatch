@@ -264,8 +264,6 @@ Write about the benefits of subpatch.
 
 Check whether kas and west can support other superprojects than git.
 
-Add checker that checks available of out-going links.
-
 Add germany haftungs-stuff in the imprint.
 
 Write about Critic/pitfalls/Bad-stuff of subpatch
