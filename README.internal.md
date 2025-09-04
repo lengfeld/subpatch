@@ -459,10 +459,6 @@ Extend ruff:
 
 "subpatch status" should print the current applied patch, if not all patches are applied!
 
-pop/push must make a success messages with patch name
-- must show a diff statu
-- must show the command to continue!
-
 Make naming convention "upstream" in the code. move all git repos in the tests
 from "subproject" to "upstream" as the remote directory! The path in the
 superproject should still be "subproject".
@@ -501,9 +497,6 @@ Add documentation how to update subpatch to a new version
 
 Recheck that ".gitignore" is not used on "subpatch add/update"
 
-Add "-q" to update and refactor tests. stdout=PIPE should not be used to
-slience the command.
-
 Add plumbing command for scripting
 - get toplevel of superproject
 - get type of superproject
@@ -523,9 +516,6 @@ stuff.
 
 Add check that subproject does not have a ".subproject" file and a "patches"
 dir. In that case "subpatch" does not work for now!
-
-Add check in update that the update does not work yet, when patches are
-applied!
 
 Also explain why patching is needed in the intro page. Currently it only explains
 the local patching
