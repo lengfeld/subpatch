@@ -353,11 +353,6 @@ everything.
 
 For "add" print the commit message that is integrated
 
-For a potential "update" command list the commits and diffstat that are integrated
-
-Show list of added files in the "add" command. Showing the diffstat is too
-huge. And it also shown when doing "git commit".
-
 Implement implicit "<name>.git" optimization for git repos. If there is a bare
 repository next the subproject use it for cloning, checkout and history
 listing.
