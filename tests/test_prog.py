@@ -232,6 +232,8 @@ The following changes are recorded in the git index:
             self.assertFileContent(".subproject", b"""\
 [patches]
 \tappliedIndex = -1
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
@@ -325,6 +327,8 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             self.assertFileContent("subproject/.subproject", b"""\
 [patches]
 \tappliedIndex = -1
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
@@ -345,6 +349,8 @@ The following changes are recorded in the git index:
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
@@ -572,11 +578,15 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tpath = dirB
 """)
             self.assertFileContent("dirA/.subproject", b"""\
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
 """)
             self.assertFileContent("dirB/.subproject", b"""\
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
@@ -656,7 +666,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Done.
 The following changes are recorded in the git index:
- 3 files changed, 6 insertions(+)
+ 3 files changed, 8 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -673,6 +683,8 @@ The following changes are recorded in the git index:
 \tpath = subproject
 """)
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject
@@ -828,7 +840,7 @@ The following changes are recorded in the git index:
             self.assertEqual(b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/main'... Done.
 The following changes are recorded in the git index:
- 3 files changed, 7 insertions(+)
+ 3 files changed, 9 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -837,6 +849,8 @@ The following changes are recorded in the git index:
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 412b020154dea0f82f6bc49790e384f3f22f7cc6
 [upstream]
 \tobjectId = 449e289b617c25c95868658a580b6c52fb817f4d
 \trevision = refs/heads/main
@@ -848,6 +862,8 @@ The following changes are recorded in the git index:
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"initial")
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = ab68824b155017910afbcf759366571460deb898
 [upstream]
 \tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
@@ -859,6 +875,8 @@ The following changes are recorded in the git index:
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on stable")
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 51e5f8032f7350eec6a08acb8ca9857c5ad424dc
 [upstream]
 \tobjectId = 32c32dcaa3c7f7024387640a91e98a5201e1f202
 \trevision = 32c32dcaa3c7f7024387640a91e98a5201e1f202
@@ -870,6 +888,8 @@ The following changes are recorded in the git index:
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 412b020154dea0f82f6bc49790e384f3f22f7cc6
 [upstream]
 \tobjectId = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
 \trevision = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
@@ -883,6 +903,8 @@ The following changes are recorded in the git index:
             self.assertFileExistsAndIsDir("subdir/subproject")
             self.assertFileContent("subdir/subproject/file", b"initial")
             self.assertFileContent("subdir/subproject/.subproject", b"""\
+[subtree]
+\tchecksum = ab68824b155017910afbcf759366571460deb898
 [upstream]
 \tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
@@ -1034,6 +1056,8 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tpath = dir/subproject
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 941de8963474f419cdc0c57e31d285472f2f29f8
 [upstream]
 \tobjectId = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 \trevision = v1
@@ -1061,6 +1085,8 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tpath = dir/subproject
 """)
             self.assertFileContent("dir/subproject/.subproject", b"""\
+[subtree]
+\tchecksum = b62e3dedea3e2f695387a9a292122b2442da291e
 [upstream]
 \tobjectId = 05273055cdb7635593d13ad7ce4d6da309050ce9
 \trevision = v2
@@ -1077,12 +1103,16 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("dir/subproject/dir/b", b"second\n")
             self.assertFileContent("dir/subproject/dir/c", b"first\n")
             self.assertFileContent("dir/subproject/dir/e", b"second\n")
+
             self.assertEqual(git.diff(staged=True), b"""\
 diff --git a/dir/subproject/.subproject b/dir/subproject/.subproject
-index 59c08af..dea6d51 100644
+index 5543c4c..348bbbc 100644
 --- a/dir/subproject/.subproject
 +++ b/dir/subproject/.subproject
-@@ -1,4 +1,4 @@
+@@ -1,6 +1,6 @@
+ [subtree]
+-\tchecksum = 941de8963474f419cdc0c57e31d285472f2f29f8
++\tchecksum = b62e3dedea3e2f695387a9a292122b2442da291e
  [upstream]
 -\tobjectId = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 -\trevision = v1
@@ -1146,7 +1176,7 @@ index 0000000..e019be0
             self.assertEqual(p.stdout, b"""\
 Adding subproject 'subproject' from URL '../subproject' at revision 'v1'... Done.
 The following changes are recorded in the git index:
- 8 files changed, 12 insertions(+)
+ 8 files changed, 14 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1157,7 +1187,7 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stdout, b"""\
 Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Done.
 The following changes are recorded in the git index:
- 5 files changed, 4 insertions(+), 4 deletions(-)
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1193,7 +1223,7 @@ The following changes are recorded in the git index:
                 self.assertEqual(p.stdout, b"""\
 Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' to revision 'v2'... Done.
 The following changes are recorded in the git index:
- 5 files changed, 4 insertions(+), 4 deletions(-)
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1213,6 +1243,8 @@ The following changes are recorded in the git index:
             git.init()
             self.run_subpatch_ok(["add", "-q", "../subproject"])
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 496d6428b9cf92981dc9495211e6e1120fb6f2ba
 [upstream]
 \tobjectId = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
 \turl = ../subproject
@@ -1316,7 +1348,7 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 -rw-rw-r-- root/root        33 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
--rw-rw-r-- root/root        85 2001-10-09 13:00 subproject/.subproject
+-rw-rw-r-- root/root       148 2001-10-09 13:00 subproject/.subproject
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
@@ -1332,6 +1364,8 @@ drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 \tpath = subproject
 """)
             self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 \turl = ../subproject

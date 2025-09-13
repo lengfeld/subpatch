@@ -8,14 +8,15 @@ import unittest
 from contextlib import chdir
 from os.path import abspath, dirname, join, realpath
 
-from helpers import TestCaseTempFolder, Git, touch, create_and_chdir
+from helpers import TestCaseTempFolder, Git, touch, create_and_chdir, mkdir
 
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
 # TODO rename "test_lib.py" to "test_main.py"
+from git import git_cat_file_pretty
 from super import (AppException, ErrorCode, FindSuperprojectData, SCMType,
-                   check_superproject_data, find_superproject)
+                   check_superproject_data, find_superproject, SuperHelperGit)
 
 
 class TestFindSuperproject(TestCaseTempFolder):
@@ -122,6 +123,40 @@ class TestCheckSuperprojectData(TestCaseTempFolder):
             data = FindSuperprojectData(b"/a", SCMType.GIT, b"/b")
             check_superproject_data(data)
         self.assertEqual(context.exception.get_code(), ErrorCode.NOT_IMPLEMENTED_YET)
+
+
+class TestSuperHelperGit(TestCaseTempFolder):
+    def test(self):
+        git = Git()
+        git.init()
+
+        mkdir("subproject")
+        touch("subproject/hello")
+        mkdir("subproject/subdir")
+        touch("subproject/subdir/hello")
+        mkdir("subproject/patches")
+        touch("subproject/patches/0001-x.patch")
+        touch("subproject/.subproject")
+
+        git.add("subproject")
+        git.commit("add subproject")
+
+        # And also have one file in the index that is not committed yet. This
+        # is a edgecase we rely on.
+        touch("subproject/file-in-index")
+        git.add("subproject")
+
+        super_helper = SuperHelperGit()
+
+        super_to_sub_relpath = b"subproject"
+
+        sha1 = super_helper.get_sha1_for_subtree(super_to_sub_relpath)
+        self.assertEqual(sha1, b"084636915836537663748269699d8f0cbfa5983d")
+        self.assertEqual(git_cat_file_pretty(b"084636915836537663748269699d8f0cbfa5983d"), b"""\
+100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tfile-in-index
+100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\thello
+040000 tree f966952d7e0715683ee935d201cd4ab22736c831\tsubdir
+""")
 
 
 if __name__ == '__main__':

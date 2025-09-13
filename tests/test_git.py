@@ -19,7 +19,8 @@ from src.git import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
                      git_get_toplevel, git_init_and_fetch,
                      git_ls_files_untracked, git_ls_remote,
                      git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
-                     is_sha1, is_valid_revision, parse_sha1_names, parse_z)
+                     is_sha1, is_valid_revision, parse_sha1_names, parse_z,
+                     git_hash_object_tree, git_cat_file_pretty)
 
 
 class TestGit(TestCaseTempFolder):
@@ -567,6 +568,88 @@ index 0000000..223b783
             p = git.call(["ls-tree", "e5f76546416792cb5666efe82dadb5b0ff901f29"], capture_stdout=True)
             self.assertEqual(p.stdout, b"""\
 100644 blob f70f10e4db19068f79bc43844b49f3eece45c4e8\tfileA
+""")
+
+
+class TestGitHashObjectTree(TestCaseTempFolder, TestCaseHelper):
+    @classmethod
+    def setUp(cls):
+        super().setUp()
+        git = Git()
+        git.init()
+
+    def test_empty(self):
+        tree_sha1 = git_hash_object_tree(b"")
+        self.assertEqual(tree_sha1, b"4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+        self.assertEqual(git_cat_file_pretty(tree_sha1), b"")
+
+    def test_simple(self):
+        # some random blob object hash
+        blob_sha1 = bytearray.fromhex("bf252b96c379a66383f5ac9b605b1633bd39362e")
+
+        tree_sha1 = git_hash_object_tree(b"100644 .gitignore\0" + blob_sha1)
+        self.assertEqual(tree_sha1, b"0d841228414b4990ecdc566ee87c8db349b15bc2")
+
+        self.assertEqual(git_cat_file_pretty(tree_sha1), b"""\
+100644 blob bf252b96c379a66383f5ac9b605b1633bd39362e\t.gitignore
+""")
+
+    def test_two_entries(self):
+        blob_sha1 = bytearray.fromhex("bf252b96c379a66383f5ac9b605b1633bd39362e")
+
+        tree_sha1 = git_hash_object_tree(b"100644 a\0" + blob_sha1 +
+                                         b"100644 b\0" + blob_sha1)
+        self.assertEqual(tree_sha1, b"0aaf626dedece2bdc7f444180300370dfe4900b3")
+
+        self.assertEqual(git_cat_file_pretty(tree_sha1), b"""\
+100644 blob bf252b96c379a66383f5ac9b605b1633bd39362e\ta
+100644 blob bf252b96c379a66383f5ac9b605b1633bd39362e\tb
+""")
+
+    def test_directory(self):
+        blob_sha1 = bytearray.fromhex("4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+
+        tree_sha1 = git_hash_object_tree(b"40000 a\0" + blob_sha1)
+        self.assertEqual(tree_sha1, b"0a8a87dd80eda4132d290a67b0676cde6ec1cb29")
+        self.assertEqual(git_cat_file_pretty(tree_sha1),
+                         b"040000 tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\ta\n")
+
+
+class TestGitCatFilePretty(TestCaseTempFolder):
+    @classmethod
+    def setUp(cls):
+        super().setUp()
+        git = Git()
+        git.init()
+        touch("hello", b"content")
+        git.add("hello")
+        git.commit("commit")
+        git.call(["tag", "-m", "tag", "vtag"])
+
+    def test_blob(self):
+        self.assertEqual(git_cat_file_pretty(b"HEAD:hello"), b"content")
+
+    def test_tree(self):
+        self.assertEqual(git_cat_file_pretty(b"HEAD^{tree}"),
+                         b"100644 blob 6b584e8ece562ebffc15d38808cd6b98fc3d97ea\thello\n")
+
+    def test_commit(self):
+        self.assertEqual(git_cat_file_pretty(b"HEAD"), b"""\
+tree 202864b6621f6ed6b9e81e558a05e02264b665f3
+author OTHER other <other@example.com> 1475301600 +0800
+committer GIT git <git@example.com> 1002625200 +0200
+
+commit
+""")
+
+    def test_tag(self):
+        self.assertEqual(git_cat_file_pretty(b"vtag"), b"""\
+object f6f20695f4eeb886fff5174b757470e77c77db34
+type commit
+tag vtag
+tagger GIT git <git@example.com> 1002625200 +0200
+
+tag
 """)
 
 

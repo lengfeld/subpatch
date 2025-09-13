@@ -6,7 +6,8 @@ from enum import Enum
 from os.path import abspath, join
 
 # ----8<----
-from git import git_add, git_diff_staged_shortstat
+from git import (git_add, git_diff_staged_shortstat, git_cat_file_pretty,
+                 git_hash_object_tree)
 # TODO decide wether also CacheHelper can use the AppException or should use a
 # own exception
 from util import AppException, ErrorCode
@@ -151,6 +152,9 @@ class SuperHelperPlain:
     def configure(self, scm_path: bytes) -> None:
         raise NotImplementedError("TODO think about this case!")
 
+    def get_sha1_for_subtree(self, path: bytes) -> bytes:
+        raise NotImplementedError("TODO think about this case!")
+
 
 # TODO think about the data structure every super_helper method gets!
 class SuperHelperGit:
@@ -184,6 +188,53 @@ class SuperHelperGit:
         print("The file .subpatch was created in the toplevel directory.")
         print("Now use 'git commit' to finalized your change.")
         # TODO maybe use the same help text as "add" and "update".
+
+    # Compute the checkums as a git sha1 for the subtree/worktree of the
+    # subproject.
+    # NOTE: This must take files in the index into account!
+    def get_sha1_for_subtree(self, super_to_sub_relpath: bytes) -> bytes:
+        # TODO this function is just a hacky first version. There at least path
+        # escaping any mabye other problems!
+
+        # TODO maybe use "ls-tree -z" instead of "HEAD:<path>" syntax. Escaping is easier!
+        import subprocess
+        p = subprocess.Popen([b"git", b"write-tree", b"--prefix=" + super_to_sub_relpath], stdout=subprocess.PIPE)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("here")
+
+        sha1 = stdout.rstrip(b"\n")
+
+        tree_data_pretty = git_cat_file_pretty(sha1)
+
+        # The pretty format looks like
+        #    100644 blob bf252b96c379a66383f5ac9b605b1633bd39362e\ta
+        #    100644 blob bf252b96c379a66383f5ac9b605b1633bd39362e\tb
+
+        tree_data_pretty_stripped = []
+        for line in tree_data_pretty.split(b"\n"):
+            if line == b"":
+                continue
+            if line.endswith(b"\tpatches") or line.endswith(b"\t.subproject"):
+                pass
+            else:
+                tree_data_pretty_stripped.append(line)
+
+        # TODO git git specifc stuff should be in the "git.py" file
+        # The binary format looks like
+        #    <mode in octal> <one space> <filename> <NULL byte> <SHA1 as bytes>
+
+        # Convert from pretty into binary format
+        new_tree_data = b""
+        for line in tree_data_pretty_stripped:
+            mode_type_sha1, path = line.split(b"\t", 1)
+            mode, _, sha1 = mode_type_sha1.split(b" ")
+            # Convert mode
+            if mode == b"040000":
+                mode = b"40000"
+            new_tree_data += mode + b" " + path + b"\0" + bytearray.fromhex(sha1.decode("ascii"))
+
+        return git_hash_object_tree(new_tree_data)
 
 
 # TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor

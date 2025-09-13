@@ -206,8 +206,10 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     assert len(os.listdir(cache_abspath)) == 0
     os.rmdir(cache_abspath)
 
-    # TODO update tree checksum in the config
-    do_unpack_update_metadata(sub_paths, url, revision, object_id)
+    with chdir(super_paths.super_abspath):
+        subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
+
+    do_unpack_update_metadata(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
         # TODO Absolute path to git-add is used. This is strange, but works!
@@ -378,8 +380,10 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
     superx.helper.add([sub_paths.cwd_to_sub_relpath])
 
     # TODO in case of failure, remove download git dir!
+    with chdir(super_paths.super_abspath):
+        subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
-    do_unpack_update_metadata(sub_paths, url, revision, object_id)
+    do_unpack_update_metadata(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
@@ -727,7 +731,8 @@ def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes,
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | None, object_id: bytes) -> None:
+def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | None, object_id: bytes,
+                              subtree_checksum: bytes | None = None) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -738,6 +743,9 @@ def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | Non
     metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"url", url.encode("utf8"))
     if revision is not None:
         metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"revision", revision.encode("utf8"))
+    if subtree_checksum is not None:
+        metadata_lines = config_add_section2(metadata_lines, b"subtree")
+        metadata_lines = config_set_key_value2(metadata_lines, b"subtree", b"checksum", subtree_checksum)
     metadata_lines = config_set_key_value2(metadata_lines, b"upstream", b"objectId", object_id)
 
     metadata_config = config_unparse2(metadata_lines)

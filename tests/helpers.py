@@ -57,6 +57,7 @@ def parse_z(b):
 
 # TODO Make this to GitExtra or GitTests and also have a Git class in
 # subpatch.py.
+# TODO convert to class to seperate functions as in git.py
 class Git:
     def __init__(self):
         env = dict(os.environ)  # Get and copy the current environment

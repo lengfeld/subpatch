@@ -149,6 +149,30 @@ def git_get_sha1(rev):
     return stdout.rstrip(b"\n")
 
 
+# The binary (not text/"cat-file -p") format of a tree object is
+#    <mode in octal> <one space> <filename> <NULL byte> <SHA1 as bytes>
+# And if there are more entries, there is no seperation character!
+# NOTE
+# - Use bytearray.fromhex() to convert from SHA1 as ASCII/HEX to SHA1 as bytes
+# - The mode should not be zero padded a front. It's not the same as the pretty output!
+#    Use "40000" instead of "040000"
+def git_hash_object_tree(tree_data: bytes) -> bytes:
+    p = Popen(["git", "hash-object", "-w", "-t", "tree", "--stdin"], stdout=PIPE, stdin=PIPE)
+    stdout, _ = p.communicate(tree_data)
+    if p.returncode != 0:
+        raise Exception("error here")
+
+    return stdout.rstrip(b"\n")
+
+
+def git_cat_file_pretty(rev: bytes) -> bytes:
+    p = Popen(["git", "cat-file", "-p", rev], stderr=DEVNULL, stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("error here")
+    return stdout.rstrip(b"")
+
+
 # git_ls_remote ::  string(url) -> dict<ref_name, sha1>
 # Output contains branches, tags, tag-commitisch "^{}" and the HEAD.
 def git_ls_remote(url: str) -> dict[bytes, bytes]:
