@@ -347,7 +347,7 @@ Add tests to verify evil chars (speical ASCII, non ASCCI and utf8) chars in
 
 Paths should be correctly escaped in the subpatch config
 
-Add command to check validy of synxtax in config. Even useful for test, where
+Add command to check validy of syntax in config. Even useful for test, where
 it's easer to just drop a ".subpatch" file instead of really "add"ing
 everything.
 
@@ -361,9 +361,9 @@ idea: If "--exclude/remove/strip" arguments are added to "supatch add", to remov
 certain files and dirs from the subproject that is integrated, the argument
 list can be become quite long. Maybe then the "add" argument must be splitted
 into multiple commands to gradually add "--exclude/.." config options.
+-> This will be done. There will be "download" and "unpack" commands/steps
 
-
-Implement commaands:
+Implement commands:
 - 'foreach'. See repo and git-submodule
 - 'rm'. The counterpart of 'add'.
 - 'move'/mv command to move subprojects.
@@ -399,6 +399,7 @@ current working directory or to the toplevel dir of the repository.
 E.g.
 - the output and arguments of "git status" are relative to the cwd.
 - the output of "git diff" is relative to the toplevel dir.
+   But there is a option "--relative"  and config now
 Think about a consistent concept and implement it.
 E.g. implement an argument "-t" for toplevel of subproject or
 "-T" for toplevel of superproject.
