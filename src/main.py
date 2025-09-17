@@ -157,13 +157,13 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
 
     # Just quick and try remove and copy!
     # TODO convert this code to "superhelper" implementation
-    # TODO This code is "subpatch worktree drop"
+    # TODO This code is "subpatch subtree drop"
     with chdir(super_paths.super_abspath):
         git_rm = GitCommandBachter(["git", "rm", "-q"])
-        # NOTE: git_ls_tree_in_dir() also lists files non-worktree files E.g.
+        # NOTE: git_ls_tree_in_dir() also lists files non-subtree files E.g.
         # the folder "patches" and the file ".subproject". These must be
         # skipped.
-        # TODO Add a custom/plumping command for that "subpatch worktree list"
+        # TODO Add a custom/plumping command for that "subpatch subtree list"
         for path in git_ls_tree_in_dir(sub_paths.super_to_sub_relpath):
             if path.startswith(sub_paths.super_to_sub_relpath + b"/patches/"):
                 continue
@@ -1000,7 +1000,7 @@ def cmd_push(args, parser):
 
 @dataclass(frozen=True)
 class Metadata:
-    # TODO introduce seperation between sections (worktree, upstream, patches)
+    # TODO introduce seperation between sections (subtree, upstream, patches)
     url: bytes | None
     revision: bytes | None
     object_id: bytes | None
@@ -1257,7 +1257,7 @@ def main_wrapped() -> int:
                                   help="Suppress output to stdout")
 
     parser_apply = subparsers.add_parser("apply",
-                                         help="Apply a patch to the worktree and add to patch list")
+                                         help="Apply a patch to the subtree and add to patch list")
     parser_apply.set_defaults(func=cmd_apply)
     parser_apply.add_argument(dest="path", type=str,
                               help="Path to patch file")
@@ -1266,14 +1266,14 @@ def main_wrapped() -> int:
 
     # TODO add argument "-a" and think about exit code!
     parser_pop = subparsers.add_parser("pop",
-                                       help="Remove topmost patch from the worktree")
+                                       help="Remove topmost patch from the subtree")
     parser_pop.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                             help="Suppress output to stdout")
     parser_pop.set_defaults(func=cmd_pop)
 
     # TODO add argument "-a"
     parser_push = subparsers.add_parser("push",
-                                        help="Add the next patch to the worktree")
+                                        help="Add the next patch to the subtree")
     parser_push.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                              help="Suppress output to stdout")
     parser_push.set_defaults(func=cmd_push)

@@ -76,7 +76,7 @@ def find_superproject() -> FindSuperprojectData:
         if data.scm_type is None:
             # NOTE Simple implementation. Check whether there is a ".git"
             # folder next to it.
-            # Does not work for worktrees! ... really? TODO check it!
+            # Does not work for git-worktrees! ... really? TODO check it!
             if os.path.exists(join(abs_cur_path, b".git")):
                 data.scm_type = SCMType.GIT
                 data.scm_path = abs_cur_path
