@@ -1,4 +1,4 @@
-# Benefits
+# Benefits and drawbacks
 
 This page lists all the benefits for you when you use subpatch instead of a
 different solution.

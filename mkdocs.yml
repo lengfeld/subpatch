@@ -12,7 +12,7 @@ nav:
     - Requirements: 'exp/requirements.md'
     - Comparison to other tools: 'exp/comparison.md'
     - Design decisions: 'exp/design.md'
-    - Benefits: 'exp/benefits.md'
+    - Benefits and drawbacks: 'exp/benefits.md'
     - Frequently asked questions: 'exp/faq.md'
     - Implementation details: 'exp/impl.md'
   - Tutorials:
