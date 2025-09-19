@@ -1000,11 +1000,14 @@ def cmd_push(args, parser):
 
 @dataclass(frozen=True)
 class Metadata:
-    # TODO introduce seperation between sections (subtree, upstream, patches)
+    # TODO introduce seperation between sections (worktree, upstream, patches)
+    # TODO introduce boolean values whether header/sections exists. This can be
+    # a different case then the value exists.
     url: bytes | None
     revision: bytes | None
     object_id: bytes | None
     patches_applied_index: bytes | None
+    subtre_checksum: bytes | None
 
 
 def read_metadata(path: bytes) -> Metadata:
@@ -1015,6 +1018,7 @@ def read_metadata(path: bytes) -> Metadata:
     revision = None
     object_id = None
     patches_applied_index = None
+    subtree_checksum = None
 
     metadata_lines = config_parse2(lines)
     for metadata_line in metadata_lines:
@@ -1030,8 +1034,10 @@ def read_metadata(path: bytes) -> Metadata:
                 object_id = line_data.value
             elif line_data.key == b"appliedIndex":
                 patches_applied_index = line_data.value
+            elif line_data.key == b"checksum":
+                subtree_checksum = line_data.value
 
-    return Metadata(url, revision, object_id, patches_applied_index)
+    return Metadata(url, revision, object_id, patches_applied_index, subtree_checksum)
 
 
 # Data class that contains most of the information that is in the patches

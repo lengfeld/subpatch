@@ -14,7 +14,33 @@ path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
 from main import (config_add_subproject, gen_sub_paths_from_cwd_and_relpath,
-                  gen_sub_paths_from_relpath, gen_super_paths)
+                  gen_sub_paths_from_relpath, gen_super_paths, read_metadata,
+                  Metadata)
+
+
+class TestReadMetadata(TestCaseTempFolder, TestCaseHelper):
+    def test_empty(self):
+        touch(".subproject", b"")
+        self.assertEqual(read_metadata(".subproject"),
+                         Metadata(None, None, None, None, None))
+
+    def test_all_data(self):
+        touch(".subproject", b"""\
+[patches]
+\tappliedIndex = -1
+[subtree]
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+[upstream]
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\trevision = 32c32dcaa3c7f7024387640a91e98a5201e1f202
+\turl = ../subproject
+""")
+        self.assertEqual(read_metadata(".subproject"),
+                         Metadata(b"../subproject",
+                                  b"32c32dcaa3c7f7024387640a91e98a5201e1f202",
+                                  b"c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c",
+                                  b"-1",
+                                  b"202864b6621f6ed6b9e81e558a05e02264b665f3"))
 
 
 class TestConfigAddSubproject(TestCaseTempFolder, TestCaseHelper):
