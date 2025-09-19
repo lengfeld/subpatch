@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/tut/applying-patches/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/format/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Applying patches - subpatch</title>
+    <title>Format - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Applying patches";
-        var mkdocs_page_input_path = "tut/applying-patches.md";
-        var mkdocs_page_url = "/tut/applying-patches/";
+        var mkdocs_page_name = "Format";
+        var mkdocs_page_input_path = "ref/format.md";
+        var mkdocs_page_url = "/ref/format/";
       </script>
     
     <!--[if lt IE 9]>
@@ -73,14 +73,12 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/installation/">Installation</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../basic-usage/">Basic usage</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/basic-usage/">Basic usage</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Applying patches</a>
-    <ul class="current">
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/applying-patches/">Applying patches</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">How-to guides</span></p>
@@ -89,18 +87,24 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/command-line/">Command line arguments</a>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../command-line/">Command line arguments</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/format/">Format</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Format</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#metadata">Metadata</a>
+    </li>
+    </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../releases/">Releases</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../froscon25/">FrOSCon 25</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../fosdem25/">FOSDEM 25</a>
                   </li>
               </ul>
               <ul>
@@ -121,8 +125,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Tutorials</li>
-      <li class="breadcrumb-item active">Applying patches</li>
+          <li class="breadcrumb-item">Reference</li>
+      <li class="breadcrumb-item active">Format</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -131,14 +135,62 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="applying-patches">Applying patches</h1>
-<p>TODO write this tutorial!</p>
+                <h1 id="configuration-and-metadata-format">Configuration and metadata format</h1>
+<p>The subpatch configuration file and the metdata files use the git config file
+format.</p>
+<h2 id="configuration">Configuration</h2>
+<p>A superproject contains a subpatch configuration file. It's call <code>.subpatch</code>
+and place at the toplevel directory of the superproject. In the case of git
+it's placed next to the <code>.git</code> folder.</p>
+<p>Example configuration file:</p>
+<pre><code>[subprojects]
+    path = dirA
+    path = dirB
+</code></pre>
+<p>For now there is only one section:</p>
+<ul>
+<li><code>[subprojects]</code><ul>
+<li><code>path</code>: Path to the subproject from the toplevel directory of the superproject.
+   For every subproject there is a seperate <code>path</code> value.</li>
+</ul>
+</li>
+</ul>
+<h2 id="metadata">Metadata</h2>
+<p>Every subproject as a metadata file. It's called <code>.subproject</code> and place at the
+top level directory of the subproject.</p>
+<p>Example metadata file:</p>
+<pre><code>[patches]
+    appliedIndex = -1
+[subtree]
+     checksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+[upstream]
+    objectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+    rev = refs/heads/master
+    url = ../subproject TODO add real url
+</code></pre>
+<p>There are different sections and every section as different keys:</p>
+<ul>
+<li><code>[upstream]</code><ul>
+<li><code>url</code>: URL of remote git repository</li>
+<li><code>rev</code>: git revision that is integrated, e.g. <code>HEAD</code>, <code>refs/heads/master</code> or <code>v1.0</code></li>
+<li><code>objectId</code>: The SHA1 of the git object that is integrated.</li>
+</ul>
+</li>
+<li><code>[patches]</code><ul>
+<li><code>appliedIndex</code>: Integer from -1 to count of patches minus 1</li>
+</ul>
+</li>
+<li><code>[subtree]</code><ul>
+<li><code>checksum</code>: A checksum over the subproject's files after integration (and before patches are applied).</li>
+</ul>
+</li>
+</ul>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../basic-usage/" class="btn btn-neutral float-left" title="Basic usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../howto/yocto/" class="btn btn-neutral float-right" title="Project based on Yocto">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../command-line/" class="btn btn-neutral float-left" title="Command line arguments"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../glossary/" class="btn btn-neutral float-right" title="Glossary">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -162,10 +214,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../basic-usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../command-line/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../howto/yocto/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../glossary/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/ref/config-format/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/impl/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Config format - subpatch</title>
+    <title>Implementation details - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Config format";
-        var mkdocs_page_input_path = "ref/config-format.md";
-        var mkdocs_page_url = "/ref/config-format/";
+        var mkdocs_page_name = "Implementation details";
+        var mkdocs_page_input_path = "exp/impl.md";
+        var mkdocs_page_url = "/exp/impl/";
       </script>
     
     <!--[if lt IE 9]>
@@ -54,22 +54,24 @@
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Explanations</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/intro/">Introduction</a>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/learnings/">Learnings</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/requirements/">Requirements</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/comparison/">Comparison to other tools</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits and drawbacks</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/benefits/">Benefits</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/faq/">Frequently asked questions</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
                   </li>
-                  <li class="toctree-l1"><a class="" href="../../exp/impl.md">Implementation details</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Implementation details</a>
+    <ul class="current">
+    </ul>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -88,15 +90,17 @@
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../command-line/">Command line arguments</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/command-line/">Command line arguments</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../glossary/">Glossary</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/format/">Format</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../releases/">Releases</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../froscon25/">FrOSCon 25</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/releases/">Releases</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../fosdem25/">FOSDEM 25</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/froscon25/">FrOSCon 25</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/fosdem25/">FOSDEM 25</a>
                   </li>
               </ul>
               <ul>
@@ -117,7 +121,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Config format</li>
+          <li class="breadcrumb-item">Explanations</li>
+      <li class="breadcrumb-item active">Implementation details</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -126,24 +131,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="config-format">Config format</h1>
-<p>This page is the reference for the subpatch config file, named <code>.subpatch</code>.
-It's located at the top level directory of the superproject.  An example is</p>
-<pre><code>[subpatch "external/googletest"]
-    url = https://github.com/google/googletest
-</code></pre>
-<h2 id="sections">Sections</h2>
-<p>TODO explain parts
-TODO maybe this should be also a manpage</p>
-<p>Maybe link to</p>
-<pre><code>https://git-scm.com/docs/git-config#EXAMPLES
-</code></pre>
-<h2 id="subsection-keys">subsection keys</h2>
-<h3 id="url">url</h3>
-<p>It's the subproject's repository URL that was used when you called <code>subpatch add</code>.</p>
+                <h1 id="implementation">Implementation</h1>
+<p>TODO this page should describe the implementation details of subpatch. e.g. the
+config and the metadata files. This should be it easier to understand the
+commands and the interaction with the superproject, e.g. git.</p>
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../design/" class="btn btn-neutral float-left" title="Design decisions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../tut/installation/" class="btn btn-neutral float-right" title="Installation">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -166,6 +164,10 @@ TODO maybe this should be also a manpage</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
+      <span><a href="../design/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../tut/installation/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

@@ -63,9 +63,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits and drawbacks</a>
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Frequently asked questions</a>
     <ul class="current">
@@ -85,7 +83,9 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="" href="../impl.md">Implementation details</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../impl/">Implementation details</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -105,6 +105,8 @@
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/command-line/">Command line arguments</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ref/format/">Format</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../ref/glossary/">Glossary</a>
                   </li>
@@ -190,7 +192,7 @@ features of a SCM tool are reimplemented or need to be reimplemented. And
 subpatch is carefully designed to not be a wrapper around git.</p>
 <h2 id="does-subpatch-increase-the-storage-requirements-on-the-source-control-servers">Does subpatch increase the storage requirements on the source control servers?</h2>
 <p>Yes, it does! But that is mostly good thing for you!</p>
-<p>If you previously used git submodules, repo or other tools for our superproject and now
+<p>If you previously used git submodules, repo or other tools for your superproject and now
 start to use subpatch, your repository will grow in size. The files of your
 dependencies are directly in our repository (superproject) now. So they are
 downloaded when you do a <code>git clone</code> or a co-worker does a <code>git fetch</code>.</p>
@@ -231,13 +233,15 @@ dependencies or subprojects in your multi repository setup into account.</p>
 <p>TODO Explain more.</p>
 <h2 id="im-using-subpatch-for-my-200-gb-source-code-project-and-i-have-git-scaling-issues-now-what-should-i-do">I'm using subpatch for my &gt;200 GB source code project and I have git scaling issues now! What should I do?</h2>
 <p>Ok, that's an issue. But if you are at this scale, you should also have
-resources in our organization to invest in better tooling. ;-)</p>
+resources in your organization to invest in better tooling. ;-) E.g. Microsoft
+has invested <a href="https://github.com/microsoft/scalar">resources into scaling git for big projects</a>.
+It started out as a fork of git and extra tooling, but now is integrated into git itself.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../benefits/" class="btn btn-neutral float-left" title="Benefits"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../tut/installation/" class="btn btn-neutral float-right" title="Installation">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../benefits/" class="btn btn-neutral float-left" title="Benefits and drawbacks"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../design/" class="btn btn-neutral float-right" title="Design decisions">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -264,7 +268,7 @@ resources in our organization to invest in better tooling. ;-)</p>
       <span><a href="../benefits/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../tut/installation/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../design/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
