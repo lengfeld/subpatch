@@ -53,4 +53,12 @@ git config files) the naming convention is *camelCase*. See
 * [+] Consistency, since supatch is using the same style as git itself.
 
 
+**DD8**: The git tree object SHA1 checksum is used to record the state of the
+subtree(=file tree) after unpack and before patches are applied.
+
+* [+]: Already a standard definied by git
+* [+]: If superproject is git, already computed for us. No extra code needed.
+* [+]: If superproject is git, already computed for us. No extra directory walk and file read needed.
+
+
 *Note*: This list is not completed yet and should grow while supbatch is developed.
