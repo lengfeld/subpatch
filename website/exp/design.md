@@ -59,5 +59,13 @@ subtree(=file tree) after unpack and before patches are applied.
 * [+]: If superproject is git, already computed for us. No extra code needed.
 * [+]: If superproject is git, already computed for us. No extra directory walk and file read needed.
 
+**DD9**: subpatch requires python 3.11 or later
+
+TODO
+
+**DD10**: Using the term *subtree* instead of *worktree*
+
+TODO explain
+TODO Maybe also add more terms here!
 
 *Note*: This list is not completed yet and should grow while supbatch is developed.

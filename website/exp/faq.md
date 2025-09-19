@@ -62,7 +62,7 @@ subpatch is carefully designed to not be a wrapper around git.
 
 Yes, it does! But that is mostly good thing for you!
 
-If you previously used git submodules, repo or other tools for our superproject and now
+If you previously used git submodules, repo or other tools for your superproject and now
 start to use subpatch, your repository will grow in size. The files of your
 dependencies are directly in our repository (superproject) now. So they are
 downloaded when you do a `git clone` or a co-worker does a `git fetch`.
@@ -96,13 +96,13 @@ submodules, repo or others and you don't configure anything, git repositories
 are not cloned with `--depth=1` by default. So you get the full history in your
 local checkout.
 
+
 ## Subpatch makes the checkout bigger!
 
 No, the whole checkout does not get larger. You have to take all the
 dependencies or subprojects in your multi repository setup into account.
 
 subpatch makes the checkout maybe even smaller. See previous answer.
-
 
 
 ## subpatch promotes vendoring of dependencies. I have heard that this is bad!
@@ -122,4 +122,6 @@ TODO Explain more.
 ## I'm using subpatch for my >200 GB source code project and I have git scaling issues now! What should I do?
 
 Ok, that's an issue. But if you are at this scale, you should also have
-resources in our organization to invest in better tooling. ;-)
+resources in your organization to invest in better tooling. ;-) E.g. Microsoft
+has invested [resources into scaling git for big projects](https://github.com/microsoft/scalar).
+It started out as a fork of git and extra tooling, but now is integrated into git itself.
