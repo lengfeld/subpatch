@@ -50,8 +50,7 @@ In the config file `.subpatch` and metadata files `.subproject` (that are
 git config files) the naming convention is *camelCase*. See
 [these example from the git documentation.](https://git-scm.com/docs/git-config#_example)
 
-* [+] Consistency, since supatch is using the same style as git itself.
-
+* [+] Consistency, since subpatch is using the same style as git itself.
 
 **DD8**: The git tree object SHA1 checksum is used to record the state of the
 subtree(=file tree) after unpack and before patches are applied.
