@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/tut/applying-patches/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://subpatch.net/exp/impl/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Applying patches - subpatch</title>
+    <title>Implementation details - subpatch</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Applying patches";
-        var mkdocs_page_input_path = "tut/applying-patches.md";
-        var mkdocs_page_url = "/tut/applying-patches/";
+        var mkdocs_page_name = "Implementation details";
+        var mkdocs_page_input_path = "exp/impl.md";
+        var mkdocs_page_url = "/exp/impl/";
       </script>
     
     <!--[if lt IE 9]>
@@ -54,33 +54,33 @@
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Explanations</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/intro/">Introduction</a>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../intro/">Introduction</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/learnings/">Learnings</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../learnings/">Learnings</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/requirements/">Requirements</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../requirements/">Requirements</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/comparison/">Comparison to other tools</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/benefits/">Benefits and drawbacks</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits and drawbacks</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/faq/">Frequently asked questions</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/impl/">Implementation details</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Implementation details</a>
+    <ul class="current">
+    </ul>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/installation/">Installation</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../basic-usage/">Basic usage</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/basic-usage/">Basic usage</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Applying patches</a>
-    <ul class="current">
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tut/applying-patches/">Applying patches</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">How-to guides</span></p>
@@ -121,8 +121,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Tutorials</li>
-      <li class="breadcrumb-item active">Applying patches</li>
+          <li class="breadcrumb-item">Explanations</li>
+      <li class="breadcrumb-item active">Implementation details</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -131,14 +131,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="applying-patches">Applying patches</h1>
-<p>TODO write this tutorial!</p>
+                <h1 id="implementation">Implementation</h1>
+<p>TODO this page should describe the implementation details of subpatch. e.g. the
+config and the metadata files. This should be it easier to understand the
+commands and the interaction with the superproject, e.g. git.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../basic-usage/" class="btn btn-neutral float-left" title="Basic usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../howto/yocto/" class="btn btn-neutral float-right" title="Project based on Yocto">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../design/" class="btn btn-neutral float-left" title="Design decisions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../tut/installation/" class="btn btn-neutral float-right" title="Installation">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -162,10 +164,10 @@
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../basic-usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../design/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../howto/yocto/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../tut/installation/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

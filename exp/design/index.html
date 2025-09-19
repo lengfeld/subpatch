@@ -63,15 +63,15 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../comparison/">Comparison to other tools</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits and drawbacks</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
+                  </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Design decisions</a>
     <ul class="current">
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
-                  </li>
-                  <li class="toctree-l1"><a class="" href="../impl.md">Implementation details</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../impl/">Implementation details</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -171,7 +171,7 @@ from the subpatch config file.</p>
 git config files) the naming convention is <em>camelCase</em>. See
 <a href="https://git-scm.com/docs/git-config#_example">these example from the git documentation.</a></p>
 <ul>
-<li>[+] Consistency, since supatch is using the same style as git itself.</li>
+<li>[+] Consistency, since subpatch is using the same style as git itself.</li>
 </ul>
 <p><strong>DD8</strong>: The git tree object SHA1 checksum is used to record the state of the
 subtree(=file tree) after unpack and before patches are applied.</p>
@@ -180,13 +180,18 @@ subtree(=file tree) after unpack and before patches are applied.</p>
 <li>[+]: If superproject is git, already computed for us. No extra code needed.</li>
 <li>[+]: If superproject is git, already computed for us. No extra directory walk and file read needed.</li>
 </ul>
+<p><strong>DD9</strong>: subpatch requires python 3.11 or later</p>
+<p>TODO</p>
+<p><strong>DD10</strong>: Using the term <em>subtree</em> instead of <em>worktree</em></p>
+<p>TODO explain
+TODO Maybe also add more terms here!</p>
 <p><em>Note</em>: This list is not completed yet and should grow while supbatch is developed.</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../comparison/" class="btn btn-neutral float-left" title="Comparison to other tools"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../benefits/" class="btn btn-neutral float-right" title="Benefits">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../faq/" class="btn btn-neutral float-left" title="Frequently asked questions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../impl/" class="btn btn-neutral float-right" title="Implementation details">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -210,10 +215,10 @@ subtree(=file tree) after unpack and before patches are applied.</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../comparison/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../faq/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../benefits/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../impl/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
