@@ -23,6 +23,7 @@ nav:
     - Project based on Yocto: 'howto/yocto.md'
   - Reference:
     - Command line arguments: 'ref/command-line.md'
+    - Format: 'ref/format.md'
     - Glossary: 'ref/glossary.md'
     - Releases: 'ref/releases.md'
     - FrOSCon 25: 'ref/froscon25.md'

@@ -652,3 +652,8 @@ Feedback from the unconference session at OSSE 2025:
 
 Looking at west talk:
    https://osseu2025.sched.com/event/25VrA/demystifying-west-carles-cufi-nordic-semiconductor
+
+For the "format" reference: Be more formal for the description of the sections,
+keys and values:
+* Add types for values, e.g. Number, String, SHA1 or path
+* Add optional information, e.g. whether a value can be left out.
