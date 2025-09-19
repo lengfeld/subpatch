@@ -11,9 +11,9 @@ nav:
     - Learnings: 'exp/learnings.md'
     - Requirements: 'exp/requirements.md'
     - Comparison to other tools: 'exp/comparison.md'
-    - Design decisions: 'exp/design.md'
     - Benefits and drawbacks: 'exp/benefits.md'
     - Frequently asked questions: 'exp/faq.md'
+    - Design decisions: 'exp/design.md'
     - Implementation details: 'exp/impl.md'
   - Tutorials:
     - Installation: 'tut/installation.md'
