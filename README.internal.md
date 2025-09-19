@@ -657,3 +657,9 @@ For the "format" reference: Be more formal for the description of the sections,
 keys and values:
 * Add types for values, e.g. Number, String, SHA1 or path
 * Add optional information, e.g. whether a value can be left out.
+
+Look a
+   https://pypi.org/project/amalgamate/
+and the record_android_trace.py script by Google
+
+Add mkdocs build to linting and make warnings/errors a failure of the linting.
