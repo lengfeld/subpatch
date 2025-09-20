@@ -164,13 +164,15 @@ class SuperHelperGit:
         git_add(paths)
 
     def print_instructions_to_commit_and_inspect(self) -> None:
-        # TODO handle the case, e.g. after "push" that there are _no_ changes in the index!
-        print("The following changes are recorded in the git index:")
         shortstat = git_diff_staged_shortstat()
-        print("%s" % (shortstat.decode("ascii"),))
-        print("- To inspect the changes, use `git status` and `git diff --staged`.")
-        print("- If you want to keep the changes, commit them with `git commit`.")
-        print("- If you want to revert the changes, execute `git reset --merge`.")
+        if shortstat == b"":
+            print("Note: There are no changes in the subproject. Nothing to commit!")
+        else:
+            print("The following changes are recorded in the git index:")
+            print("%s" % (shortstat.decode("ascii"),))
+            print("- To inspect the changes, use `git status` and `git diff --staged`.")
+            print("- If you want to keep the changes, commit them with `git commit`.")
+            print("- If you want to revert the changes, execute `git reset --merge`.")
 
     # TODO move this code to "main.py" it's generic for all SCMs
     def configure(self, scm_path: bytes) -> None:

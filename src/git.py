@@ -27,15 +27,13 @@ def git_add(args):
         raise Exception("git failure")
 
 
-def git_diff_staged_shortstat():
+def git_diff_staged_shortstat() -> bytes:
     p = Popen(["git", "diff", "--staged", "--shortstat"], stdout=PIPE)
     stdout, _ = p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
 
-    stdout = stdout.rstrip(b"\n")
-    assert isinstance(stdout, bytes)
-    return stdout
+    return stdout.rstrip(b"\n")
 
 
 # As of git v2.9.0 these are all valid git objects

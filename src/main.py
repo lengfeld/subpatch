@@ -332,15 +332,10 @@ def cmd_update(args, parser):
     if not args.quiet:
         print(" Done.")
 
-    # TODO think about this case. Maybe add an argument to make this an error.
-    if not git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
-        # There are no changes in the subproject directory and in the metadata.
-        # Nothing has changed! And so there is nothing to commit!
-        # NOTE: So also don't show the commands to commit and inspect the
-        # changes.
-        if not args.quiet:
-            print("Note: There are no changes in the subproject. Nothing to commit!")
-        return 0
+    # TODO Think about the case when there are no changes in the subproject. Or
+    # just no changes in the subtree. (e.g. just a rev/object_id update). Maybe
+    # the user wants to know that. So maybe subpatch should have a exit code
+    # for that.
 
     if not args.quiet:
         # TODO Idea "subpatch status" should print the info/help text. The status

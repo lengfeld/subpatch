@@ -1223,6 +1223,25 @@ The following changes are recorded in the git index:
 """)
                 self.assertEqual(git.diff(staged=True), diff_ok)
 
+    def test_update_with_no_changes_in_subproject(self):
+        with create_and_chdir("subproject"):
+            git = Git()
+            git.init()
+            touch("a")
+            git.add("a")
+            git.commit("adding a")
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            git.commit("add subproject")
+            p = self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"""\
+Updating subproject 'subproject' from URL '../subproject' to revision 'HEAD'... Done.
+Note: There are no changes in the subproject. Nothing to commit!
+""")
+
     def test_update_with_head(self):
         with create_and_chdir("subproject"):
             git = Git()
