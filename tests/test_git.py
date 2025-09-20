@@ -20,7 +20,7 @@ from src.git import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
                      git_ls_files_untracked, git_ls_remote,
                      git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                      is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                     git_hash_object_tree, git_cat_file_pretty)
+                     git_hash_object_tree, git_cat_file_pretty, git_ls_files)
 
 
 class TestGit(TestCaseTempFolder):
@@ -157,6 +157,39 @@ class TestGit(TestCaseTempFolder):
                          refs_sha1[b"refs/tags/v2"])
         self.assertEqual(b"e85c40dcd26466c0052323eb767d1a44ef0a12c1",
                          refs_sha1[b"refs/tags/v1.1"])
+
+    def test_ls_files(self):
+        git = Git()
+        git.init()
+        self.assertEqual(git_ls_files(), [])
+
+        touch("a")
+        self.assertEqual(git_ls_files(), [])
+
+        git.add("a")
+        self.assertEqual(git_ls_files(), [b"a"])
+
+        git.commit("add a")
+        self.assertEqual(git_ls_files(), [b"a"])
+
+        mkdir("subdir")
+        touch("subdir/b")
+        self.assertEqual(git_ls_files(), [b"a"])
+
+        git.add("subdir")
+        self.assertEqual(git_ls_files(), [b"a", b"subdir/b"])
+
+        with chdir("subdir"):
+            self.assertEqual(git_ls_files(), [b"b"])
+
+        os.remove("a")
+        self.assertEqual(git_ls_files(), [b"a", b"subdir/b"])
+
+        git.rm("a")
+        # Now the deletion is recorded in the index. So it's not listed
+        # anymore.
+        self.assertEqual(git_ls_files(), [b"subdir/b"])
+
 
     def test_parse_sha1_names(self):
         self.assertEqual(parse_sha1_names(b"""\

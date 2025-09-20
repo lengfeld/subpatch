@@ -24,8 +24,8 @@ from config import (LineDataHeader, LineDataKeyValue, LineType,
 # TODO main.py should not depend on any git command. They all should be in cache.py
 # or in a new super.py module
 from git import (get_name_from_repository_url, git_diff_in_dir,
-                 git_diff_name_only, git_ls_files_untracked,
-                 git_ls_tree_in_dir, is_valid_revision)
+                 git_diff_name_only, git_ls_files_untracked, is_valid_revision,
+                 git_ls_files)
 from util import AppException, ErrorCode, URLTypes, get_url_type
 from super import (find_superproject, SCMType, check_superproject_data,
                    check_and_get_superproject_from_checked_data, SuperprojectType,
@@ -148,29 +148,34 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
             if len(self._args) >= self.BATCH_COUNT:
                 self.exec_force()
 
+        # NOTE: This function is cwd aware!
         def exec_force(self):
             if len(self._args) == 0:
                 return
             cmd = self._cmd + self._args
-            subprocess.run(cmd, check=True, cwd=super_paths.super_abspath)
+            subprocess.run(cmd, check=True)
             self._args.clear()
 
     # Just quick and try remove and copy!
     # TODO convert this code to "superhelper" implementation
     # TODO This code is "subpatch subtree drop"
     with chdir(super_paths.super_abspath):
-        git_rm = GitCommandBachter(["git", "rm", "-q"])
-        # NOTE: git_ls_tree_in_dir() also lists files non-subtree files E.g.
-        # the folder "patches" and the file ".subproject". These must be
-        # skipped.
+        # TODO ensure that there are no untracked changes. Subpatch should not
+        # remove any work of the user by accident.
+        git_rm = GitCommandBachter(["git", "rm", "-q", "-f"])
         # TODO Add a custom/plumping command for that "subpatch subtree list"
-        for path in git_ls_tree_in_dir(sub_paths.super_to_sub_relpath):
-            if path.startswith(sub_paths.super_to_sub_relpath + b"/patches/"):
-                continue
-            if path == (sub_paths.super_to_sub_relpath + b"/.subproject"):
-                continue
-            git_rm.add_and_maybe_exec(path)
-        git_rm.exec_force()
+        with chdir(sub_paths.super_to_sub_relpath):
+            subtree_files_relpaths = git_ls_files()
+            # NOTE: git_ls_tree_in_dir() also lists files non-subtree files E.g.
+            # the folder "patches" and the file ".subproject". These must be
+            # skipped.
+            for path in subtree_files_relpaths:
+                if path.startswith(b"patches/"):
+                    continue
+                if path == b".subproject":
+                    continue
+                git_rm.add_and_maybe_exec(path)
+            git_rm.exec_force()
 
     # and copy
 
@@ -195,7 +200,8 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
 
                 git_add.add_and_maybe_exec(super_to_dest_relpath)
 
-        git_add.exec_force()
+        with chdir(super_paths.super_abspath):
+            git_add.exec_force()
 
     # Remove empty directories in download/cache dir
     for root, dirnames, files in os.walk(cache_abspath, topdown=False):
@@ -271,15 +277,12 @@ def cmd_update(args, parser):
     assert isinstance(url, str)
     assert revision is None or isinstance(revision, str)
 
-    # TODO if some of the patches are deapply, it's ok to have changes in the
-    # index! How to handle that here? In that case
+    # NOTE staged changes in the subtree of the subproject are ok. We assume that the
+    # subproject is in a clean/sane state. E.g. the user has deapplyed some or all patches.
+    # Untrack changes are _not_ ok. It's mostly means that the subproject is not clean.
     if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath):
         # TODO add more explanations and commands to fix!
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There are unstaged changes in the subproject.")
-
-    if git_diff_in_dir(superx.path, sub_paths.super_to_sub_relpath, staged=True):
-        # TODO add more explanations and commands to fix!
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There are staged changes in the subproject.")
 
     # TODO check that the subproject is in a clean state
 

@@ -265,6 +265,20 @@ def git_ls_tree_in_dir(subdir):
     return parse_z(stdout)
 
 
+# NOTE:
+# * The 'git ls-files' is cmd aware. The caller should go into the right
+#   directory first.
+# * it also list files that are added to the index, but not yet commited.
+# * it does not list files that are removed and the deletion is stagged!
+def git_ls_files() -> list[bytes]:
+    p = Popen(["git", "ls-files", "-z"], stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("TODO error here")
+
+    return parse_z(stdout)
+
+
 def git_diff_name_only(staged=False):
     # NOTE: "git diff" does not depend on the cwd inside the repo
     cmd = ["git", "diff", "--name-only", "-z"]

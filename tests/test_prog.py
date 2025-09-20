@@ -991,13 +991,6 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(b"Error: Invalid argument: There are unstaged changes in the subproject.\n",
                              p.stderr)
 
-            # Staged changes in subproject are an error
-            git.add("dir/subproject/file")
-            p = self.run_subpatch(["update", "dir/subproject", "-r", "v2"], stderr=PIPE)
-            self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Error: Invalid argument: There are staged changes in the subproject.\n",
-                             p.stderr)
-
             git.remove_staged_changes()
 
     def create_subproject(self):
@@ -1301,25 +1294,24 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 """)
 
     def test_update_with_local_patches(self):
+        # NOTE: This does does not commit any changes. Adding, appyling,
+        # poping, updating, pushing is done on the index. This is on purpose
+        # and a feature of subpatch with git as the superproject.
         self.create_subproject()
 
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
             self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
-            git.commit("add subproject")
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
-                git.commit("subproject: add patch")
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["pop", "-q"])
-            git.commit("subproject: pop")
             self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
 
             self.run_subpatch_ok(["update", "-q", "-r", "v2", "subproject"])
-            git.commit("subproject: update")
 
             self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
 

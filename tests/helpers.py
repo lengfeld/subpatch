@@ -84,6 +84,10 @@ class Git:
         # TODO rework argument to be filenames as a list.
         self.call(["add", filename])
 
+    def rm(self, filename):
+        # TODO rework argument to be filenames as a list.
+        self.call(["rm", "-q", filename])
+
     def tag(self, name, message):
         self.call(["tag", name, "-m", message])
 
