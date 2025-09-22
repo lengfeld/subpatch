@@ -218,7 +218,6 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     do_unpack_update_metadata(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
-        # TODO Absolute path to git-add is used. This is strange, but works!
         superx.helper.add([sub_paths.metadata_abspath])
 
 
