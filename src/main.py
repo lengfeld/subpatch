@@ -294,6 +294,8 @@ def cmd_update(args, parser):
     # TODO deapply all patches
 
     if not args.quiet:
+        # TODO printing is not correct. In case of an error, the newline is not
+        # printed!
         print("Updating subproject '%s' from URL '%s' to revision '%s'..." %
               (sub_paths.cwd_to_sub_relpath.decode("utf8"), url, cache_helper.get_revision_as_str(revision)),
               end="")
@@ -324,9 +326,19 @@ def cmd_update(args, parser):
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
 
     # subpatch unpack
-    do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath, url, revision, object_id)
+    try:
+        do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath, url, revision, object_id)
+    except Exception:
+        # TODO maybe some other layer of subpatch should be responsible for the
+        # cleanup.
+        if os.path.exists(cache_abspath):
+            print("Warning: Cache directory '{cache_relpath}' still exists. Removing it!", file=sys.stderr)
+            # TODO rmtree is always a bit risky. subpatch should not remove
+            # random files from the user.
+            shutil.rmtree(cache_abspath)
 
     # TODO reapply patches: subpatch push --all
+    # TODO only apply to the same index as before, not just all patches!
 
     if not args.quiet:
         print(" Done.")
