@@ -779,6 +779,23 @@ def do_pop_push_update_metadata(sub_paths: SubPaths, applied_index: int) -> None
 
 
 # TODO maybe use metadata_abspath instead of SubPaths
+# TODO refactor with other update commands
+def do_update_metadata_for_subtree_checksum(sub_paths: SubPaths, subtree_checksum: bytes) -> None:
+    try:
+        with open(sub_paths.metadata_abspath, "br") as f:
+            metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
+    except FileNotFoundError:
+        metadata_lines = empty_config_lines()
+
+    metadata_lines = config_add_section2(metadata_lines, b"subtree")
+    metadata_lines = config_set_key_value2(metadata_lines, b"subtree", b"checksum", subtree_checksum)
+
+    metadata_config = config_unparse2(metadata_lines)
+    with open(sub_paths.metadata_abspath, "bw") as f:
+        f.write(metadata_config)
+
+
+# TODO maybe use metadata_abspath instead of SubPaths
 def do_pop_update_metadata_drop(sub_paths: SubPaths) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
@@ -1016,7 +1033,7 @@ class Metadata:
     revision: bytes | None
     object_id: bytes | None
     patches_applied_index: bytes | None
-    subtre_checksum: bytes | None
+    subtree_checksum: bytes | None
 
 
 def read_metadata(path: bytes) -> Metadata:
@@ -1079,6 +1096,57 @@ def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
         applied_index = len(patches) - 1
 
     return PatchesDim(patches, applied_index)
+
+
+def cmd_subtree_checksum(args, parser):
+    if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
+
+    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+
+    if args.calc:
+        checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
+        print(checksum.decode("ascii"))
+        return 0
+    elif args.get:
+        metadata = read_metadata(sub_paths.metadata_abspath)
+
+        if metadata.subtree_checksum is None:
+            # TODO is this a runtime error or an invalid argument?
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "No checksum in metadata found!")
+
+        print(metadata.subtree_checksum.decode("ascii"))
+        return 0
+    elif args.check:
+        checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
+        metadata = read_metadata(sub_paths.metadata_abspath)
+
+        if metadata.subtree_checksum is None:
+            # TODO is this a runtime error or an invalid argument?
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "No checksum in metadata found!")
+
+        # TODO document exit codes
+        # TODO maybe use abbrev versions of the checksum as git does!
+        if checksum == metadata.subtree_checksum:
+            if not args.quiet:
+                checksum_str = checksum.decode("ascii")
+                print(f"Subtree's checksum {checksum_str} matches the metdata!")
+            return 0
+        else:
+            if not args.quiet:
+                checksum_str = checksum.decode("ascii")
+                metadata_checksum_str = metadata.subtree_checksum.decode("ascii")
+                print(f"Subtree's checksum {checksum_str} does not match checksum {metadata_checksum_str} in the metadata.")
+            return 1
+    elif args.write:
+        checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
+
+        # TODO mabye this should also have an output to stdout?
+        do_update_metadata_for_subtree_checksum(sub_paths, checksum)
+
+        return 0
+    else:
+        assert False
 
 
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
@@ -1325,6 +1393,23 @@ def main_wrapped() -> int:
     parser_list = subparsers.add_parser("list",
                                         help="List all subprojects")
     parser_list.set_defaults(func=cmd_list)
+
+    parser_subtree = subparsers.add_parser("subtree",
+                                           help="Commands to modify/query the subprojects subtree")
+    subparsers_subtree = parser_subtree.add_subparsers()
+    parser_subtree_checksum = subparsers_subtree.add_parser("checksum",
+                                                            help="Commands to modify/query the checksum of the subtree")
+    parser_subtree_checksum.add_argument("--calc", dest="calc", action=argparse.BooleanOptionalAction,
+                                         help="tbd")
+    parser_subtree_checksum.add_argument("--check", dest="check", action=argparse.BooleanOptionalAction,
+                                         help="tbd")
+    parser_subtree_checksum.add_argument("--write", dest="write", action=argparse.BooleanOptionalAction,
+                                         help="tbd")
+    parser_subtree_checksum.add_argument("--get", dest="get", action=argparse.BooleanOptionalAction,
+                                         help="tbd")
+    parser_subtree_checksum.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                                         help="Suppress output to stdout")
+    parser_subtree_checksum.set_defaults(func=cmd_subtree_checksum)
 
     parser_help = subparsers.add_parser("help",
                                         help="Also shows the help message")

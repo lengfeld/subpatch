@@ -967,6 +967,128 @@ Now use 'git commit' to finalized your change.
                          b"Error: Feature not implemented yet: No SCM found. Cannot configure. '--here' not implemented yet!\n")
 
 
+class TestCmdSubtree(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def test_invalid_argument(self):
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+
+            message = b"Error: Invalid argument: You must exactly use one of --get, --calc, --write or --check!\n"
+
+            p = self.run_subpatch(["subtree", "checksum"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, message)
+
+            p = self.run_subpatch(["subtree", "checksum", "--get", "--calc"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, message)
+
+    def test_check(self):
+        # TODO use subpatch init to speed up tests!
+        with create_and_chdir("subproject"):
+            create_git_repo_with_branches_and_tags()
+            # TODO this can also be a simpler repo
+            # TODO and this can also then be faster!
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+
+            with chdir("subproject"):
+                p = self.run_subpatch_ok(["subtree", "checksum", "--check"], stdout=PIPE)
+                self.assertEqual(p.stdout,
+                                 b"Subtree's checksum ab68824b155017910afbcf759366571460deb898 matches the metdata!\n")
+                p = self.run_subpatch_ok(["subtree", "checksum", "--check", "-q"], stdout=PIPE)
+                self.assertEqual(p.stdout, b"")
+
+                touch("file", b"xxxx")
+                git.add("file")
+                p = self.run_subpatch(["subtree", "checksum", "--check"], stdout=PIPE)
+                self.assertEqual(p.returncode, 1)
+                self.assertEqual(p.stdout,
+                                 b"Subtree's checksum 3958b4b8e6a26fab03ceb1e9a93098ae07658c69 does not match "
+                                 b"checksum ab68824b155017910afbcf759366571460deb898 in the metadata.\n")
+                p = self.run_subpatch(["subtree", "checksum", "--check", "-q"], stdout=PIPE)
+                self.assertEqual(p.returncode, 1)
+                self.assertEqual(p.stdout, b"")
+
+                # Quick hack to check failure case. Just overwrite the file!
+                touch(".subproject", b"")
+                p = self.run_subpatch(["subtree", "checksum", "--check"], stderr=PIPE)
+                self.assertEqual(p.returncode, 4)
+                self.assertEqual(p.stderr, b"Error: Invalid argument: No checksum in metadata found!\n")
+
+    def test_get(self):
+        with create_and_chdir("subproject"):
+            create_git_repo_with_branches_and_tags()
+            # TODO this can also be a simpler repo
+            # TODO and this can also then be faster!
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+
+            with chdir("subproject"):
+                p = self.run_subpatch(["subtree", "checksum", "--get"], stdout=PIPE)
+                self.assertEqual(p.returncode, 0)
+                self.assertEqual(p.stdout, b"ab68824b155017910afbcf759366571460deb898\n")
+
+                # Quick hack to check failure case. Just overwrite the file!
+                touch(".subproject", b"")
+                p = self.run_subpatch(["subtree", "checksum", "--get"], stderr=PIPE)
+                self.assertEqual(p.returncode, 4)
+                self.assertEqual(p.stderr, b"Error: Invalid argument: No checksum in metadata found!\n")
+
+    def test_calc(self):
+        with create_and_chdir("subproject"):
+            create_git_repo_with_branches_and_tags()
+            # TODO this can also be a simpler repo
+            # TODO and this can also then be faster!
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+
+            with chdir("subproject"):
+                p = self.run_subpatch_ok(["subtree", "checksum", "--calc"], stdout=PIPE)
+                self.assertEqual(p.stdout, b"ab68824b155017910afbcf759366571460deb898\n")
+                touch("file", b"xxxx")
+                git.add("file")
+                p = self.run_subpatch_ok(["subtree", "checksum", "--calc"], stdout=PIPE)
+                self.assertEqual(p.stdout, b"3958b4b8e6a26fab03ceb1e9a93098ae07658c69\n")
+
+    def test_write(self):
+        with create_and_chdir("subproject"):
+            create_git_repo_with_branches_and_tags()
+            # TODO this can also be a simpler repo
+            # TODO and this can also then be faster!
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+
+            with chdir("subproject"):
+                p = self.run_subpatch_ok(["subtree", "checksum", "--get"], stdout=PIPE)
+                checksum_old = p.stdout
+                self.assertEqual(checksum_old, b"ab68824b155017910afbcf759366571460deb898\n")
+
+                touch("file", b"xxxx")
+                git.add("file")
+
+                p = self.run_subpatch_ok(["subtree", "checksum", "--calc"], stdout=PIPE)
+                checksum_new = p.stdout
+                self.assertEqual(checksum_new, b"3958b4b8e6a26fab03ceb1e9a93098ae07658c69\n")
+
+                self.run_subpatch_ok(["subtree", "checksum", "--write"])
+
+                p = self.run_subpatch_ok(["subtree", "checksum", "--get"], stdout=PIPE)
+                self.assertEqual(p.stdout, checksum_new)
+
+
 class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_some_errors_cases(self):
         with create_and_chdir("subproject"):

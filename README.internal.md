@@ -663,3 +663,5 @@ Look a
 and the record_android_trace.py script by Google
 
 Add mkdocs build to linting and make warnings/errors a failure of the linting.
+
+Document `subpatch subtree checksum` command on the website.
