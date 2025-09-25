@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import configparser
 from contextlib import chdir
 from dataclasses import dataclass
 from subprocess import DEVNULL, PIPE, Popen
@@ -53,6 +54,21 @@ def parse_z(b):
         return []
 
     return b.rstrip(b"\0").split(b"\0")
+
+
+# TODO this function uses 'str' types, but actually we use the bytes type for
+# this data a lot.
+def get_prop_from_ini(filename: str, section: str, name: str) -> str | None:
+    # We use the configparser here, because the git config file format is very
+    # similar to INI format. It's a easy and fast way to get values from the
+    # config file. E.g. faster than use "git config -f <filename> <prop>" as an
+    # external command.
+    data = configparser.ConfigParser()
+    data.read(filename)
+    try:
+        return data[section][name]
+    except KeyError:
+        return None
 
 
 # TODO Make this to GitExtra or GitTests and also have a Git class in

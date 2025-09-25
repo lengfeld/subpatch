@@ -12,7 +12,8 @@ from subprocess import DEVNULL, PIPE, Popen, run
 from time import sleep
 
 from helpers import (Git, TestCaseHelper, TestCaseTempFolder, create_and_chdir,
-                     create_git_repo_with_branches_and_tags, touch)
+                     create_git_repo_with_branches_and_tags, touch,
+                     get_prop_from_ini)
 from localwebserver import FileRequestHandler, LocalWebserver
 
 path = realpath(__file__)
@@ -22,16 +23,6 @@ from src.git import ObjectType, git_get_object_type, git_ls_files_untracked
 
 # TODO make this more generic and an API for also testing subpatch in the PATH
 SUBPATCH_PATH = os.environ.get("TEST_BIN_PATH", join(dirname(path), "../src/main.py"))
-
-
-# TODO Move to helper. Find better name
-def get_prop_from_ini(filename, prop):
-    p = Popen(["git", "config", "-f", filename, prop], stdout=PIPE)
-    stdout, _ = p.communicate()
-    if p.returncode != 0:
-        raise Exception("hwere")
-
-    return stdout.rstrip(b"\n")
 
 
 class TestSubpatch:
@@ -1447,18 +1438,20 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), None)
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["pop", "-q"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), "-1")
 
             self.run_subpatch_ok(["update", "-q", "-r", "v2", "subproject"])
 
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches.appliedIndex"), b"-1")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), "-1")
 
             self.assertFileDoesNotExist("subproject/extra-file")
             with chdir("subproject"):
                 self.run_subpatch_ok(["push", "-q"])
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), None)
 
             # Ensure that the changes of the patch are still there
             self.assertFileContent("subproject/extra-file", b"extra-content\n")
