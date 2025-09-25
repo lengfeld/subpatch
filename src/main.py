@@ -287,8 +287,11 @@ def cmd_update(args, parser):
 
     # For now check whether all patches are deapplied!
     patches_dim = read_patches_dim(sub_paths, metadata)
+    subtree_dim = read_subtree_dim(metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
+
     if len(patches_dim.patches) > 0:
-        if patches_dim.applied_index != -1:
+        if subtree_dim.applied_index != -1:
             raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subproject has patches applied. Please pop first!")
 
     # TODO deapply all patches
@@ -770,8 +773,8 @@ def do_pop_push_update_metadata(sub_paths: SubPaths, applied_index: int) -> None
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
 
-    metadata_lines = config_add_section2(metadata_lines, b"patches")
-    metadata_lines = config_set_key_value2(metadata_lines, b"patches", b"appliedIndex", b"%d" % (applied_index,))
+    metadata_lines = config_add_section2(metadata_lines, b"subtree")
+    metadata_lines = config_set_key_value2(metadata_lines, b"subtree", b"appliedIndex", b"%d" % (applied_index,))
 
     metadata_config = config_unparse2(metadata_lines)
     with open(sub_paths.metadata_abspath, "bw") as f:
@@ -803,8 +806,24 @@ def do_pop_update_metadata_drop(sub_paths: SubPaths) -> None:
     except FileNotFoundError:
         metadata_lines = empty_config_lines()
 
-    metadata_lines = config_drop_key2(metadata_lines, b"patches", b"appliedIndex")
-    metadata_lines = config_drop_section_if_empty(metadata_lines, b"patches")
+    metadata_lines = config_drop_key2(metadata_lines, b"subtree", b"appliedIndex")
+    metadata_lines = config_drop_section_if_empty(metadata_lines, b"subtree")
+
+    metadata_config = config_unparse2(metadata_lines)
+    with open(sub_paths.metadata_abspath, "bw") as f:
+        f.write(metadata_config)
+
+
+# TODO refactor this function!
+def do_apply_update_metadata(sub_paths: SubPaths, applied_index: int) -> None:
+    try:
+        with open(sub_paths.metadata_abspath, "br") as f:
+            metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
+    except FileNotFoundError:
+        metadata_lines = empty_config_lines()
+
+    metadata_lines = config_add_section2(metadata_lines, b"subtree")
+    metadata_lines = config_set_key_value2(metadata_lines, b"subtree", b"appliedIndex", b"%d" % (applied_index,))
 
     metadata_config = config_unparse2(metadata_lines)
     with open(sub_paths.metadata_abspath, "bw") as f:
@@ -883,9 +902,11 @@ def cmd_apply(args, parser):
 
     superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
+    subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if len(patches_dim.patches) != patches_dim.applied_index + 1:
+    if len(patches_dim.patches) != subtree_dim.applied_index + 1:
         # TODO add message how to resolve it
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Cannot apply new patch. Not all existing patches are applied!")
 
@@ -937,6 +958,10 @@ def cmd_apply(args, parser):
     with chdir(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
+    do_apply_update_metadata(sub_paths, subtree_dim.applied_index + 1)
+    with chdir(super_paths.super_abspath):
+        superx.helper.add([sub_paths.metadata_abspath])
+
     if not args.quiet:
         # TODO The output convetion is wrong here. It should be relative and
         # the path to the subproject is not relative to the cwd here!
@@ -952,13 +977,16 @@ def cmd_apply(args, parser):
 def cmd_pop(args, parser):
     superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
+    subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if patches_dim.applied_index == -1:
+    if subtree_dim.applied_index == -1:
         # TODO make better error messages
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to pop!")
 
-    patch_filename = patches_dim.patches[patches_dim.applied_index]
+    # TODO check for out of bounds!
+    patch_filename = patches_dim.patches[subtree_dim.applied_index]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
     # TODO check whether patchs applys fully before applying
@@ -968,10 +996,17 @@ def cmd_pop(args, parser):
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    applied_index_new = patches_dim.applied_index - 1
+    applied_index_new = subtree_dim.applied_index - 1
 
     # TODO make naming schema for update metadata functions
-    do_pop_push_update_metadata(sub_paths, applied_index_new)
+
+    if applied_index_new == -1:
+        # Now all patches are deapplied. Drop the information from the metadata.
+        # The default value is that no patches are applied
+        do_pop_update_metadata_drop(sub_paths)
+    else:
+        do_pop_push_update_metadata(sub_paths, applied_index_new)
+
     with chdir(super_paths.super_abspath):
         # TODO here is not relative path used for git. This seems also to work!
         superx.helper.add([sub_paths.metadata_abspath])
@@ -987,15 +1022,18 @@ def cmd_pop(args, parser):
 def cmd_push(args, parser):
     superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
+    subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if patches_dim.applied_index + 1 == len(patches_dim.patches):
+    if subtree_dim.applied_index + 1 == len(patches_dim.patches):
         # TODO when there are not patches, make a better error messages
         # TODO add better message: either all patches are already applied/pushed or there are no patches
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to push!")
 
-    applied_index_new = patches_dim.applied_index + 1
+    applied_index_new = subtree_dim.applied_index + 1
 
+    # TODO check for out of bounds
     patch_filename = patches_dim.patches[applied_index_new]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
@@ -1006,13 +1044,7 @@ def cmd_push(args, parser):
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    if applied_index_new + 1 == len(patches_dim.patches):
-        # Now all patches are applied. Drop the information from the metadata.
-        # The default value is that all patches are applied!
-        do_pop_update_metadata_drop(sub_paths)
-    else:
-        do_pop_push_update_metadata(sub_paths, applied_index_new)
-
+    do_pop_push_update_metadata(sub_paths, applied_index_new)
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
@@ -1032,7 +1064,7 @@ class Metadata:
     url: bytes | None
     revision: bytes | None
     object_id: bytes | None
-    patches_applied_index: bytes | None
+    subtree_applied_index: bytes | None
     subtree_checksum: bytes | None
 
 
@@ -1043,7 +1075,7 @@ def read_metadata(path: bytes) -> Metadata:
     url = None
     revision = None
     object_id = None
-    patches_applied_index = None
+    subtree_applied_index = None
     subtree_checksum = None
 
     metadata_lines = config_parse2(lines)
@@ -1059,11 +1091,36 @@ def read_metadata(path: bytes) -> Metadata:
             elif line_data.key == b"objectId":
                 object_id = line_data.value
             elif line_data.key == b"appliedIndex":
-                patches_applied_index = line_data.value
+                subtree_applied_index = line_data.value
             elif line_data.key == b"checksum":
                 subtree_checksum = line_data.value
 
-    return Metadata(url, revision, object_id, patches_applied_index, subtree_checksum)
+    return Metadata(url, revision, object_id, subtree_applied_index, subtree_checksum)
+
+
+# Data class that contains most of the information that is in the subtree
+# dimension of a subproject. The actuall files in the subtree are left out!
+@dataclass(frozen=True)
+class SubtreeDim:
+    # Range: -1 <= applied_index < len(patches)
+    # - -1 := no applied patch
+    # -  0 := first patch applied,
+    # -  1 := second patch applied,
+    #   ...
+    applied_index: int
+    checksum: bytes
+
+
+def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
+    if metadata.subtree_applied_index is not None:
+        # TODO add error when value is not an int!
+        applied_index = int(metadata.subtree_applied_index)
+    else:
+        applied_index = -1  # Default value
+
+    # TODO Check subtree checksum for format
+
+    return SubtreeDim(applied_index, applied_index)
 
 
 # Data class that contains most of the information that is in the patches
@@ -1071,11 +1128,6 @@ def read_metadata(path: bytes) -> Metadata:
 @dataclass(frozen=True)
 class PatchesDim:
     patches: list[bytes]
-    # Range: -1 <= applied_index < len(patches)
-    # - -1 := no applied patch
-    # -  0 := first patch applied, ...
-    # -  1 := second patch applied, ...
-    applied_index: int
 
 
 def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
@@ -1086,16 +1138,13 @@ def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
     except FileNotFoundError:
         patches = []
 
-    if metadata.patches_applied_index is not None:
-        # TODO add error when value is not an int!
-        applied_index = int(metadata.patches_applied_index)
-        if not (-1 <= applied_index < len(patches)):
-            # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
-            raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
-    else:
-        applied_index = len(patches) - 1
+    return PatchesDim(patches)
 
-    return PatchesDim(patches, applied_index)
+
+def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim) -> None:
+    if not (-1 <= subtree_dim.applied_index < len(patches_dim.patches)):
+        # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
 
 
 def cmd_subtree_checksum(args, parser):
@@ -1258,6 +1307,8 @@ def cmd_status(args, parser):
 
         # Get count of patches for subproject and other information
         patches_dim = read_patches_dim(sub_paths, metadata)
+        subtree_dim = read_subtree_dim(metadata)
+        ensure_dims_are_consistent(subtree_dim, patches_dim)
 
         p = subproject_str
 
@@ -1306,8 +1357,10 @@ def cmd_status(args, parser):
         patches_count = len(patches_dim.patches)
         if patches_count != 0:
             print("* There are n=%d patches." % (patches_count,))
-            if patches_dim.applied_index + 1 != patches_count:
-                print("* There are only n=%d patches applied." % (patches_dim.applied_index + 1,))
+            # TODO rework this. the default value of the config -1, so here
+            # also applied patches are shown!
+            if subtree_dim.applied_index + 1 != patches_count:
+                print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
                 # TODO add messages "Use 'subpatch push -a' to apply them!"
 
             # TODO Maybe add commands to push/pop patches, if not everything is applied

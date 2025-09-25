@@ -184,15 +184,25 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileExists("subproject/patches/0001-changing-hello.patch")
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/hello",
+                             [b"M\tsubproject/.subproject",
+                              b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertEqual(p.stdout, b"""\
 Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!
 The following changes are recorded in the git index:
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
+""")
+
+            self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tappliedIndex = 0
+\tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+[upstream]
+\tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+\turl = ../subproject
 """)
 
     def test_multiple_patches(self):
@@ -219,10 +229,9 @@ The following changes are recorded in the git index:
             self.assertFileExists("patches/0001-changing-hello.patch")
             self.assertFileExists("patches/0002-changing-hello.patch")
 
-            # But it is recorded in the metadata
+            # And the appliedIndex is removed from the metadata. The default
+            # value for the metadata is that no patches are applied.
             self.assertFileContent(".subproject", b"""\
-[patches]
-\tappliedIndex = -1
 [subtree]
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
@@ -305,19 +314,17 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/hello",
+                             [b"M\tsubproject/.subproject",
+                              b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
 
             with chdir("subproject"):
                 p = self.run_subpatch_ok(["pop"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/.subproject",
-                              b'A\tsubproject/patches/0001-changing-hello.patch'])
+                             [b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"content")
             self.assertFileContent("subproject/.subproject", b"""\
-[patches]
-\tappliedIndex = -1
 [subtree]
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
@@ -327,7 +334,7 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             self.assertEqual(p.stdout, b"""\
 Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
 The following changes are recorded in the git index:
- 2 files changed, 23 insertions(+)
+ 1 file changed, 21 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -336,11 +343,13 @@ The following changes are recorded in the git index:
             with chdir("subproject"):
                 p = self.run_subpatch_ok(["push"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/hello",
+                             [b"M\tsubproject/.subproject",
+                              b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
+\tappliedIndex = 0
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
@@ -349,7 +358,7 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stdout, b"""\
 Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
 The following changes are recorded in the git index:
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -1438,20 +1447,20 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), None)
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "0")
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["pop", "-q"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), "-1")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
 
             self.run_subpatch_ok(["update", "-q", "-r", "v2", "subproject"])
 
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), "-1")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
 
             self.assertFileDoesNotExist("subproject/extra-file")
             with chdir("subproject"):
                 self.run_subpatch_ok(["push", "-q"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "patches", "appliedIndex"), None)
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "0")
 
             # Ensure that the changes of the patch are still there
             self.assertFileContent("subproject/extra-file", b"extra-content\n")

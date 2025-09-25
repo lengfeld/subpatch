@@ -28,10 +28,9 @@ top level directory of the subproject.
 
 Example metadata file:
 
-    [patches]
-        appliedIndex = -1
     [subtree]
-         checksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+        appliedIndex = 0
+        checksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
     [upstream]
         objectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
         rev = refs/heads/master
@@ -44,6 +43,7 @@ There are different sections and every section as different keys:
     * `rev`: git revision that is integrated, e.g. `HEAD`, `refs/heads/master` or `v1.0`
     * `objectId`: The SHA1 of the git object that is integrated.
 * `[patches]`
-    * `appliedIndex`: Integer from -1 to count of patches minus 1
+    * This section contains no value yet
 * `[subtree]`
     * `checksum`: A checksum over the subproject's files after integration (and before patches are applied).
+    * `appliedIndex`: Integer from -1 to count of patches minus 1 (default value is -1)
