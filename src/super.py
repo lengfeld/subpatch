@@ -1,7 +1,6 @@
 import os
 import stat
 from dataclasses import dataclass
-from contextlib import chdir
 from enum import Enum
 from os.path import abspath, join
 
@@ -140,7 +139,18 @@ def check_superproject_data(data: FindSuperprojectData) -> CheckedSuperprojectDa
 # TODO clarify naming: path, filename, url
 # TODO clairfy name for remote git name and path/url
 
-class SuperHelperPlain:
+class SuperHelper:
+    def add(self, paths: list[bytes]) -> None:
+        raise NotImplementedError()
+
+    def print_instructions_to_commit_and_inspect(self) -> None:
+        raise NotImplementedError()
+
+    def get_sha1_for_subtree(self, path: bytes) -> bytes:
+        raise NotImplementedError()
+
+
+class SuperHelperPlain(SuperHelper):
     def add(self, paths: list[bytes]) -> None:
         # Nothing to do here. There is no SCM system. So the code can also not add
         # files to the SCM
@@ -149,15 +159,12 @@ class SuperHelperPlain:
     def print_instructions_to_commit_and_inspect(self) -> None:
         raise NotImplementedError("TODO think about this case!")
 
-    def configure(self, scm_path: bytes) -> None:
-        raise NotImplementedError("TODO think about this case!")
-
     def get_sha1_for_subtree(self, path: bytes) -> bytes:
         raise NotImplementedError("TODO think about this case!")
 
 
 # TODO think about the data structure every super_helper method gets!
-class SuperHelperGit:
+class SuperHelperGit(SuperHelper):
     # Add the file in 'path' to the index
     # TODO not all version control systems have the notion of a index!
     def add(self, paths: list[bytes]) -> None:
@@ -173,18 +180,6 @@ class SuperHelperGit:
             print("- To inspect the changes, use `git status` and `git diff --staged`.")
             print("- If you want to keep the changes, commit them with `git commit`.")
             print("- If you want to revert the changes, execute `git reset --merge`.")
-
-    # TODO move this code to "main.py" it's generic for all SCMs
-    def configure(self, scm_path: bytes) -> None:
-        config_abspath = join(scm_path, b".subpatch")
-        assert not os.path.exists(config_abspath)
-        with open(config_abspath, "bw"):
-            pass
-
-        # TODO: Using cwd to the toplevel directory is just a hack because
-        # the helper is cwd-aware.
-        with chdir(scm_path):
-            git_add([b".subpatch"])
 
     def print_configure_success(self) -> None:
         print("The file .subpatch was created in the toplevel directory.")
@@ -267,7 +262,7 @@ class SuperHelperGit:
 @dataclass(frozen=True)
 class Superproject:
     path: bytes
-    helper: SuperHelperGit | SuperHelperPlain
+    helper: SuperHelper
     configured: bool
     typex: SuperprojectType   # TODO same information is in 'helper'. Refactor!
 

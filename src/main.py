@@ -28,7 +28,7 @@ from git import (get_name_from_repository_url, git_diff_in_dir,
 from util import AppException, ErrorCode, URLTypes, get_url_type
 from super import (find_superproject, SCMType, check_superproject_data,
                    check_and_get_superproject_from_checked_data, SuperprojectType,
-                   SuperHelperGit, Superproject)
+                   SuperHelperGit, Superproject, SuperHelper)
 
 # ----8<----
 
@@ -471,7 +471,7 @@ def cmd_add(args, parser):
     # subpatch configure
     # TODO reuse more of cmd_configure
     if not superx.configured:
-        superx.helper.configure(superx.path)
+        do_configure(superx.path, superx.helper)
 
     # NOTE: At this point subpatch is using the git staging area as a
     # rollback/revert mechansim. If something fails in the next code lines,
@@ -567,6 +567,16 @@ def show_info(args) -> int:
     return 0
 
 
+def do_configure(super_abspath: bytes, super_helper: SuperHelper) -> None:
+    config_abspath = join(super_abspath, b".subpatch")
+    assert not os.path.exists(config_abspath)
+    with open(config_abspath, "bw"):
+        pass
+
+    with chdir(super_abspath):
+        super_helper.add([b".subpatch"])
+
+
 # TODO implement option to unconfigure a superproject
 # TODO unconfiguring should only be possible if all subprojects are removed!
 def cmd_configure(args, parser):
@@ -591,7 +601,7 @@ def cmd_configure(args, parser):
             # TODO see above. Use other function to switch between super implementations.
             super_helper = SuperHelperGit()
 
-            super_helper.configure(checked_data.super_path)
+            do_configure(checked_data.super_path, super_helper)
 
             if not args.quiet:
                 super_helper.print_configure_success()
