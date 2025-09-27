@@ -1188,7 +1188,8 @@ class SubtreeDim:
     # -  1 := second patch applied,
     #   ...
     applied_index: int
-    checksum: bytes
+    # TODO decided whether metadata is required or use default b""
+    checksum: bytes | None
 
 
 def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
@@ -1200,7 +1201,7 @@ def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
 
     # TODO Check subtree checksum for format
 
-    return SubtreeDim(applied_index, applied_index)
+    return SubtreeDim(applied_index, metadata.subtree_checksum)
 
 
 # Data class that contains most of the information that is in the patches
