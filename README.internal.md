@@ -676,3 +676,10 @@ Fix inconsistency "subpatch update" uses a path argument "pop/push/apply" uses c
 
 Make a DDX: commands that use cwd and operation only on one subproject should
 not print out the subproject name!
+
+Add `subtree subtree ls` command
+
+Currently the `subpatch add/update` commands print only a single line. Maybe
+print the outputs of the  level-1/2 commands like subtree, init, cache and unpack, ...
+
+Try out new type checker: pyrefly check src/*.py

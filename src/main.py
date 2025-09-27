@@ -432,6 +432,7 @@ def cmd_add(args, parser):
         # sanitize path. Remove double slashes trailing slash
         # and paths that are outside of the repository
         # - For now just remove trailing slashes
+        # TODO same checks are needed for `cmd_init`
         cwd_to_sub_relpath = cwd_to_sub_relpath.rstrip("/")
 
     url_type = get_url_type(url)
@@ -469,7 +470,6 @@ def cmd_add(args, parser):
     # This should work
 
     # subpatch configure
-    # TODO reuse more of cmd_configure
     if not superx.configured:
         do_configure(superx.path, superx.helper)
 
@@ -480,31 +480,7 @@ def cmd_add(args, parser):
     # TODO add notes how to revert if anything of the following fails!
 
     # subpatch init <path>
-    if os.path.exists(sub_paths.cwd_to_sub_relpath):
-        # There is already a directory
-        # TODO add message how to solve the problem
-        raise AppException(ErrorCode.CUSTOM,
-                           "Directory '%s' alreay exists. Cannot add subproject!" % (sub_paths.cwd_to_sub_relpath.decode("utf8"),))
-
-    if os.path.exists(sub_paths.metadata_abspath):
-        # There is already a subproject at this place
-        # TODO also check git index if there is a file
-        # TODO explain what can be done: Either remove the dir or use another name!
-        # TODO fix decode utf8. Should the the system default encoding!
-        # TODO add tests for this!
-        # TODO Add ErrorCode for invalid state of superproject.
-        raise AppException(ErrorCode.CUSTOM,
-                           "File '%s' alreay exists. Cannot add subproject!" % (sub_paths.metadata_abspath.decode("utf8"),))
-
-    os.makedirs(sub_paths.subproject_abspath)
-    with open(sub_paths.metadata_abspath, "bw") as f:
-        f.write(b"")
-    with chdir(sub_paths.subproject_abspath):
-        superx.helper.add([b".subproject"])
-
-    config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
-    with chdir(super_paths.super_abspath):
-        superx.helper.add([b".subpatch"])
+    do_init(super_paths, sub_paths, superx)
 
     # subpatch cache init --git
     cache_helper = CacheHelperGit()
@@ -846,7 +822,7 @@ def is_cwd_toplevel_directory(super_paths: SuperPaths) -> bool:
 # TODO add "-z" option to be safe againts any chars in the path
 # TODO add escpaing for "evil" chars in non "-z" output
 # TODO add not about plumbing command
-def cmd_list(args, parser):
+def cmd_list(args, parser) -> int:
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
@@ -1228,6 +1204,67 @@ def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim)
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
 
 
+def do_init(super_paths: SuperPaths, sub_paths: SubPaths, superx: Superproject) -> None:
+    # TODO check path argument
+    # - Should not point outside the superproject
+    # - should not point inside a existing subproject.
+
+    if sub_paths.super_to_sub_relpath == b"":
+        raise AppException(ErrorCode.INVALID_ARGUMENT,
+                           "Subproject path is empty. Cannot create subproject at toplevel directory for now!")
+
+    if os.path.exists(sub_paths.cwd_to_sub_relpath):
+        # There is already a directory
+        # TODO add message how to solve the problem
+        # TODO just a empty dir should be ok!
+        raise AppException(ErrorCode.INVALID_ARGUMENT,
+                           "Directory '%s' alreay exists. Cannot add subproject!" % (sub_paths.cwd_to_sub_relpath.decode("utf8"),))
+
+    if os.path.exists(sub_paths.metadata_abspath):
+        # There is already a subproject at this place
+        # TODO write this check better
+        # TODO also check git index if there is a file
+        # TODO explain what can be done: Either remove the dir or use another name!
+        # TODO fix decode utf8. Should the the system default encoding!
+        # TODO add tests for this!
+        # TODO Add ErrorCode for invalid state of superproject.
+        raise AppException(ErrorCode.INVALID_ARGUMENT,
+                           "File '%s' alreay exists. Cannot add subproject!" % (sub_paths.metadata_abspath.decode("utf8"),))
+
+    os.makedirs(sub_paths.cwd_to_sub_relpath)
+    with open(join(sub_paths.cwd_to_sub_relpath, b".subproject"), "bw"):
+        pass
+
+    with chdir(super_paths.super_abspath):
+        superx.helper.add([sub_paths.metadata_abspath])
+
+    config_add_subproject(super_paths.config_abspath, sub_paths.super_to_sub_relpath)
+    with chdir(super_paths.super_abspath):
+        superx.helper.add([b".subpatch"])
+
+
+def cmd_init(args, parser) -> int:
+    data = find_superproject()
+    checked_data = check_superproject_data(data)
+    superx = check_and_get_superproject_from_checked_data(checked_data)
+    ensure_superproject_is_configured(superx)
+    # TODO for the simple command init, we maybe can relax this required even now!
+    ensure_superproject_is_git(superx)
+    super_paths = gen_super_paths(superx.path)
+
+    # TODO ensure that paths are normalized!
+    cwd_to_sub_relpath = args.path.rstrip("/").encode("utf8")
+    sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, cwd_to_sub_relpath)
+
+    do_init(super_paths, sub_paths, superx)
+
+    if not args.quiet:
+        print("Subproject '%s' initialized." % (cwd_to_sub_relpath.decode("utf8"),))
+        superx.helper.print_instructions_to_commit_and_inspect()
+
+    return 0
+
+
 def cmd_subtree_checksum(args, parser):
     if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
@@ -1473,6 +1510,14 @@ def main_wrapped() -> int:
     parser_configure.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                                   help="Suppress output to stdout")
 
+    parser_init = subparsers.add_parser("init",
+                                        help="Init a subproject inside the superproject. Normaly done by subpatch add automatically.")
+    parser_init.set_defaults(func=cmd_init)
+    parser_init.add_argument(dest="path", type=str,
+                             help="Path to new subproject")
+    parser_init.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                             help="Suppress output to stdout")
+
     parser_apply = subparsers.add_parser("apply",
                                          help="Apply a patch to the subtree and add to patch list")
     parser_apply.set_defaults(func=cmd_apply)
@@ -1501,7 +1546,7 @@ def main_wrapped() -> int:
     parser_add.add_argument(dest="url", type=str,
                             help="URL or path to git repo")
     parser_add.add_argument(dest="path", type=str, default=None, nargs='?',
-                            help="folder or path in the local repo")
+                            help="Add subproject a path (not use the repo name)")
     parser_add.add_argument("-r", "--revision", dest="revision", type=str,
                             help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
     parser_add.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
@@ -1598,6 +1643,7 @@ def main() -> int:
             print("Error: No superproject found!", file=sys.stderr)
         elif e._code == ErrorCode.SUPERPROJECT_NOT_CONFIGURED:
             # TODO add steps to resolve the issue. e.g. touching the file
+            # TODO rework error message, Word subpatch should not be included
             print("Error: subpatch not yet configured for superproject!", file=sys.stderr)
         elif e._code == ErrorCode.INVALID_ARGUMENT:
             # TODO change structure of errors. It contains two colons now.

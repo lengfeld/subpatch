@@ -146,7 +146,7 @@ class SuperHelper:
     def print_instructions_to_commit_and_inspect(self) -> None:
         raise NotImplementedError()
 
-    def get_sha1_for_subtree(self, path: bytes) -> bytes:
+    def get_sha1_for_subtree(self, super_to_sub_relpath: bytes) -> bytes:
         raise NotImplementedError()
 
 
@@ -159,7 +159,7 @@ class SuperHelperPlain(SuperHelper):
     def print_instructions_to_commit_and_inspect(self) -> None:
         raise NotImplementedError("TODO think about this case!")
 
-    def get_sha1_for_subtree(self, path: bytes) -> bytes:
+    def get_sha1_for_subtree(self, super_to_sub_relpath: bytes) -> bytes:
         raise NotImplementedError("TODO think about this case!")
 
 
