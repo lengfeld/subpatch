@@ -12,7 +12,6 @@ from contextlib import chdir
 from dataclasses import dataclass
 from os.path import join
 from subprocess import DEVNULL, Popen
-from typing import Any
 
 # ----8<----
 from cache import CacheHelperGit, DownloadConfig
@@ -29,7 +28,7 @@ from git import (get_name_from_repository_url, git_diff_in_dir,
 from util import AppException, ErrorCode, URLTypes, get_url_type
 from super import (find_superproject, SCMType, check_superproject_data,
                    check_and_get_superproject_from_checked_data, SuperprojectType,
-                   SuperHelperGit)
+                   SuperHelperGit, Superproject)
 
 # ----8<----
 
@@ -853,7 +852,7 @@ def cmd_list(args, parser):
     return 0
 
 
-def checks_for_cmds_apply_pop_push(args) -> tuple[Any, SuperPaths, SubPaths]:
+def checks_for_cmds_with_single_subproject(args) -> tuple[Superproject, SuperPaths, SubPaths]:
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
@@ -900,7 +899,7 @@ def cmd_apply(args, parser):
     if not os.path.isfile(args.path):
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
 
-    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -975,7 +974,7 @@ def cmd_apply(args, parser):
 
 
 def cmd_sync(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1046,7 +1045,7 @@ def cmd_sync(args, parser):
 
 
 def cmd_pop(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1091,7 +1090,7 @@ def cmd_pop(args, parser):
 
 
 def cmd_push(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1222,7 +1221,7 @@ def cmd_subtree_checksum(args, parser):
     if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
 
-    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
 
     if args.calc:
         checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
