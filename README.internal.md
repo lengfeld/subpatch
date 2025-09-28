@@ -683,3 +683,5 @@ Currently the `subpatch add/update` commands print only a single line. Maybe
 print the outputs of the  level-1/2 commands like subtree, init, cache and unpack, ...
 
 Try out new type checker: pyrefly check src/*.py
+
+Describe/define the term "populated" and unpopulated for subtrees.

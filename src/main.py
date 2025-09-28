@@ -1163,9 +1163,9 @@ class SubtreeDim:
     # -  0 := first patch applied,
     # -  1 := second patch applied,
     #   ...
+    # The default value is "-1"
     applied_index: int
-    # TODO decided whether metadata is required or use default b""
-    checksum: bytes | None
+    checksum: bytes   # Default value is b"", which means that the subtree is unpopulated
 
 
 def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
@@ -1175,9 +1175,13 @@ def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
     else:
         applied_index = -1  # Default value
 
-    # TODO Check subtree checksum for format
+    if metadata.subtree_checksum is None:
+        checksum = b""
+    else:
+        # TODO Check subtree checksum for format
+        checksum = metadata.subtree_checksum
 
-    return SubtreeDim(applied_index, metadata.subtree_checksum)
+    return SubtreeDim(applied_index, checksum)
 
 
 # Data class that contains most of the information that is in the patches
@@ -1433,6 +1437,10 @@ def cmd_status(args, parser):
         # NOTE Listing the modified files seems to much like "git status".
         # There is already "git status". The output just referneces the git
         # commands To inspect the changes.
+
+        if subtree_dim.checksum == b"":
+            print("""\
+* Subtree is unpopulated""")
 
         if changes.untracked > 0:
             print("""\

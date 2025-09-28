@@ -755,9 +755,11 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 # subproject at 'dir/subproject'
 
+* Subtree is unpopulated
 
 # subproject at 'subproject'
 
+* Subtree is unpopulated
 """)
 
 
