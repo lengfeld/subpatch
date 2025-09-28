@@ -1321,6 +1321,102 @@ def cmd_subtree_checksum(args, parser):
         assert False
 
 
+def do_status_subproject(super_paths: SuperPaths, subproject: bytes, changes) -> None:
+    # TODO Idea: make it valid markdown output
+    # TODO Idea: For every cvs superproject (superhelper) make the output
+    # like the cvs styled of console output. Subpach should look like git
+    # for git superprojects. And look like svn for svn superprojects.
+    # NOTE: these two ideas are conflicting!
+
+    # TODO use the term "dimensions" also in the output to make the
+    # dimension for understandable for the user.
+
+    sub_paths = gen_sub_paths_from_relpath(super_paths, subproject)
+    metadata = read_metadata(sub_paths.metadata_abspath)
+
+    # TODO again some bytes to string decoding. Annoying!
+    subproject_str = subproject.decode("utf8")
+
+    # TODO Think about other cvs systems
+    print("# subproject at '%s'" % (subproject_str,))
+    print("")
+
+    # TODO add upstream dimensions
+    if metadata.url is not None:
+        print("* was integrated from URL: %s" % (metadata.url.decode("utf8"),))
+    if metadata.revision is not None:
+        print("* has integrated revision: %s" % (metadata.revision.decode("utf8"),))
+        # TODO Maybe included whether it "tracks a branch" or it was a git tag
+    if metadata.object_id is not None:
+        print("* has integrated object id: %s" % (metadata.object_id.decode("utf8"),))
+
+    # Get count of patches for subproject and other information
+    patches_dim = read_patches_dim(sub_paths, metadata)
+    subtree_dim = read_subtree_dim(metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
+
+    p = subproject_str
+
+    # NOTE Listing the modified files seems to much like "git status".
+    # There is already "git status". The output just referneces the git
+    # commands To inspect the changes.
+
+    if subtree_dim.checksum == b"":
+        print("""\
+* Subtree is unpopulated""")
+
+    if changes.untracked > 0:
+        print("""\
+* There are n=%d untracked files and/or directories:
+    - To see them execute:
+        `git status %s`
+        `git ls-files --exclude-standard -o %s`
+    - Use `git add %s` to add all of them
+    - Use `git add %s/<filename>` to just add some of them
+    - Use `rm <filename>` to remove them"""
+              % (changes.untracked, p, p, p, p))
+
+    if changes.unstaged > 0:
+        print("""\
+* There are n=%d modified files not staged for commit:
+    - To see them execute:
+        `git status %s` or
+        `git diff %s`
+    - Use `git add %s` to update what will be committed
+    - Use `git restore %s` to discard changes in working directory"""
+              % (changes.unstaged, p, p, p, p))
+
+    if changes.uncommitted > 0:
+        # TODO check git restore
+        print("""\
+* There are n=%d modified files that are staged, but not committed:
+    - To see them execute:
+        `git status %s` or
+        `git diff --staged %s`
+    - Use `git commit %s` to commit the changes
+    - Use `git restore --staged %s` to unstage"""
+              % (changes.uncommitted, p, p, p, p))
+        # TODO check restore staged
+        # TODO add command "git restore --staged --worktree -- xxxpath/"
+        # to remove changes staged in the index from the index and the
+        # working tree But leave changes in the working tree/unstaged
+        # untouched This helps because it does ot leave new files in the
+        # working tree as "git restore --staged" will done.
+
+    patches_count = len(patches_dim.patches)
+    if patches_count != 0:
+        print("* There are n=%d patches." % (patches_count,))
+        # TODO rework this. the default value of the config -1, so here
+        # also applied patches are shown!
+        if subtree_dim.applied_index + 1 != patches_count:
+            print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
+            # TODO add messages "Use 'subpatch push -a' to apply them!"
+
+        # TODO Maybe add commands to push/pop patches, if not everything is applied
+        # TODO implement subpatch patch list
+        # print("    - Use `subpatch patches list` to list them")
+
+
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
 def cmd_status(args, parser):
     data = find_superproject()
@@ -1400,99 +1496,9 @@ def cmd_status(args, parser):
     print("")
 
     for i, subproject in enumerate(subprojects):
-        # TODO Idea: make it valid markdown output
-        # TODO Idea: For every cvs superproject (superhelper) make the output
-        # like the cvs styled of console output. Subpach should look like git
-        # for git superprojects. And look like svn for svn superprojects.
-        # NOTE: these two ideas are conflicting!
-
-        # TODO use the term "dimensions" also in the output to make the
-        # dimension for understandable for the user.
-
-        sub_paths = gen_sub_paths_from_relpath(super_paths, subproject)
-        metadata = read_metadata(sub_paths.metadata_abspath)
-
-        # TODO again some bytes to string decoding. Annoying!
-        subproject_str = subproject.decode("utf8")
-
-        # TODO Think about other cvs systems
-        print("# subproject at '%s'" % (subproject_str,))
-        print("")
-        if metadata.url is not None:
-            print("* was integrated from URL: %s" % (metadata.url.decode("utf8"),))
-        if metadata.revision is not None:
-            print("* has integrated revision: %s" % (metadata.revision.decode("utf8"),))
-            # TODO Maybe included whether it "tracks a branch" or it was a git tag
-        if metadata.object_id is not None:
-            print("* has integrated object id: %s" % (metadata.object_id.decode("utf8"),))
-
         changes = subproject_changes[subproject]
 
-        # Get count of patches for subproject and other information
-        patches_dim = read_patches_dim(sub_paths, metadata)
-        subtree_dim = read_subtree_dim(metadata)
-        ensure_dims_are_consistent(subtree_dim, patches_dim)
-
-        p = subproject_str
-
-        # NOTE Listing the modified files seems to much like "git status".
-        # There is already "git status". The output just referneces the git
-        # commands To inspect the changes.
-
-        if subtree_dim.checksum == b"":
-            print("""\
-* Subtree is unpopulated""")
-
-        if changes.untracked > 0:
-            print("""\
-* There are n=%d untracked files and/or directories:
-    - To see them execute:
-        `git status %s`
-        `git ls-files --exclude-standard -o %s`
-    - Use `git add %s` to add all of them
-    - Use `git add %s/<filename>` to just add some of them
-    - Use `rm <filename>` to remove them"""
-                  % (changes.untracked, p, p, p, p))
-
-        if changes.unstaged > 0:
-            print("""\
-* There are n=%d modified files not staged for commit:
-    - To see them execute:
-        `git status %s` or
-        `git diff %s`
-    - Use `git add %s` to update what will be committed
-    - Use `git restore %s` to discard changes in working directory"""
-                  % (changes.unstaged, p, p, p, p))
-
-        if changes.uncommitted > 0:
-            # TODO check git restore
-            print("""\
-* There are n=%d modified files that are staged, but not committed:
-    - To see them execute:
-        `git status %s` or
-        `git diff --staged %s`
-    - Use `git commit %s` to commit the changes
-    - Use `git restore --staged %s` to unstage"""
-                  % (changes.uncommitted, p, p, p, p))
-            # TODO check restore staged
-            # TODO add command "git restore --staged --worktree -- xxxpath/"
-            # to remove changes staged in the index from the index and the
-            # working tree But leave changes in the working tree/unstaged
-            # untouched This helps because it does ot leave new files in the
-            # working tree as "git restore --staged" will done.
-
-        patches_count = len(patches_dim.patches)
-        if patches_count != 0:
-            print("* There are n=%d patches." % (patches_count,))
-            # TODO rework this. the default value of the config -1, so here
-            # also applied patches are shown!
-            if subtree_dim.applied_index + 1 != patches_count:
-                print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
-                # TODO add messages "Use 'subpatch push -a' to apply them!"
-
-            # TODO Maybe add commands to push/pop patches, if not everything is applied
-            # TODO implement subpatch patch list
-            # print("    - Use `subpatch patches list` to list them")
+        do_status_subproject(super_paths, subproject, changes)
 
         if i + 1 < len(subprojects):
             # Add a empty line between the subprojects
