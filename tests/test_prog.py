@@ -1186,7 +1186,7 @@ Now use 'git commit' to finalized your change.
                          b"Error: Feature not implemented yet: No SCM found. Cannot configure. '--here' not implemented yet!\n")
 
 
-class TestCmdSubtree(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+class TestCmdSubtreeChecksum(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_invalid_argument(self):
         git = Git()
         git.init()
@@ -1242,7 +1242,7 @@ class TestCmdSubtree(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with chdir("subproject"):
             p = self.run_subpatch(["subtree", "checksum", "--get"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
-            self.assertEqual(p.stderr, b"Error: Invalid argument: No checksum in metadata found!\n")
+            self.assertEqual(p.stderr, b"Error: Invalid argument: Subtree is unpopulated. So there is no checksum!\n")
 
             self.run_subpatch_ok(["subtree", "checksum", "--write"])
 

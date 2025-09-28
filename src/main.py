@@ -1283,8 +1283,9 @@ def cmd_subtree_checksum(args, parser):
         metadata = read_metadata(sub_paths.metadata_abspath)
 
         if metadata.subtree_checksum is None:
-            # TODO is this a runtime error or an invalid argument?
-            raise AppException(ErrorCode.INVALID_ARGUMENT, "No checksum in metadata found!")
+            # TODO This is not a INVALID_ARGUMENT, it's a state error
+            # It's an ok state, because the subtree can be unpopluated
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "Subtree is unpopulated. So there is no checksum!")
 
         print(metadata.subtree_checksum.decode("ascii"))
         return 0
