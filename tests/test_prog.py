@@ -452,6 +452,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 * There are n=2 patches.
 * There are only n=1 patches applied.
+    - Use `subpatch push` to apply a tracked patch to the subtree
 """, p.stdout)
 
 
