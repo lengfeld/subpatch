@@ -1188,7 +1188,7 @@ Now use 'git commit' to finalized your change.
         # Test in subdirectory
         with create_and_chdir(b"sub"):
             self.run_subpatch_ok(["configure", "-q"])
-            self.assertFileContent("../.subpatch", b"")
+        self.assertFileContent(".subpatch", b"")
         self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
 
     def test_after_configure_list_and_add_are_possible(self):
