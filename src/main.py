@@ -1463,8 +1463,12 @@ def cmd_status(args, parser):
 
     # TODO does the concept of staged and unstaged files als exists in other
     # cvs systems
-    diff_files_not_staged = git_diff_name_only()
-    diff_files_staged = git_diff_name_only(staged=True)
+    with chdir(super_paths.super_abspath):
+        # TODO make a test and use a real fix. For now just chdir to the
+        # toplevel repo, but `git diff` is affected by the diff.relative option
+        # that the user may have active or not.
+        diff_files_not_staged = git_diff_name_only()
+        diff_files_staged = git_diff_name_only(staged=True)
 
     # NOTE git_ls_files_untracked() depends on the cwd for now! Cwd must be the
     # root of the directory for now.
