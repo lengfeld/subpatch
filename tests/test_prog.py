@@ -659,9 +659,25 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 """,
                              p.stdout)
 
+    def test_path_argument(self):
+        create_super_and_subproject()
+        with chdir("superproject"):
+            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject1"])
+            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject2"])
+            git = Git()
+            git.commit("add two subprojects")
+
+            p = self.run_subpatch(["status", "subproject-invalid"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: Argument 'subproject-invalid' does not point to a subproject!\n")
+
             with chdir("subproject1"):
-                p = self.run_subpatch_ok(["status"], stdout=PIPE)
-                self.assertEqual(b"""\
+                p = self.run_subpatch(["status", ".."], stderr=PIPE)
+                self.assertEqual(p.returncode, 4)
+                self.assertEqual(p.stderr, b"Error: Invalid argument: Argument '..' does not point to a subproject!\n")
+
+            # Only one subproject is show!
+            expected_output = b"""\
 NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
 NOTE: The format is markdown currently. Will mostly change in the future.
 WARNING: The current working directory is not the toplevel directory of the superproject.
@@ -671,12 +687,37 @@ WARNING: The paths in this console output are wrong (for now)!
 
 * was integrated from URL: ../subproject
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+"""
 
-# subproject at 'subproject2'
+            p = self.run_subpatch_ok(["status", "subproject1"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"""\
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'subproject1'
 
 * was integrated from URL: ../subproject
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-""", p.stdout)
+"""
+)
+
+            with chdir("subproject1"):
+                p = self.run_subpatch_ok(["status", "."], stdout=PIPE)
+                expected_output =  b"""\
+NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
+NOTE: The format is markdown currently. Will mostly change in the future.
+WARNING: The current working directory is not the toplevel directory of the superproject.
+WARNING: The paths in this console output are wrong (for now)!
+
+# subproject at 'subproject1'
+
+* was integrated from URL: ../subproject
+* has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
+"""
+                self.assertEqual(p.stdout, expected_output)
+                with create_and_chdir("sub"):
+                    p = self.run_subpatch_ok(["status", ".."], stdout=PIPE)
+                    self.assertEqual(p.stdout, expected_output)
 
     def test_one_subproject_with_modified_files(self):
         with create_and_chdir("subproject"):

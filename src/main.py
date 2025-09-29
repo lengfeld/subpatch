@@ -1430,15 +1430,16 @@ def do_status_subproject(super_paths: SuperPaths, subproject: bytes, changes) ->
 
 # TODO add note that the output of "status" is not an API/plumbing. Should not be used in scripts
 def cmd_status(args, parser):
+    # TODO allow the cwd to select the subproject
+    # TODO add plumbing commands for scripts!
+    # TODO add colorscheme for output, e.g. like git status does
+    # TODO handle stdout fd is pipe/file and not tty.
+
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
     ensure_superproject_is_configured(superx)
     ensure_superproject_is_git(superx)
-
-    # TODO add argument for a path to a single subproject and then only list
-    # the status of this subproject
-    # TODO allow the cwd to select the subproject
 
     super_paths = gen_super_paths(superx.path)
 
@@ -1447,15 +1448,27 @@ def cmd_status(args, parser):
     else:
         print_warning = False
 
-    # TODO add plumbing commands for scripts!
-    # TODO add colorscheme for output, e.g. like git status does
-    # TODO handle stdout fd is pipe/file and not tty.
-
     config = read_config(super_paths.config_abspath)
 
-    # These are relative paths: super_to_sub_relpath
-    subprojects = config.subprojects
-    subproject_paths = subprojects
+    if args.path is not None:
+        # TODO use sys default/argument encoding
+        path_bytes = args.path.encode("utf8")
+        path_relpath = os.path.relpath(path_bytes)
+        super_to_sub_relpath = join(super_paths.super_to_cwd_relpath, path_relpath)
+
+        # Normalize path. e.g. remove "." or ".." from the path!
+        # TODO make this a common function and test it. Also the function
+        # is_inside_subproject_and_return_path() does something similar!
+        # TODO maybe add a plumbing command for that to expose to scripting!
+        super_to_sub_relpath = os.path.normpath(super_to_sub_relpath)
+
+        if super_to_sub_relpath not in config.subprojects:
+            raise AppException(ErrorCode.INVALID_ARGUMENT,
+                               "Argument '%s' does not point to a subproject!" % (args.path,))
+        subprojects = [super_to_sub_relpath]
+    else:
+        # These are relative paths: super_to_sub_relpath
+        subprojects = config.subprojects
 
     if len(subprojects) == 0:
         # Early return. Nothing to print!
@@ -1484,10 +1497,10 @@ def cmd_status(args, parser):
         uncommitted: int = 0
 
     subproject_changes = {}
-    for path in subproject_paths:
+    for path in subprojects:
         subproject_changes[path] = Changes()
 
-    for subproject in subproject_paths:
+    for subproject in subprojects:
         # TODO str vs bytes mismatch
         changes = subproject_changes[subproject]
 
@@ -1601,10 +1614,11 @@ def main_wrapped() -> int:
     parser_update.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                                help="Suppress output to stdout")
 
-    # TODO add argument <path> to print the status of only a single subproject
     parser_status = subparsers.add_parser("status",
-                                          help="Prints a summary of all subprojects")
+                                          help="Prints a summary of all or one subprojects")
     parser_status.set_defaults(func=cmd_status)
+    parser_status.add_argument(dest="path", type=str, default=None, nargs='?',
+                               help="path to a subproject")
 
     parser_list = subparsers.add_parser("list",
                                         help="List all subprojects")
