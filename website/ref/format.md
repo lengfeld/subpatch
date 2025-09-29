@@ -1,7 +1,8 @@
 # Configuration and metadata format
 
-The subpatch configuration file and the metdata files use the git config file
+The subpatch configuration file and the metadata files use the git config file
 format.
+
 
 ## Configuration
 
@@ -12,14 +13,16 @@ it's placed next to the `.git` folder.
 Example configuration file:
 
     [subprojects]
-        path = dirA
-        path = dirB
+            path = sources/meta-openembedded
+            path = sources/meta-raspberrypi
+            path = sources/poky
 
 For now there is only one section:
 
 * `[subprojects]`
     * `path`: Path to the subproject from the toplevel directory of the superproject.
-       For every subproject there is a seperate `path` value.
+       For every subproject there is a separate `path` value.
+
 
 ## Metadata
 
@@ -29,21 +32,22 @@ top level directory of the subproject.
 Example metadata file:
 
     [subtree]
-        appliedIndex = 0
-        checksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+            appliedIndex = 0
+            checksum = d35979e585e180a212a2eb1eedb71cb0ea53542b
     [upstream]
-        objectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-        rev = refs/heads/master
-        url = ../subproject TODO add real url
+            objectId = af3049cec7c916d96cf8214c6f9ae77710f667db
+            revision = refs/heads/master
+            url = https://github.com/lengfeld/live555-unofficial-git-archive.git
 
 There are different sections and every section as different keys:
 
 * `[upstream]`
     * `url`: URL of remote git repository
-    * `rev`: git revision that is integrated, e.g. `HEAD`, `refs/heads/master` or `v1.0`
+    * `revision`: git revision that is integrated, e.g. `HEAD`, `refs/heads/master` or `v1.0`
     * `objectId`: The SHA1 of the git object that is integrated.
 * `[patches]`
     * This section contains no value yet
 * `[subtree]`
     * `checksum`: A checksum over the subproject's files after integration (and before patches are applied).
+       If the subtree is unpopulated, no value is present.
     * `appliedIndex`: Integer from -1 to count of patches minus 1 (default value is -1)
