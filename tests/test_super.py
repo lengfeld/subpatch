@@ -193,6 +193,28 @@ index 0000000..54d8917
 +content-of-file-in-index
 """)
 
+    def test_get_sha1_for_subtree_empty_subtree(self):
+        git = Git()
+        git.init()
+
+        # The ".subproject" file is filtered out, because it does not belong to
+        # the subtree.
+        mkdir("subproject")
+        touch("subproject/.subproject")
+
+        git.add("subproject/.subproject")
+        git.commit("add subproject")
+
+        super_helper = SuperHelperGit()
+
+        super_to_sub_relpath = b"subproject"
+
+        sha1 = super_helper.get_sha1_for_subtree(super_to_sub_relpath)
+        self.assertEqual(sha1, b"4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+
+        # Check that this is the object id of the empty tree object
+        self.assertEqual(git.cat_file(sha1), b"")
+
 
 if __name__ == '__main__':
     unittest.main()

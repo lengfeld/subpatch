@@ -390,6 +390,17 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
 
     superx.helper.add([sub_paths.cwd_to_sub_relpath])
 
+    # Hack for now:
+    # The funciton get_sha1_for_subtree does not work if the subtree is empty
+    # (=no files tracked by git in it). So just create and add a file for the moment.
+    # This case only happens, when the upstream projet has a empty file tree. This is
+    # also a rare case. Someone would say this would be even a error case ;-)
+    # TODO add argument to allow empty subtrees in the upstream repo.
+    with open(sub_paths.metadata_abspath, "bw"):
+        pass
+    with chdir(super_paths.super_abspath):
+        superx.helper.add([sub_paths.metadata_abspath])
+
     # TODO in case of failure, remove download git dir!
     with chdir(super_paths.super_abspath):
         subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)

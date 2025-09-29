@@ -846,6 +846,31 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(b"Error: Invalid argument: Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
+    def test_add_with_empty_tree_in_upstream(self):
+        with create_and_chdir("subproject"):
+            git = Git()
+            git.init()
+            git.call(["commit", "--allow-empty", "-m", "empty commit", "-q"])
+            self.assertEqual(git.get_sha1("HEAD^{tree}"),
+                             b"4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "../subproject", "-q",])
+            self.assertEqual(git.diff_staged_files(),
+                             [b"A\t.subpatch",
+                              b"A\tsubproject/.subproject"])
+            self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 4b825dc642cb6eb9a060e54bf8d69288fbee4904
+[upstream]
+\tobjectId = c49c85c0ebf4ef3518a3282a5f58b9417f730029
+\turl = ../subproject
+""")
+            # NOTE: It's the same checksum as above and this is the empty tree
+            # object
+
     def test_add_in_subdirectory(self):
         create_super_and_subproject()
 
