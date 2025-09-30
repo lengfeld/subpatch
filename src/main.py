@@ -904,7 +904,7 @@ def cmd_apply(args, parser):
 
     if len(patches_dim.patches) != subtree_dim.applied_index + 1:
         # TODO add message how to resolve it
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "Cannot apply new patch. Not all existing patches are applied!")
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Cannot apply new patch. Not all tracked patches are applied!")
 
     patch_filename = os.path.basename(args.path.encode("utf8"))
 

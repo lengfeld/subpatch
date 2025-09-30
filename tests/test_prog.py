@@ -331,7 +331,7 @@ The following changes are recorded in the git index:
             p = self.run_subpatch(["apply", "-q", "../../subproject/0002-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
-                             b"Error: Invalid argument: Cannot apply new patch. Not all existing patches are applied!\n")
+                             b"Error: Invalid argument: Cannot apply new patch. Not all tracked patches are applied!\n")
 
     def test_error_patch_filename_not_correct(self):
         self.create_super_and_subproject_for_class()
