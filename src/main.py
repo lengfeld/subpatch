@@ -1280,6 +1280,23 @@ def cmd_init(args, parser) -> int:
     return 0
 
 
+def cmd_patches_list(args, parser):
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    patches_dim = read_patches_dim(sub_paths, metadata)
+
+    for patch in patches_dim.patches:
+        # TODO fix encoding
+        # TODO should the output the path to the patch file or just the name of the patch file?
+        # TODO should skipped/non-skipped state be shown here?
+        # NOTE: the applied or not applied state cannot be shown, because the
+        # information is in the subtree dimension
+        print(patch.decode("utf8"))
+
+    return 0
+
+
 def cmd_subtree_checksum(args, parser):
     if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
@@ -1623,6 +1640,13 @@ def main_wrapped() -> int:
     parser_list = subparsers.add_parser("list",
                                         help="List all subprojects")
     parser_list.set_defaults(func=cmd_list)
+
+    parser_patches = subparsers.add_parser("patches",
+                                           help="Commands to modify/query the subprojects patches")
+    subparsers_patches = parser_patches.add_subparsers()
+    parser_patches_list = subparsers_patches.add_parser("list",
+                                                        help="List tracked patches in the subproject")
+    parser_patches_list.set_defaults(func=cmd_patches_list)
 
     parser_subtree = subparsers.add_parser("subtree",
                                            help="Commands to modify/query the subprojects subtree")

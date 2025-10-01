@@ -139,6 +139,14 @@ You select the subproject by changing the current work directory into the
 subproject.
 
 
+## subpatch patches list
+
+List all tracked patches of the subproject.
+
+You select the subproject by changing the current work directory into the
+subproject.
+
+
 ## Commands, not implemented yet
 
 The following list is a draft for additional commands. subpatch will implement

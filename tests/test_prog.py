@@ -1252,6 +1252,26 @@ Now use 'git commit' to finalized your change.
         self.assertEqual(p.stderr,
                          b"Error: Feature not implemented yet: No SCM found. Cannot configure. '--here' not implemented yet!\n")
 
+class TestCmdPatchesList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def test_invalid_argument(self):
+        git = Git()
+        git.init()
+        self.run_subpatch_ok(["configure", "-q"])
+        self.run_subpatch_ok(["init", "-q", "subproject"])
+
+        with chdir("subproject"):
+            p = self.run_subpatch_ok(["patches", "list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"")
+            os.mkdir("patches")
+            touch("patches/001-test.patch")
+
+            p = self.run_subpatch_ok(["patches", "list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"001-test.patch\n")
+
+            touch("patches/002-test.patch")
+            p = self.run_subpatch_ok(["patches", "list"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"001-test.patch\n002-test.patch\n")
+
 
 class TestCmdSubtreeChecksum(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_invalid_argument(self):
