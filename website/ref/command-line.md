@@ -128,6 +128,17 @@ You select the subproject by changing the current work directory into the
 subproject.
 
 
+## subpatch subtree checksum
+
+    subpatch subtree checksum [--calc] [--check] [--write] [--get]
+
+Calculate, check, write to the metadata or get from the metadata the checksum
+of the subproject's subtree.
+
+You select the subproject by changing the current work directory into the
+subproject.
+
+
 ## Commands, not implemented yet
 
 The following list is a draft for additional commands. subpatch will implement
