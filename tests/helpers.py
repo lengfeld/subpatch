@@ -266,6 +266,7 @@ class TestCaseHelper(unittest.TestCase):
             # TOOD unify debug env variable
             if os.environ.get("DEBUG", "0") == "1":
                 print("file content of '%s':" % (filename,))
+                sys.stdout.flush()
                 sys.stdout.buffer.write(content_actual)
                 sys.stdout.buffer.flush()
 
