@@ -126,7 +126,7 @@ class TestCheckSuperprojectData(TestCaseTempFolder):
 
 
 class TestSuperHelperGit(TestCaseTempFolder):
-    def test(self):
+    def test_get_sha1_for_subtree(self):
         git = Git()
         git.init()
 
@@ -156,6 +156,41 @@ class TestSuperHelperGit(TestCaseTempFolder):
 100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tfile-in-index
 100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\thello
 040000 tree f966952d7e0715683ee935d201cd4ab22736c831\tsubdir
+""")
+
+    def test_get_diff_for_subtree(self):
+        git = Git()
+        git.init()
+
+        mkdir("subproject")
+        touch("subproject/hello")
+        mkdir("subproject/subdir")
+        touch("subproject/subdir/hello")
+        mkdir("subproject/patches")
+        touch("subproject/patches/0001-x.patch")
+        touch("subproject/.subproject")
+
+        git.add("subproject")
+        git.commit("add subproject")
+
+        # And also have one file in the index that is not committed yet. This
+        # is a edgecase we rely on.
+        touch("subproject/file-in-index", b"content-of-file-in-index\n")
+        git.add("subproject")
+
+        super_helper = SuperHelperGit()
+
+        super_to_sub_relpath = b"subproject"
+
+        subtree_diff = super_helper.get_diff_for_subtree(super_to_sub_relpath)
+        self.assertEqual(subtree_diff, b"""\
+diff --git a/file-in-index b/file-in-index
+new file mode 100644
+index 0000000..54d8917
+--- /dev/null
++++ b/file-in-index
+@@ -0,0 +1 @@
++content-of-file-in-index
 """)
 
 

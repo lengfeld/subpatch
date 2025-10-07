@@ -36,6 +36,19 @@ def git_diff_staged_shortstat() -> bytes:
     return stdout.rstrip(b"\n")
 
 
+# TODO Not used anymore. Maybe drop! But keep tests for code in super.py
+def git_diff_relative(staged=False) -> bytes:
+    cmd = ["git", "diff", "--relative"]
+    if staged:
+        cmd.append("--staged")
+    p = Popen(cmd, stdout=PIPE)
+    stdout, _ = p.communicate()
+    if p.returncode != 0:
+        raise Exception("git failure")
+
+    return stdout
+
+
 # As of git v2.9.0 these are all valid git objects
 OBJECT_TYPES = (b"blob", b"tree", b"commit", b"tag")
 

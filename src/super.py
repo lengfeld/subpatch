@@ -207,6 +207,11 @@ class SuperHelperGit:
 
         sha1 = stdout.rstrip(b"\n")
 
+        return self.strip_tree_object(sha1)
+
+    # TODO refactor!!!!
+    # TODO Move function to git.py. It's should not be part of the SuperHepler!
+    def strip_tree_object(self, sha1: bytes) -> bytes:
         tree_data_pretty = git_cat_file_pretty(sha1)
 
         # The pretty format looks like
@@ -237,6 +242,25 @@ class SuperHelperGit:
             new_tree_data += mode + b" " + path + b"\0" + bytearray.fromhex(sha1.decode("ascii"))
 
         return git_hash_object_tree(new_tree_data)
+
+    # TODO argument 'stat' is kind of a hack for now!
+    def get_diff_for_subtree(self, super_to_sub_relpath: bytes, stat: bool = False) -> bytes:
+        # For the current staged files in the subtree, get a SHA1 sum of the
+        # tree object, without the ".subproject" and "patches changes"
+        subtree_staged_sha1 = self.get_sha1_for_subtree(super_to_sub_relpath)
+
+        subtree_head_sha1 = self.strip_tree_object(b"HEAD:" + super_to_sub_relpath)
+
+        import subprocess
+        cmd = [b"git", b"diff", "--relative", subtree_head_sha1, subtree_staged_sha1]
+        if stat:
+            cmd.append("--stat")
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        stdout, _ = p.communicate()
+        if p.returncode != 0:
+            raise Exception("here")
+
+        return stdout
 
 
 # TODO compare to CheckedSuperprojectData. It's very similiar, maybe refactor

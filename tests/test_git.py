@@ -20,7 +20,8 @@ from src.git import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
                      git_ls_files_untracked, git_ls_remote,
                      git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                      is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                     git_hash_object_tree, git_cat_file_pretty, git_ls_files)
+                     git_hash_object_tree, git_cat_file_pretty, git_ls_files,
+                     git_diff_relative, git_diff_staged_shortstat)
 
 
 class TestGit(TestCaseTempFolder):
@@ -646,6 +647,72 @@ class TestGitHashObjectTree(TestCaseTempFolder, TestCaseHelper):
         self.assertEqual(tree_sha1, b"0a8a87dd80eda4132d290a67b0676cde6ec1cb29")
         self.assertEqual(git_cat_file_pretty(tree_sha1),
                          b"040000 tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\ta\n")
+
+class TestGitDiff(TestCaseTempFolder):
+    @classmethod
+    def setUp(cls):
+        super().setUp()
+        git = Git()
+        git.init()
+        touch("hello", b"content\n")
+        mkdir("dir")
+        touch("dir/hello", b"content\n")
+        git.add("hello")
+        git.add("dir")
+        git.commit("commit")
+
+        # Make staged changes
+        touch("hello", b"change\n")
+        touch("dir/hello", b"change\n")
+        git.add("hello")
+        git.add("dir")
+
+        # Make staged in worktree
+        touch("hello", b"change-second\n")
+        touch("dir/hello", b"change-second\n")
+
+    def test_diff_relative_staged(self):
+        self.assertEqual(git_diff_relative(staged=True), b"""\
+diff --git a/dir/hello b/dir/hello
+index d95f3ad..0835e4f 100644
+--- a/dir/hello
++++ b/dir/hello
+@@ -1 +1 @@
+-content
++change
+diff --git a/hello b/hello
+index d95f3ad..0835e4f 100644
+--- a/hello
++++ b/hello
+@@ -1 +1 @@
+-content
++change
+""")
+        with chdir("dir"):
+            self.assertEqual(git_diff_relative(staged=True), b"""\
+diff --git a/hello b/hello
+index d95f3ad..0835e4f 100644
+--- a/hello
++++ b/hello
+@@ -1 +1 @@
+-content
++change
+""")
+
+    def test_diff_relative(self):
+        with chdir("dir"):
+            self.assertEqual(git_diff_relative(), b"""\
+diff --git a/hello b/hello
+index 0835e4f..49ab42f 100644
+--- a/hello
++++ b/hello
+@@ -1 +1 @@
+-change
++change-second
+""")
+
+    def test_git_diff_staged_shortstat(self):
+        self.assertEqual(git_diff_staged_shortstat(), b" 2 files changed, 2 insertions(+), 2 deletions(-)")
 
 
 class TestGitCatFilePretty(TestCaseTempFolder):

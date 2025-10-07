@@ -974,6 +974,77 @@ def cmd_apply(args, parser):
     return 0
 
 
+def cmd_sync(args, parser):
+    superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    subtree_dim = read_subtree_dim(metadata)
+    patches_dim = read_patches_dim(sub_paths, metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
+
+    if subtree_dim.applied_index == -1:
+        # TODO this is an invalid state or argument
+        # TODO add explanation how to fix it!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no current patch.")
+
+    # index checked by ensure_dims_are_consistent()
+    patch_filename = patches_dim.patches[subtree_dim.applied_index]
+    patch_abspath = join(sub_paths.patches_abspath, patch_filename)
+    patch_tmp_abspath = patch_abspath + b".tmp"
+
+    # HACK for now nore
+    # NOTE: we only want to have the diff of the subtree, not the "patches" dir and the ".subproject" file
+    with chdir(super_paths.super_abspath):
+        subtree_diff = superx.helper.get_diff_for_subtree(sub_paths.super_to_sub_relpath)
+        subtree_stat = superx.helper.get_diff_for_subtree(sub_paths.super_to_sub_relpath, stat=True)
+
+    # TODO cleanup tmpfile on exception
+    # TODO move this to a patch file library
+    with open(patch_abspath, "br") as f_old, open(patch_tmp_abspath, "bw") as f_new:
+        before_diff = True
+        after_diff = False
+        for line in f_old:
+            if before_diff:
+                if line == b"---\n":
+                    f_new.write(line)
+                    # Write out the new diff
+                    before_diff = False
+                    f_new.write(subtree_stat)
+                    f_new.write(b"\n")
+                    f_new.write(subtree_diff)
+                else:
+                    # Write out the line as is
+                    f_new.write(line)
+            else:
+                if not after_diff:
+                    # Not yet after the original diff
+                    if line == b"-- \n":
+                        after_diff = True
+                        # Write this line out
+                        f_new.write(line)
+                    else:
+                        # drop this line, because it's the old diff
+                        pass
+                else:
+                    # After the original diff, write out the original banner
+                    f_new.write(line)
+
+    os.rename(patch_tmp_abspath, patch_abspath)
+
+    with chdir(super_paths.super_abspath):
+        # TODO use relative paths. It feels nicer.
+        superx.helper.add([patch_abspath])
+
+    if not args.quiet:
+        print("Syncing patch '%s' from stagging area." % (patch_filename.decode("utf8"),))
+        # TODO make printout with superx.helper
+        # NOTE This print out now clobbers a lot of the output of very command.
+        # At some point the user knows it and this is just visual clutter.
+        # Maybe have a config option to suppress it?
+        # superx.helper.print_instructions_to_commit_and_inspect()
+
+    return 0
+
+
 def cmd_pop(args, parser):
     superx, super_paths, sub_paths = checks_for_cmds_apply_pop_push(args)
     metadata = read_metadata(sub_paths.metadata_abspath)
@@ -985,7 +1056,7 @@ def cmd_pop(args, parser):
         # TODO make better error messages
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to pop!")
 
-    # TODO check for out of bounds!
+    # index checked by ensure_dims_are_consistent()
     patch_filename = patches_dim.patches[subtree_dim.applied_index]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
@@ -1425,6 +1496,13 @@ def main_wrapped() -> int:
                             help="Specify the revision to integrate. Can be a branch name, tag name or commit id.")
     parser_add.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                             help="Suppress output to stdout")
+
+    # TODO maybe find better name than "sync"
+    parser_sync = subparsers.add_parser("sync",
+                                        help="Update diff of the current patch from the staging area")
+    parser_sync.set_defaults(func=cmd_sync)
+    parser_sync.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
+                             help="Suppress output to stdout")
 
     parser_update = subparsers.add_parser("update",
                                           help="Fetch and update a subproject")

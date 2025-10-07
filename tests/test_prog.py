@@ -389,6 +389,134 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 """, p.stdout)
 
 
+class TestCmdSync(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def create_super_and_subproject_for_class(self):
+        with create_and_chdir("upstream"):
+            git = Git()
+            git.init()
+            touch("hello", b"content\n")
+            git.add("hello")
+            git.commit("adding hello\n")
+
+            touch("hello", b"new-content\n")
+            git.add("hello")
+            git.commit("changing hello\n")
+
+            git.call(["format-patch", "-q", "HEAD", "-1"])
+            git.call(["reset", "--hard", "HEAD^", "-q"])
+            self.assertFileExists("0001-changing-hello.patch")
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
+            self.assertFileContent("subproject/hello", b"content\n")
+            git.commit("add subproject")
+
+    def test_no_patches(self):
+        self.create_super_and_subproject_for_class()
+
+        with chdir("superproject/subproject"):
+            p = self.run_subpatch(["sync"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: There is no current patch.\n")
+
+    def test_simple_case(self):
+        self.create_super_and_subproject_for_class()
+
+        with chdir("superproject/subproject"):
+            git = Git()
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
+
+            # Mve the diff of the patch into the staging area of the git repo
+            self.run_subpatch_ok(["pop", "-q"])
+            git.add(".")
+            git.commit("add changes")
+            self.run_subpatch_ok(["push", "-q"])
+
+            # TODO The banner in the patch file is bad in tests. It's the version of git and therefore changes!
+            original_patch_file_content = b"""\
+From 25d546a72326fffb0006a2e2bee813c994c9fa48 Mon Sep 17 00:00:00 2001
+From: OTHER other <other@example.com>
+Date: Sat, 1 Oct 2016 14:00:00 +0800
+Subject: [PATCH] changing hello
+
+---
+ hello | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hello b/hello
+index d95f3ad..77f863d 100644
+--- a/hello
++++ b/hello
+@@ -1 +1 @@
+-content
++new-content
+-- 
+2.43.0
+
+"""
+            self.assertFileContent("patches/0001-changing-hello.patch", original_patch_file_content)
+
+            # Running 'sync' after a fresh 'push' does not change the diff. The
+            # changes in the patch file are equal to the changes in the
+            # stagging area.
+            p = self.run_subpatch_ok(["sync"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"Syncing patch '0001-changing-hello.patch' from stagging area.\n")
+            self.assertFileContent("patches/0001-changing-hello.patch", original_patch_file_content)
+
+            # Make some changes to the subtree _and_ record it in the index/staging area
+            touch(b"hello", b"new-new-content\n")
+            git.add("hello")
+
+            # Sync these changes into the patch file
+            self.run_subpatch_ok(["sync", "-q"])
+            self.assertFileContent("patches/0001-changing-hello.patch", b"""\
+From 25d546a72326fffb0006a2e2bee813c994c9fa48 Mon Sep 17 00:00:00 2001
+From: OTHER other <other@example.com>
+Date: Sat, 1 Oct 2016 14:00:00 +0800
+Subject: [PATCH] changing hello
+
+---
+ hello | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hello b/hello
+index d95f3ad..c9ded0e 100644
+--- a/hello
++++ b/hello
+@@ -1 +1 @@
+-content
++new-new-content
+-- 
+2.43.0
+
+""")
+
+            # Now compare the changes in the patch file, that 'sync' has done.
+            self.assertEqual(git.call(["diff", "--relative", "--staged", "--", "patches"], capture_stdout=True).stdout, b"""\
+diff --git a/patches/0001-changing-hello.patch b/patches/0001-changing-hello.patch
+index 274d359..1a97e78 100644
+--- a/patches/0001-changing-hello.patch
++++ b/patches/0001-changing-hello.patch
+@@ -8,12 +8,12 @@ Subject: [PATCH] changing hello
+  1 file changed, 1 insertion(+), 1 deletion(-)
+ 
+ diff --git a/hello b/hello
+-index d95f3ad..77f863d 100644
++index d95f3ad..c9ded0e 100644
+ --- a/hello
+ +++ b/hello
+ @@ -1 +1 @@
+ -content
+-+new-content
+++new-new-content
+ -- 
+ 2.43.0
+ 
+""")
+
+
 class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
         with create_and_chdir("superproject"):
