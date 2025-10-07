@@ -21,12 +21,14 @@ def git_add(args):
     assert len(args) >= 1
     # NOTE: use "-f" here otherwise git honors ignored files and does not add
     # all files!
+    # TODO add the force to the function signature
     p = Popen(["git", "add", "-f"] + args)
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
 
 
+# TODO make staged an argument!
 def git_diff_staged_shortstat() -> bytes:
     p = Popen(["git", "diff", "--staged", "--shortstat"], stdout=PIPE)
     stdout, _ = p.communicate()
