@@ -1073,7 +1073,7 @@ Now use 'git commit' to finalized your change.
         with create_and_chdir(b"sub"):
             self.run_subpatch_ok(["configure", "-q"])
             self.assertFileContent("../.subpatch", b"")
-            self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
+        self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
 
     def test_after_configure_list_and_add_are_possible(self):
         create_super_and_subproject()
@@ -1471,7 +1471,7 @@ The following changes are recorded in the git index:
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
 """)
-                self.assertEqual(git.diff(staged=True), diff_ok)
+            self.assertEqual(git.diff(staged=True), diff_ok)
 
     def test_update_with_no_changes_in_subproject(self):
         with create_and_chdir("subproject"):
