@@ -665,3 +665,14 @@ and the record_android_trace.py script by Google
 Add mkdocs build to linting and make warnings/errors a failure of the linting.
 
 Document `subpatch subtree checksum` command on the website.
+
+naming conventions and states/data for patches:
+- tracked patch
+- applied patch
+- current patch  patch with "appiledIndex"
+- skipped patch
+
+Fix inconsistency "subpatch update" uses a path argument "pop/push/apply" uses cwd!
+
+Make a DDX: commands that use cwd and operation only on one subproject should
+not print out the subproject name!
