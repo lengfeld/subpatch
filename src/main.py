@@ -1606,7 +1606,7 @@ def main_wrapped() -> int:
 
     # TODO add argument "-a" and think about exit code!
     parser_pop = subparsers.add_parser("pop",
-                                       help="Remove topmost patch from the subtree")
+                                       help="Remove current patch from the subtree")
     parser_pop.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                             help="Suppress output to stdout")
     parser_pop.set_defaults(func=cmd_pop)

@@ -37,7 +37,7 @@ Print the path of all subprojects in the repository.
 
     subpatch status
 
-Show the current state of all subprojects in the superproject. It prints the
+Show the state of all subprojects in the superproject. It prints the
 URL, integrated revision and whether the files of the subproject are changed.
 E.g. if there are untracked files, unstaged changes or staged, but uncommitted
 changes.
@@ -50,8 +50,8 @@ subprojects.
 
     subpatch add <url> [<path>] [-r | --revision <revision>] [-q | --quiet]
 
-Add the remote project specified by `url` as a subproject at the optional
-`path` in the current repository.  Currently `url` can only point to a git
+Add the upstream project specified by `url` as a subproject at the optional
+`path` in the superproject.  Currently `url` can only point to a git
 repository. Other subproject types are not supported yet.
 
 The `path` is optional. If it's omitted the canonical subproject name is used.
@@ -92,7 +92,7 @@ value in the config.
 
     subpatch configure [-q | --quiet]
 
-Configure the current superproject to use subpatch. The command adds the
+Configure a superproject to use subpatch. The command adds the
 `.subpatch` config file at toplevel directory of the superproject. subpatch
 uses the existens of this file as a marker that the project is using subpatch.
 
@@ -105,11 +105,11 @@ configures the superproject if necessary.
 
 ## subpatch apply
 
-    subpatch configure [-q | --quiet] <patch file>
+    subpatch apply [-q | --quiet] <patch file>
 
-Apply the patch in the `patch file` to the current subproject. The code changes
+Apply the patch in the `patch file` to a subproject. The code changes
 in the patch are applied onto the source code in the directory
-and the patch file is stored in the `patches` subdirectory.
+and the patch file is tracked in the `patches` subdirectory.
 
 You select the subproject by changing the current work directory into the
 subproject.
@@ -119,7 +119,7 @@ subproject.
 
     subpatch pop|push [-q | --quiet]
 
-Pop or push the top most applied patch of the current subproject. The code
+Pop the current applied or push the next patch of a subproject. The code
 changes are reverted (for `pop`) or applied (for `push`) to the working tree of
 the subproject. subpatch records the current state of applied or not applied
 patches in the metadata.
