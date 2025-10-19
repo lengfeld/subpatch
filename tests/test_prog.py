@@ -455,6 +455,44 @@ NOTE: The format is markdown currently. Will mostly change in the future.
     - Use `subpatch push` to apply a tracked patch to the subtree
 """, p.stdout)
 
+    def test_empty_patch(self):
+        with create_and_chdir("upstream"):
+            git = Git()
+            git.init()
+            touch("hello", b"content\n")
+            git.add("hello")
+            git.commit("add hello")
+            git.call(["commit", "-q", "-m", "empty commit", "--allow-empty"])
+            git.call(["format-patch", "-q", "HEAD", "-1"])
+            self.assertFileExists("0001-empty-commit.patch")
+            git.call(["reset", "--hard", "HEAD^", "-q"])
+
+        with create_and_chdir("superproject"):
+            git = Git()
+            git.init()
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
+            git.commit("add subproject")
+            with chdir("subproject"):
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-empty-commit.patch"])
+            self.assertEqual(git.diff_staged_files(),
+                             [b"M\tsubproject/.subproject",
+                              b'A\tsubproject/patches/0001-empty-commit.patch'])
+            git.commit("add subproject")
+            self.assertFileContent("subproject/.subproject", b"""\
+[subtree]
+\tappliedIndex = 0
+\tchecksum = c325b55a587c41fcbad76aa7bf5c0be65ed4dd89
+[upstream]
+\tobjectId = e615fbe0232e484c5c36ea420c270f681da4faf2
+\turl = ../upstream
+""")
+            with chdir("subproject"):
+                self.run_subpatch_ok(["pop", "-q"])
+            self.assertEqual(git.diff_staged_files(), [b"M\tsubproject/.subproject"])
+            with chdir("subproject"):
+                self.run_subpatch_ok(["push", "-q"])
+            self.assertEqual(git.diff_staged_files(), [])
+
 
 class TestCmdSync(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def create_super_and_subproject_for_class(self):

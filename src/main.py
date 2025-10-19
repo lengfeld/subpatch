@@ -925,8 +925,10 @@ def cmd_apply(args, parser):
                            (patch_filename.decode("utf8"),))
 
     # Test whether the patch applies to the working tree
-    git_args = ["git", "apply", "--check", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
-    p = Popen(git_args, stderr=DEVNULL)
+    # TODO refactor direct git call to to superproject helper!
+    git_apply_args = ["git", "apply", "--allow-empty", "--index",
+                      "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
+    p = Popen(git_apply_args + ["--check"], stderr=DEVNULL)
     p.communicate()
     if p.returncode != 0:
         if p.returncode == 1:
@@ -936,8 +938,7 @@ def cmd_apply(args, parser):
         else:
             raise Exception("git failure")
 
-    git_args = ["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), args.path]
-    p = Popen(git_args)
+    p = Popen(git_apply_args)
     p.communicate()
     if p.returncode != 0:
         # TODO add a nicer error message
@@ -1057,7 +1058,8 @@ def cmd_pop(args, parser):
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
     # TODO check whether patchs applys fully before applying
-    p = Popen(["git", "apply", "--reverse", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
+    p = Popen(["git", "apply", "--allow-empty", "--reverse", "--index",
+               "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:
         # TODO explain how to recover!
@@ -1105,7 +1107,8 @@ def cmd_push(args, parser):
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
     # TODO check whether patchs applys fully before applying
-    p = Popen(["git", "apply", "--index", "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
+    p = Popen(["git", "apply", "--allow-empty", "--index",
+               "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
     p.communicate()
     if p.returncode != 0:
         # TODO explain how to recover!
