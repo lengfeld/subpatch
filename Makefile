@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: Copyright (C) 2024 Stefan Lengfeld
 
-all:
+all: subpatch.py
 
 subpatch.py: src/util.py src/config.py src/git.py src/cache.py src/super.py src/main.py
 	scripts/pybundle.py $^ > $@.tmp
