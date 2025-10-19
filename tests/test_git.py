@@ -191,7 +191,6 @@ class TestGit(TestCaseTempFolder):
         # anymore.
         self.assertEqual(git_ls_files(), [b"subdir/b"])
 
-
     def test_parse_sha1_names(self):
         self.assertEqual(parse_sha1_names(b"""\
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\tHEAD
@@ -631,8 +630,7 @@ class TestGitHashObjectTree(TestCaseTempFolder, TestCaseHelper):
     def test_two_entries(self):
         blob_sha1 = bytearray.fromhex("bf252b96c379a66383f5ac9b605b1633bd39362e")
 
-        tree_sha1 = git_hash_object_tree(b"100644 a\0" + blob_sha1 +
-                                         b"100644 b\0" + blob_sha1)
+        tree_sha1 = git_hash_object_tree(b"100644 a\0" + blob_sha1 + b"100644 b\0" + blob_sha1)
         self.assertEqual(tree_sha1, b"0aaf626dedece2bdc7f444180300370dfe4900b3")
 
         self.assertEqual(git_cat_file_pretty(tree_sha1), b"""\
@@ -647,6 +645,7 @@ class TestGitHashObjectTree(TestCaseTempFolder, TestCaseHelper):
         self.assertEqual(tree_sha1, b"0a8a87dd80eda4132d290a67b0676cde6ec1cb29")
         self.assertEqual(git_cat_file_pretty(tree_sha1),
                          b"040000 tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\ta\n")
+
 
 class TestGitDiff(TestCaseTempFolder):
     @classmethod

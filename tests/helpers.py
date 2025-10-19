@@ -277,4 +277,4 @@ class TestCaseHelper(unittest.TestCase):
 def create_and_chdir(path):
     os.makedirs(path)
     with chdir(path):
-        yield 
+        yield

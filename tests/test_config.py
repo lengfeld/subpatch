@@ -116,13 +116,13 @@ class TestConfigDropSectionIfEmpty(unittest.TestCase):
         self.assertEqual(config_actual, config_expected)
 
     def test_simple_drop(self):
-        self.compare(b"section",  b"""\
+        self.compare(b"section", b"""\
 [section]
 """, b"""\
 """)
 
     def test_simple_no_drop(self):
-        self.compare(b"section",  b"""\
+        self.compare(b"section", b"""\
 [section]
 \tkey = value
 """, b"""\
@@ -131,7 +131,7 @@ class TestConfigDropSectionIfEmpty(unittest.TestCase):
 """)
 
     def test_complex(self):
-        self.compare(b"a",  b"""\
+        self.compare(b"a", b"""\
 [a]
 [b]
 [c]
@@ -139,7 +139,7 @@ class TestConfigDropSectionIfEmpty(unittest.TestCase):
 [b]
 [c]
 """)
-        self.compare(b"b",  b"""\
+        self.compare(b"b", b"""\
 [a]
 [b]
 [c]
@@ -147,7 +147,7 @@ class TestConfigDropSectionIfEmpty(unittest.TestCase):
 [a]
 [c]
 """)
-        self.compare(b"c",  b"""\
+        self.compare(b"c", b"""\
 [a]
 [b]
 [c]

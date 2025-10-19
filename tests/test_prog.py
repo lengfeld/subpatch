@@ -179,8 +179,8 @@ The following changes are recorded in the git index:
         self.assertEqual(p.stderr, b"Error: Invalid argument: Directory 'subproject' alreay exists. Cannot add subproject!\n")
 
 
-def create_super_and_subproject():
-    with create_and_chdir("subproject"):
+def create_super_and_upstream():
+    with create_and_chdir("upstream"):
         git = Git()
         git.init()
         git.call(["switch", "-c", "main", "-q"])
@@ -201,9 +201,9 @@ def create_super_and_subproject():
 
 # TODO update name. Also pop and push are tested!
 class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
-    def create_super_and_subproject_for_class(self):
-        create_super_and_subproject()
-        with chdir("subproject"):
+    def create_super_and_upstream_for_class(self):
+        create_super_and_upstream()
+        with chdir("upstream"):
             git = Git()
             touch("hello", b"new-content")
             git.add("hello")
@@ -218,12 +218,12 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 
         with chdir("superproject"):
             git = Git()
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             self.assertFileContent("subproject/hello", b"content")
             git.commit("add subproject")
 
     def test_cwd_errors(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject"):
             touch("test.patch")
 
@@ -240,13 +240,13 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                                  b"directory of the subproject for now!\n")
 
     def test_apply_simple_case(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject"):
             git = Git()
             self.assertFileContent("subproject/hello", b"content")
 
             with chdir("subproject"):
-                p = self.run_subpatch_ok(["apply", "../../subproject/0001-changing-hello.patch"], stdout=PIPE)
+                p = self.run_subpatch_ok(["apply", "../../upstream/0001-changing-hello.patch"], stdout=PIPE)
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileExists("subproject/patches/0001-changing-hello.patch")
             self.assertEqual(git.diff_staged_files(),
@@ -254,7 +254,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                               b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertEqual(p.stdout, b"""\
-Applied patch '../../subproject/0001-changing-hello.patch' successfully!
+Applied patch '../../upstream/0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  3 files changed, 23 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -268,18 +268,18 @@ The following changes are recorded in the git index:
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
 
     def test_multiple_patches(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
             self.assertFileContent("hello", b"new-content")
             self.assertFileExists("patches/0001-changing-hello.patch")
             self.assertFileDoesNotExist("patches/0002-changing-hello.patch")
 
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0002-changing-hello.patch"])
             self.assertFileContent("hello", b"new-new-content")
             self.assertFileExists("patches/0001-changing-hello.patch")
             self.assertFileExists("patches/0002-changing-hello.patch")
@@ -302,7 +302,7 @@ The following changes are recorded in the git index:
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
 
             # Now push again
@@ -313,10 +313,10 @@ The following changes are recorded in the git index:
             self.assertFileContent("hello", b"new-new-content")
 
     def test_argument_all(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0002-changing-hello.patch"])
             self.assertFileContent("hello", b"new-new-content")
 
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
@@ -352,7 +352,7 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stdout, b"All patches are applied. Nothing to push!\n")
 
     def test_push_pop_no_patches(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
             p = self.run_subpatch(["pop"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
@@ -363,22 +363,22 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stderr, b"Error: Invalid argument: The subproject does not track at least one patch. Nothing to push!\n")
 
     def test_error_not_all_applied(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
             self.run_subpatch_ok(["pop", "-q"])
-            p = self.run_subpatch(["apply", "-q", "../../subproject/0002-changing-hello.patch"], stderr=PIPE)
+            p = self.run_subpatch(["apply", "-q", "../../upstream/0002-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
                              b"Error: Invalid argument: Cannot apply new patch. Not all tracked patches are applied!\n")
 
     def test_error_patch_filename_not_correct(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
-            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
 
             # First test that the patch filename is unique
-            p = self.run_subpatch(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stderr=PIPE)
+            p = self.run_subpatch(["apply", "-q", "../../upstream/0001-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
                              b"Error: Invalid argument: The filename '0001-changing-hello.patch' must be unique. "
@@ -386,16 +386,16 @@ The following changes are recorded in the git index:
 
             # Second test that the patch filename is in order (=higher)
             # -> Rename the second patch file to provoke the error
-            with chdir("../../subproject/"):
+            with chdir("../../upstream/"):
                 os.rename("0002-changing-hello.patch", "0000-changing-hello.patch")
-            p = self.run_subpatch(["apply", "-q", "../../subproject/0000-changing-hello.patch"], stderr=PIPE)
+            p = self.run_subpatch(["apply", "-q", "../../upstream/0000-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr,
                              b"Error: Invalid argument: The patch filenames must be in order. The new patch "
                              b"filename '0000-changing-hello.patch' does not sort latest!\n")
 
     def test_apply_fails(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject"):
             # Create a conflict for the patch
             git = Git()
@@ -404,7 +404,7 @@ The following changes are recorded in the git index:
             git.commit("changing hello")
 
             with chdir("subproject"):
-                p = self.run_subpatch(["apply", "../../subproject/0001-changing-hello.patch"], stderr=PIPE)
+                p = self.run_subpatch(["apply", "../../upstream/0001-changing-hello.patch"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr, b"""\
 Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to the working tree.
@@ -413,11 +413,11 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             self.assertFileContent("subproject/hello", b"conflicting-content")
 
     def test_pop_push_simple_case(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
         with chdir("superproject"):
             git = Git()
             with chdir("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/.subproject",
                               b"M\tsubproject/hello",
@@ -434,7 +434,7 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertEqual(p.stdout, b"""\
 Poped patch '0001-changing-hello.patch' successfully!
@@ -458,7 +458,7 @@ The following changes are recorded in the git index:
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertEqual(p.stdout, b"""\
 Pushed patch '0001-changing-hello.patch' successfully!
@@ -470,13 +470,13 @@ The following changes are recorded in the git index:
 """)
 
     def test_status(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
 
         with chdir("superproject"):
             git = Git()
             with chdir("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0002-changing-hello.patch"])
                 self.run_subpatch_ok(["pop", "-q"])
                 git.commit("add patches")
 
@@ -487,7 +487,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 # subproject at 'subproject'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 * There are n=2 patches.
 * There are only n=1 patches applied.
@@ -534,7 +534,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 
 class TestCmdSync(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
-    def create_super_and_subproject_for_class(self):
+    def create_super_and_upstream_for_class(self):
         with create_and_chdir("upstream"):
             git = Git()
             git.init()
@@ -558,7 +558,7 @@ class TestCmdSync(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git.commit("add subproject")
 
     def test_no_patches(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
 
         with chdir("superproject/subproject"):
             p = self.run_subpatch(["sync"], stderr=PIPE)
@@ -566,7 +566,7 @@ class TestCmdSync(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(p.stderr, b"Error: Invalid argument: There is no current patch.\n")
 
     def test_simple_case(self):
-        self.create_super_and_subproject_for_class()
+        self.create_super_and_upstream_for_class()
 
         with chdir("superproject/subproject"):
             git = Git()
@@ -672,14 +672,14 @@ class TestCmdList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(p.returncode, 4)
 
     def test_one_and_two_subproject(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
-            self.run_subpatch_ok(["add", "-q", "../subproject", "first"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "first"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(b"first\n", p.stdout)
 
-            self.run_subpatch_ok(["add", "-q", "../subproject", "external/second"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "external/second"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(b"external/second\nfirst\n", p.stdout)
@@ -702,7 +702,6 @@ path = a_alphabetical_order
 
 class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_no_subpatch_config_file(self):
-        # TODO Refactor to common code. Every tmp dir should be in /tmp!
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
@@ -712,10 +711,10 @@ class TestCmdStatus(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertEqual(p.returncode, 4)
 
     def test_two_clean_subprojects(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
-            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject1"])
-            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject2"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject1"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject2"])
             git = Git()
             git.commit("add two subprojects")
 
@@ -726,21 +725,21 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 # subproject at 'subproject1'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 
 # subproject at 'subproject2'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 """,
                              p.stdout)
 
     def test_path_argument(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
-            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject1"])
-            self.run_subpatch_ok(["add", "-q", "../subproject", "subproject2"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject1"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject2"])
             git = Git()
             git.commit("add two subprojects")
 
@@ -762,7 +761,7 @@ WARNING: The paths in this console output are wrong (for now)!
 
 # subproject at 'subproject1'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 """
 
@@ -773,14 +772,13 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 # subproject at 'subproject1'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-"""
-)
+""")
 
             with chdir("subproject1"):
                 p = self.run_subpatch_ok(["status", "."], stdout=PIPE)
-                expected_output =  b"""\
+                expected_output = b"""\
 NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
 NOTE: The format is markdown currently. Will mostly change in the future.
 WARNING: The current working directory is not the toplevel directory of the superproject.
@@ -788,7 +786,7 @@ WARNING: The paths in this console output are wrong (for now)!
 
 # subproject at 'subproject1'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
 """
                 self.assertEqual(p.stdout, expected_output)
@@ -797,7 +795,7 @@ WARNING: The paths in this console output are wrong (for now)!
                     self.assertEqual(p.stdout, expected_output)
 
     def test_one_subproject_with_modified_files(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
             touch("a")
@@ -812,7 +810,7 @@ WARNING: The paths in this console output are wrong (for now)!
             git = Git()
             git.init()
 
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             git.commit("add subproject")
 
             with chdir("subproject"):
@@ -832,7 +830,7 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 
 # subproject at 'subproject'
 
-* was integrated from URL: ../subproject
+* was integrated from URL: ../upstream
 * has integrated object id: a094853f138e0f388d787aca36354e1c3e7d1a2a
 * There are n=1 untracked files and/or directories:
     - To see them execute:
@@ -894,12 +892,12 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         self.assertIn(b"the following arguments are required: url", p.stderr)
 
     def test_adding_two_subprojects(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
 
         with chdir("superproject"):
-            p = self.run_subpatch(["add", "-q", "../subproject", "dirB"])
+            p = self.run_subpatch(["add", "-q", "../upstream", "dirB"])
             self.assertEqual(0, p.returncode)
-            p = self.run_subpatch(["add", "-q", "../subproject", "dirA"])
+            p = self.run_subpatch(["add", "-q", "../upstream", "dirA"])
             self.assertEqual(0, p.returncode)
 
             git = Git()
@@ -920,19 +918,19 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertFileContent("dirB/.subproject", b"""\
 [subtree]
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
 
     def test_gitignore_in_subproject(self):
         # Testing for a bug. There was a "-f" missing for "git add".
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
             touch("a")
@@ -945,7 +943,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git = Git()
             git.init()
 
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             self.assertFileContent("subproject/a", b"")
             self.assertFileContent("subproject/.gitignore", b"a\n")
             self.assertEqual(git.diff_staged_files(),
@@ -955,18 +953,18 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                               b"A\tsubproject/a"])
 
     def test_subproject_directory_already_exists(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
 
         with chdir("superproject"):
             # Just create a file. It should also fail!
             touch("subproject")
 
-            p = self.run_subpatch(["add", "../subproject"], stderr=PIPE)
+            p = self.run_subpatch(["add", "../upstream", "subproject"], stderr=PIPE)
             self.assertEqual(b"Error: Invalid argument: Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
     def test_add_with_empty_tree_in_upstream(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
             git.call(["commit", "--allow-empty", "-m", "empty commit", "-q"])
@@ -976,7 +974,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "../subproject", "-q",])
+            self.run_subpatch_ok(["add", "../upstream", "subproject", "-q",])
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
                               b"A\tsubproject/.subproject"])
@@ -985,17 +983,17 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 \tchecksum = 4b825dc642cb6eb9a060e54bf8d69288fbee4904
 [upstream]
 \tobjectId = c49c85c0ebf4ef3518a3282a5f58b9417f730029
-\turl = ../subproject
+\turl = ../upstream
 """)
             # NOTE: It's the same checksum as above and this is the empty tree
             # object
 
     def test_add_in_subdirectory(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
 
         # Prepare repo for dump http protocol
         # See https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols
-        with chdir("subproject"):
+        with chdir("upstream"):
             git = Git()
             git.call(["update-server-info"])
 
@@ -1004,30 +1002,30 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             with create_and_chdir("subdir"):
                 # NOTE: This also tests that "/.git/" is not used as the local
                 # directory name.
-                p = self.run_subpatch_ok(["add", "http://localhost:7000/subproject/.git/"], stdout=PIPE)
-                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' "
+                p = self.run_subpatch_ok(["add", "http://localhost:7000/upstream/.git/"], stdout=PIPE)
+                self.assertIn(b"Adding subproject 'upstream' from URL 'http://localhost:7000/upstream/.git/' "
                               b"at revision 'HEAD'... Done",
                               p.stdout)
-                self.assertTrue(os.path.isdir("subproject"))
+                self.assertTrue(os.path.isdir("upstream"))
 
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
-                              b"A\tsubdir/subproject/.subproject",
-                              b"A\tsubdir/subproject/hello"])
+                              b"A\tsubdir/upstream/.subproject",
+                              b"A\tsubdir/upstream/hello"])
 
             self.assertFileContent(".subpatch", b"""\
 [subprojects]
-\tpath = subdir/subproject
+\tpath = subdir/upstream
 """)
 
     def test_add_with_stdout_output_and_index_updates(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
 
         with chdir("superproject"):
             git = Git()
-            p = self.run_subpatch_ok(["add", "../subproject"], stdout=PIPE)
+            p = self.run_subpatch_ok(["add", "../upstream", "subproject"], stdout=PIPE)
             self.assertEqual(b"""\
-Adding subproject 'subproject' from URL '../subproject' at revision 'HEAD'... Done.
+Adding subproject 'subproject' from URL '../upstream' at revision 'HEAD'... Done.
 The following changes are recorded in the git index:
  3 files changed, 8 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -1050,27 +1048,27 @@ The following changes are recorded in the git index:
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
 
     def test_add_with_extra_path_but_empty(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
-            p = self.run_subpatch(["add", "../subproject", ""], stderr=PIPE)
+            p = self.run_subpatch(["add", "../upstream", ""], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: path is empty\n",
                              p.stderr)
 
     def test_absolute_paths_are_not_supported(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
-            p = self.run_subpatch(["add", "/tmp/subproject"], stderr=PIPE)
+            p = self.run_subpatch(["add", "/tmp/upstream"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Absolute local paths to a remote repository are not supported!\n",
                              p.stderr)
 
     def test_remote_git_repo_is_empty(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
 
@@ -1078,20 +1076,20 @@ The following changes are recorded in the git index:
             git = Git()
             git.init()
 
-            p = self.run_subpatch(["add", "../subproject", "-r", "master"], stderr=PIPE, stdout=PIPE)
+            p = self.run_subpatch(["add", "../upstream", "-r", "master"], stderr=PIPE, stdout=PIPE)
             self.assertEqual(4, p.returncode)
-            self.assertEqual(b"Adding subproject 'subproject' from URL '../subproject' at revision 'master'... Failed.\n",
+            self.assertEqual(b"Adding subproject 'upstream' from URL '../upstream' at revision 'master'... Failed.\n",
                              p.stdout)
             self.assertEqual(b"Error: Invalid argument: The reference 'master' cannot be resolved to a branch or tag!\n",
                              p.stderr)
             # TODO add test without "-r" argument. The internal code behaves differently!
 
     def test_add_with_extra_path(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
             git = Git()
 
-            self.run_subpatch_ok(["add", "-q", "../subproject", "folder"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "folder"])
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -1104,7 +1102,7 @@ The following changes are recorded in the git index:
             git.remove_staged_changes()
 
             # Add same subproject but in a subfolder
-            self.run_subpatch_ok(["add", "-q", "../subproject", "sub/folder"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "sub/folder"])
             self.assertFileExistsAndIsDir("sub/folder")
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
@@ -1117,7 +1115,7 @@ The following changes are recorded in the git index:
             git.remove_staged_changes()
 
             # Add subproject with trailing slash in path
-            self.run_subpatch_ok(["add", "-q", "../subproject", "folder/"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "folder/"])
 
             self.assertFileExistsAndIsDir("folder")
             self.assertEqual(git.diff_staged_files(),
@@ -1132,7 +1130,7 @@ The following changes are recorded in the git index:
             git.remove_staged_changes()
 
     def test_add_in_subdirectory_with_relative_path_fails(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with create_and_chdir("superproject/sub"):
             p = self.run_subpatch(["add", "../../subproject"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
@@ -1141,7 +1139,7 @@ The following changes are recorded in the git index:
                              p.stderr)
 
     def test_with_invalid_revision(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             create_git_repo_with_branches_and_tags()
             git = Git()
             object_id_file = git.get_sha1("main:file")
@@ -1152,7 +1150,7 @@ The following changes are recorded in the git index:
             git = Git()
             git.init()
 
-            p = self.run_subpatch(["add", "-q", "../subproject", "-r", "main-does-not-exists"], stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../upstream", "subproject", "-r", "main-does-not-exists"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: The reference 'main-does-not-exists' cannot be resolved to a branch or tag!\n",
                              p.stderr)
@@ -1161,28 +1159,28 @@ The following changes are recorded in the git index:
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
             invalid_object_id = b"0" * 40
-            p = self.run_subpatch(["add", "-q", "../subproject", "-r", invalid_object_id], stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../upstream", "subproject", "-r", invalid_object_id], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '0000000000000000000000000000000000000000' "
                              b"does not point to a valid object!\n",
                              p.stderr)
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
-            p = self.run_subpatch(["add", "-q", "../subproject", "-r", object_id_file], stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../upstream", "subproject", "-r", object_id_file], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: Object id '177324cdffb43c57471674a4655a2a513ab158f5' "
                              b"does not point to a commit or tag object!\n",
                              p.stderr)
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
-            p = self.run_subpatch(["add", "-q", "../subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
+            p = self.run_subpatch(["add", "-q", "../upstream", "subproject", "-r", "refs/heads\nmain"], stderr=PIPE)
             self.assertEqual(4, p.returncode)
             self.assertEqual(b"Error: Invalid argument: revision 'refs/heads\nmain' is invalid\n",
                              p.stderr)
             git.remove_staged_changes()  # NOTE: Revert changes subpatch already made!
 
     def test_with_revision(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             create_git_repo_with_branches_and_tags()
             git = Git()
             # Ensure that these objects have different types
@@ -1197,11 +1195,11 @@ The following changes are recorded in the git index:
             git = Git()
             git.init()
 
-            p = self.run_subpatch_ok(["add", "../subproject", "-r", "refs/heads/main"], stdout=PIPE)
+            p = self.run_subpatch_ok(["add", "../upstream", "subproject", "-r", "refs/heads/main"], stdout=PIPE)
             # NOTE: Checking the stdout here for a single time. There was a bug
             # in git_reset_hard().
             self.assertEqual(b"""\
-Adding subproject 'subproject' from URL '../subproject' at revision 'refs/heads/main'... Done.
+Adding subproject 'subproject' from URL '../upstream' at revision 'refs/heads/main'... Done.
 The following changes are recorded in the git index:
  3 files changed, 9 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -1217,11 +1215,11 @@ The following changes are recorded in the git index:
 [upstream]
 \tobjectId = 449e289b617c25c95868658a580b6c52fb817f4d
 \trevision = refs/heads/main
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", "v1"])
+            p = self.run_subpatch_ok(["add", "-q", "../upstream", "subproject", "-r", "v1"])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"initial")
             self.assertFileContent("subproject/.subproject", b"""\
@@ -1230,11 +1228,11 @@ The following changes are recorded in the git index:
 [upstream]
 \tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_commit])
+            p = self.run_subpatch_ok(["add", "-q", "../upstream", "subproject", "-r", object_id_commit])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on stable")
             self.assertFileContent("subproject/.subproject", b"""\
@@ -1243,11 +1241,11 @@ The following changes are recorded in the git index:
 [upstream]
 \tobjectId = 32c32dcaa3c7f7024387640a91e98a5201e1f202
 \trevision = 32c32dcaa3c7f7024387640a91e98a5201e1f202
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.remove_staged_changes()
 
-            p = self.run_subpatch_ok(["add", "-q", "../subproject", "-r", object_id_tag])
+            p = self.run_subpatch_ok(["add", "-q", "../upstream", "subproject", "-r", object_id_tag])
             self.assertFileExistsAndIsDir("subproject")
             self.assertFileContent("subproject/file", b"change on main")
             self.assertFileContent("subproject/.subproject", b"""\
@@ -1256,13 +1254,13 @@ The following changes are recorded in the git index:
 [upstream]
 \tobjectId = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
 \trevision = 60c7ec01d2a8d8c450896bb683c16637d52ea63c
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.remove_staged_changes()
 
             # Special case: Test revision argument with subdirectory for
             # subproject. This was broken.
-            p = self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subdir/subproject"])
+            p = self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "subdir/subproject"])
             self.assertFileExistsAndIsDir("subdir/subproject")
             self.assertFileContent("subdir/subproject/file", b"initial")
             self.assertFileContent("subdir/subproject/.subproject", b"""\
@@ -1271,7 +1269,7 @@ The following changes are recorded in the git index:
 [upstream]
 \tobjectId = 20650350f66b12d5c34194a90c5b0a6e2771e8a5
 \trevision = v1
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.remove_staged_changes()
 
@@ -1311,14 +1309,14 @@ Now use 'git commit' to finalized your change.
         self.assertEqual(git.diff_staged_files(), [b"A\t.subpatch"])
 
     def test_after_configure_list_and_add_are_possible(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
             self.run_subpatch_ok(["configure", "-q"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"")
 
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
 
             p = self.run_subpatch_ok(["list"], stdout=PIPE)
             self.assertEqual(p.stdout, b"subproject\n")
@@ -1328,6 +1326,7 @@ Now use 'git commit' to finalized your change.
         self.assertEqual(p.returncode, 4)
         self.assertEqual(p.stderr,
                          b"Error: Feature not implemented yet: No SCM found. Cannot configure. '--here' not implemented yet!\n")
+
 
 class TestCmdPatchesList(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_invalid_argument(self):
@@ -1456,13 +1455,13 @@ class TestCmdSubtreeChecksum(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 
 class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_some_errors_cases(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             create_git_repo_with_branches_and_tags()
 
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "dir/subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "dir/subproject"])
             git.commit("add subproject")
             self.assertFileContent("dir/subproject/file", b"initial")
 
@@ -1480,8 +1479,8 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 
             git.remove_staged_changes()
 
-    def create_subproject(self):
-        with create_and_chdir("subproject"):
+    def create_upstream(self):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
 
@@ -1525,12 +1524,12 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             git.call(["reset", "--hard", "HEAD^", "-q"])
 
     def test_simple_update(self):
-        self.create_subproject()
+        self.create_upstream()
 
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "dir/subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "dir/subproject"])
             self.assertFileContent(".subpatch", b"""\
 [subprojects]
 \tpath = dir/subproject
@@ -1541,7 +1540,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 [upstream]
 \tobjectId = 97d971584b8d9ef942abc6a88e500c5233fb89b3
 \trevision = v1
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertFileExistsAndIsDir("dir/subproject/dir")
             self.assertFileContent("dir/subproject/a", b"first-toplevel\n")
@@ -1570,7 +1569,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 [upstream]
 \tobjectId = 05273055cdb7635593d13ad7ce4d6da309050ce9
 \trevision = v2
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tdir/subproject/.subproject",
@@ -1586,7 +1585,7 @@ class TestCmdUpdate(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 
             self.assertEqual(git.diff(staged=True), b"""\
 diff --git a/dir/subproject/.subproject b/dir/subproject/.subproject
-index 5543c4c..348bbbc 100644
+index 21f6158..6e915f3 100644
 --- a/dir/subproject/.subproject
 +++ b/dir/subproject/.subproject
 @@ -1,6 +1,6 @@
@@ -1598,7 +1597,7 @@ index 5543c4c..348bbbc 100644
 -\trevision = v1
 +\tobjectId = 05273055cdb7635593d13ad7ce4d6da309050ce9
 +\trevision = v2
- \turl = ../subproject
+ \turl = ../upstream
 diff --git a/dir/subproject/dir/b b/dir/subproject/dir/b
 index 9c59e24..e019be0 100644
 --- a/dir/subproject/dir/b
@@ -1626,11 +1625,11 @@ index 0000000..e019be0
 """)
 
     def test_update_with_untracked_files(self):
-        self.create_subproject()
+        self.create_upstream()
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "subproject"])
             git.commit("add subproject")
 
             # Testing that a non-tracked file in the subproject is not removed on the update
@@ -1648,13 +1647,13 @@ index 0000000..e019be0
             self.assertFileContent("subproject/dir/untracked-file", b"untracked file\n")
 
     def test_stdout_of_add_and_update_are_the_simliar(self):
-        self.create_subproject()
+        self.create_upstream()
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            p = self.run_subpatch_ok(["add", "-r", "v1", "../subproject", "subproject"], stdout=PIPE)
+            p = self.run_subpatch_ok(["add", "-r", "v1", "../upstream", "subproject"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
-Adding subproject 'subproject' from URL '../subproject' at revision 'v1'... Done.
+Adding subproject 'subproject' from URL '../upstream' at revision 'v1'... Done.
 The following changes are recorded in the git index:
  8 files changed, 14 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -1665,7 +1664,7 @@ The following changes are recorded in the git index:
 
             p = self.run_subpatch_ok(["update", "subproject", "-r", "v2"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
-Updating subproject 'subproject' from URL '../subproject' to revision 'v2'... Done.
+Updating subproject 'subproject' from URL '../upstream' to revision 'v2'... Done.
 The following changes are recorded in the git index:
  5 files changed, 5 insertions(+), 5 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -1677,15 +1676,15 @@ The following changes are recorded in the git index:
             # test "test_update_with_cwd_in_subdir"
 
     def test_update_with_cwd_in_subdir(self):
-        self.create_subproject()
-        with chdir("subproject"):
+        self.create_upstream()
+        with chdir("upstream"):
             git = Git()
             git.call(["update-server-info"])
 
         with LocalWebserver(7000, FileRequestHandler), create_and_chdir("superproject"):
             git = Git()
             git.init()
-            p = self.run_subpatch(["add", "-q", "-r", "v1", "http://localhost:7000/subproject/.git/", "dir/subproject"], hack=True)
+            p = self.run_subpatch(["add", "-q", "-r", "v1", "http://localhost:7000/upstream/.git/", "dir/subproject"], hack=True)
             self.assertEqual(p.returncode, 0)
             git.commit("add subproject")
 
@@ -1701,7 +1700,7 @@ The following changes are recorded in the git index:
                 self.assertEqual(p.returncode, 0)
                 # NOTE: Path in output is relative to the current work directory!
                 self.assertEqual(p.stdout, b"""\
-Updating subproject 'subproject' from URL 'http://localhost:7000/subproject/.git/' to revision 'v2'... Done.
+Updating subproject 'subproject' from URL 'http://localhost:7000/upstream/.git/' to revision 'v2'... Done.
 The following changes are recorded in the git index:
  5 files changed, 5 insertions(+), 5 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -1711,7 +1710,7 @@ The following changes are recorded in the git index:
             self.assertEqual(git.diff(staged=True), diff_ok)
 
     def test_update_with_no_changes_in_subproject(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
             touch("a")
@@ -1721,16 +1720,16 @@ The following changes are recorded in the git index:
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             git.commit("add subproject")
             p = self.run_subpatch_ok(["update", "subproject"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
-Updating subproject 'subproject' from URL '../subproject' to revision 'HEAD'... Done.
+Updating subproject 'subproject' from URL '../upstream' to revision 'HEAD'... Done.
 Note: There are no changes in the subproject. Nothing to commit!
 """)
 
     def test_update_with_head(self):
-        with create_and_chdir("subproject"):
+        with create_and_chdir("upstream"):
             git = Git()
             git.init()
             touch("a")
@@ -1740,13 +1739,13 @@ Note: There are no changes in the subproject. Nothing to commit!
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
 \tchecksum = 496d6428b9cf92981dc9495211e6e1120fb6f2ba
 [upstream]
 \tobjectId = 78733648ec0177bf0bc0c6d681cc80c37d8749ff
-\turl = ../subproject
+\turl = ../upstream
 """)
             git.commit("add subproject")
 
@@ -1754,7 +1753,7 @@ Note: There are no changes in the subproject. Nothing to commit!
             self.run_subpatch_ok(["update", "-q", "subproject"])
             self.assertEqual(git.diff_staged_files(), [])
 
-        with chdir("subproject"):
+        with chdir("upstream"):
             git = Git()
             touch("b")
             git.add("b")
@@ -1767,30 +1766,30 @@ Note: There are no changes in the subproject. Nothing to commit!
                              [b"M\tsubproject/.subproject", b"A\tsubproject/b"])
 
     def test_update_has_no_changes(self):
-        self.create_subproject()
+        self.create_upstream()
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "subproject"])
             git.commit("add subproject")
 
             p = self.run_subpatch_ok(["update", "-r", "v1", "subproject"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
-Updating subproject 'subproject' from URL '../subproject' to revision 'v1'... Done.
+Updating subproject 'subproject' from URL '../upstream' to revision 'v1'... Done.
 Note: There are no changes in the subproject. Nothing to commit!
 """)
 
     def test_update_error_with_patches_applied(self):
-        self.create_subproject()
+        self.create_upstream()
 
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "subproject"])
             git.commit("add subproject")
 
             with chdir("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-add-extra-file.patch"])
                 git.commit("subproject: add patch")
 
             p = self.run_subpatch(["update", "-r", "v2", "subproject"], stderr=PIPE)
@@ -1803,15 +1802,15 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
         # NOTE: This does does not commit any changes. Adding, appyling,
         # poping, updating, pushing is done on the index. This is on purpose
         # and a feature of subpatch with git as the superproject.
-        self.create_subproject()
+        self.create_upstream()
 
         with create_and_chdir("superproject"):
             git = Git()
             git.init()
-            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../subproject", "subproject"])
+            self.run_subpatch_ok(["add", "-q", "-r", "v1", "../upstream", "subproject"])
 
             with chdir("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-add-extra-file.patch"])
+                self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-add-extra-file.patch"])
             self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "0")
 
             with chdir("subproject"):
@@ -1833,10 +1832,10 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 
 class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
     def test_git_archive_export(self):
-        create_super_and_subproject()
+        create_super_and_upstream()
         with chdir("superproject"):
             git = Git()
-            self.run_subpatch_ok(["add", "-q", "../subproject"])
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
             git.commit("add subproject")
 
             git.call(["archive", "-o", "archive.tar", "HEAD"])
@@ -1848,7 +1847,7 @@ class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
 -rw-rw-r-- root/root        33 2001-10-09 13:00 .subpatch
 -rw-rw-r-- root/root         7 2001-10-09 13:00 hello
 drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
--rw-rw-r-- root/root       148 2001-10-09 13:00 subproject/.subproject
+-rw-rw-r-- root/root       146 2001-10-09 13:00 subproject/.subproject
 -rw-rw-r-- root/root         7 2001-10-09 13:00 subproject/hello
 """)
 
@@ -1868,7 +1867,7 @@ drwxrwxr-x root/root         0 2001-10-09 13:00 subproject/
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-\turl = ../subproject
+\turl = ../upstream
 """)
             self.assertFileContent("subproject/hello", b"content")
 

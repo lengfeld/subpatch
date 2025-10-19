@@ -76,8 +76,7 @@ class TestSubmodule(TestCaseTempFolder, TestCaseHelper):
             with create_and_chdir("folder"):
                 # TODO "git.submodule()" and others methods do not have an
                 # interface for failing commands. So fallback to popen here.
-                p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS +
-                          ["submodule", "add", "../../subproject/"],
+                p = Popen(["git"] + Git.SUBMODULE_EXTRA_ARGS + ["submodule", "add", "../../subproject/"],
                           stderr=PIPE)
                 _, stderr = p.communicate()
                 self.assertEqual(128, p.returncode)
