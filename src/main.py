@@ -1194,15 +1194,22 @@ def cmd_pop(args, parser):
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
     if args.all:
+        # NOTE: If there are no patches, "-a" exists successfully!
+        if len(patches_dim.patches) == 0:
+            print("The subproject does not track at least one patch. Nothing to pop!")
+            return 0
+        else:
+            if subtree_dim.applied_index == -1:
+                print("No patches are applied. Nothing to pop!")
+                return 0
         for applied_index_current in range(subtree_dim.applied_index, -1, -1):
             do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
     else:
         if len(patches_dim.patches) == 0:
-            raise AppException(ErrorCode.INVALID_ARGUMENT, "subproject does not track at least one patch. Nothing to pop!")
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to pop!")
         else:
             if subtree_dim.applied_index == -1:
-                # TODO make better error messages
-                raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches already poped. Nothing to pop!")
+                raise AppException(ErrorCode.INVALID_ARGUMENT, "No patches are applied. Nothing to pop!")
 
         applied_index_current = subtree_dim.applied_index
         do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
@@ -1213,6 +1220,8 @@ def cmd_pop(args, parser):
     return 0
 
 
+# TODO Maybe parts of this can be combined with "do_pop"
+# TODO And this must be moved to "super.py" anyway!
 def do_push(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
             patches_dim: PatchesDim, applied_index_new: int, quiet: bool) -> None:
     patch_filename = patches_dim.patches[applied_index_new]
@@ -1242,15 +1251,24 @@ def cmd_push(args, parser):
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if subtree_dim.applied_index + 1 == len(patches_dim.patches):
-        # TODO when there are not patches, make a better error messages
-        # TODO add better message: either all patches are already applied/pushed or there are no patches
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to push!")
-
     if args.all:
+        if len(patches_dim.patches) == 0:
+            # TODO should this be printed to stderr?
+            print("The subproject does not track at least one patch. Nothing to push!")
+            return 0
+        else:
+            if subtree_dim.applied_index == len(patches_dim.patches) - 1:
+                print("All patches are applied. Nothing to push!")
+                return 0
+
         for applied_index_new in range(subtree_dim.applied_index + 1, len(patches_dim.patches)):
             do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
     else:
+        if len(patches_dim.patches) == 0:
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to push!")
+        else:
+            if subtree_dim.applied_index == len(patches_dim.patches) - 1:
+                raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches are applied. Nothing to push!")
         applied_index_new = subtree_dim.applied_index + 1
         do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
 

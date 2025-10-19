@@ -312,24 +312,55 @@ The following changes are recorded in the git index:
             self.run_subpatch_ok(["push", "-q"])
             self.assertFileContent("hello", b"new-new-content")
 
-        # Testing "-a"
+    def test_argument_all(self):
+        self.create_super_and_subproject_for_class()
         with chdir("superproject/subproject"):
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
+            self.run_subpatch_ok(["apply", "-q", "../../subproject/0002-changing-hello.patch"])
             self.assertFileContent("hello", b"new-new-content")
-            self.run_subpatch_ok(["pop", "-q", "-a"])
+
+            p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"""\
+Poped patch '0002-changing-hello.patch' from subproject 'subproject' successfully!
+Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
+The following changes are recorded in the git index:
+ 2 files changed, 42 insertions(+)
+- To inspect the changes, use `git status` and `git diff --staged`.
+- If you want to keep the changes, commit them with `git commit`.
+- If you want to revert the changes, execute `git reset --merge`.
+""")
             self.assertFileContent("hello", b"content")
-            self.run_subpatch_ok(["push", "-q", "-a"])
+
+            # Executing it again will just do nothing.
+            p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"No patches are applied. Nothing to pop!\n")
+
+            p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
             self.assertFileContent("hello", b"new-new-content")
+            self.assertEqual(p.stdout, b"""\
+Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
+Pushed patch '0002-changing-hello.patch' to subproject 'subproject' successfully!
+The following changes are recorded in the git index:
+ 4 files changed, 44 insertions(+), 1 deletion(-)
+- To inspect the changes, use `git status` and `git diff --staged`.
+- If you want to keep the changes, commit them with `git commit`.
+- If you want to revert the changes, execute `git reset --merge`.
+""")
+
+            self.assertFileContent("hello", b"new-new-content")
+            p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
+            self.assertEqual(p.stdout, b"All patches are applied. Nothing to push!\n")
 
     def test_push_pop_no_patches(self):
         self.create_super_and_subproject_for_class()
         with chdir("superproject/subproject"):
             p = self.run_subpatch(["pop"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
-            self.assertEqual(p.stderr, b"Error: Invalid argument: subproject does not track at least one patch. Nothing to pop!\n")
+            self.assertEqual(p.stderr, b"Error: Invalid argument: The subproject does not track at least one patch. Nothing to pop!\n")
 
             p = self.run_subpatch(["push"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
-            self.assertEqual(p.stderr, b"Error: Invalid argument: There is no patch to push!\n")
+            self.assertEqual(p.stderr, b"Error: Invalid argument: The subproject does not track at least one patch. Nothing to push!\n")
 
     def test_error_not_all_applied(self):
         self.create_super_and_subproject_for_class()
@@ -386,7 +417,7 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
         with chdir("superproject"):
             git = Git()
             with chdir("subproject"):
-                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"], stdout=PIPE)
+                self.run_subpatch_ok(["apply", "-q", "../../subproject/0001-changing-hello.patch"])
             self.assertEqual(git.diff_staged_files(),
                              [b"M\tsubproject/.subproject",
                               b"M\tsubproject/hello",
