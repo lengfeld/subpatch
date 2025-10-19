@@ -1441,7 +1441,7 @@ def do_status_subproject(super_paths: SuperPaths, subproject: bytes, changes) ->
         # also applied patches are shown!
         if subtree_dim.applied_index + 1 != patches_count:
             print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
-            print("    - Use `subpatch push` to apply a tracked patch to the subtree")
+            print("    - Use `subpatch push` to apply the next tracked patch to the subtree")
 
         # TODO Maybe add commands to push/pop patches, if not everything is applied
         # TODO implement subpatch patch list
