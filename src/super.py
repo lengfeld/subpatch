@@ -149,6 +149,9 @@ class SuperHelper:
     def get_sha1_for_subtree(self, super_to_sub_relpath: bytes) -> bytes:
         raise NotImplementedError()
 
+    def get_diff_for_subtree(self, super_to_sub_relpath: bytes, stat: bool = False) -> bytes:
+        raise NotImplementedError()
+
 
 class SuperHelperPlain(SuperHelper):
     def add(self, paths: list[bytes]) -> None:
@@ -161,6 +164,9 @@ class SuperHelperPlain(SuperHelper):
 
     def get_sha1_for_subtree(self, super_to_sub_relpath: bytes) -> bytes:
         raise NotImplementedError("TODO think about this case!")
+
+    def get_diff_for_subtree(self, super_to_sub_relpath: bytes, stat: bool = False) -> bytes:
+        raise NotImplementedError()
 
 
 # TODO think about the data structure every super_helper method gets!
