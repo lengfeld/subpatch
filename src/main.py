@@ -82,9 +82,197 @@ def read_config(path: bytes) -> Config:
     return parse_config(config_lines)
 
 
+# Paths documentation and naming
+#
+#     Example              ../folder/superproject/dirA/dirB/subproject/
+#                                                 ^^^^cwd
+#
+#     super_abspath:       ../folder/superproject
+#       other name: "top level directory" TODO unify
+#     config_abspath:      ../folder/superproject/.subpatch
+#     super_to_sub_relpath:                       dirA/dirB/subproject
+#     super_to_cwd_relpath:                       dirA
+#     cwd_to_sub_relpath:                              dirB/subproject
+#     sub_name:                                             subproject
+#
+#     TODO finalized this naming
+#     Note on path/filesystem nameing
+#      - path: "dir/test", "/dir/test"
+#      - file: a file in a filesystem!
+#      - filename: can be a dir name or a regular file name
+#     reduandent words:
+#      - maybe pathname
+#      - maybe dirname
+#
+# TODO test and fix all the edge cases
+#  e.g. cwd_to_sub_relpath="../symbolic-link/../../dir"
+#  - symbolic links
+#  - ".." pointing outside of repo
+@dataclass(frozen=True)
+class SuperPaths:
+    super_abspath: bytes
+    config_abspath: bytes  # TODO Maybe just have a single abspath in super_abspath
+    super_to_cwd_relpath: bytes
+
+
 # TODO is it "<object>_<verb>" or "<verb>_<object>"?
 #  "subprojects_parse" vs "parse_subprojects"
 #  ... -> then should should be "parse_config_parts_to_subprojects
+
+@dataclass(frozen=True)
+class SubPaths:
+    super_to_sub_relpath: bytes
+    cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
+    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory (but this is not supported for now)
+    subproject_abspath: bytes
+    metadata_abspath: bytes  # Path to ".subproject" file
+    patches_abspath: bytes  # Path to "patches" directory
+
+
+def gen_sub_paths_from_relpath(super_paths: SuperPaths, super_to_sub_relpath: bytes) -> SubPaths:
+    # Returns a relative paht from the current work directory
+    cwd_to_sub_relpath = os.path.relpath(join(super_paths.super_abspath, super_to_sub_relpath))
+    if cwd_to_sub_relpath == b".":
+        cwd_to_sub_relpath = b""
+
+    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
+
+
+def gen_sub_paths_from_cwd_and_relpath(super_paths: SuperPaths, cwd_to_sub_relpath: bytes) -> SubPaths:
+    # Sanitize input path
+    if cwd_to_sub_relpath != b"":
+        cwd_to_sub_relpath = os.path.relpath(cwd_to_sub_relpath)
+        if cwd_to_sub_relpath == b".":
+            cwd_to_sub_relpath = b""
+
+    super_to_sub_relpath = join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
+
+    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
+
+
+def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes, cwd_to_sub_relpath: bytes) -> SubPaths:
+    # Remove trailing slash if there is any
+    # TODO is this correct? Does this makes sense?
+    if super_paths.super_to_cwd_relpath != b"":
+        super_to_sub_relpath = os.path.relpath(super_to_sub_relpath)
+
+    def my_join(a, b):
+        if a == b"":
+            return b
+        if b == b"":
+            return a
+        # If b contains ".." or "../..", strip path components, instead of
+        # adding ".."
+        return os.path.relpath(join(a, b))
+
+    assert super_to_sub_relpath == my_join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
+
+    sub_name = os.path.basename(super_to_sub_relpath)
+
+    subproject_abspath = join(super_paths.super_abspath, super_to_sub_relpath)
+
+    metadata_abspath = join(subproject_abspath, b".subproject")
+
+    patches_abspath = join(subproject_abspath, b"patches")
+
+    return SubPaths(super_to_sub_relpath, cwd_to_sub_relpath, sub_name, subproject_abspath, metadata_abspath, patches_abspath)
+
+
+@dataclass(frozen=True)
+class Metadata:
+    # TODO introduce seperation between sections (worktree, upstream, patches)
+    # TODO introduce boolean values whether header/sections exists. This can be
+    # a different case then the value exists.
+    url: bytes | None
+    revision: bytes | None
+    object_id: bytes | None
+    subtree_applied_index: bytes | None
+    subtree_checksum: bytes | None
+
+
+def read_metadata(path: bytes) -> Metadata:
+    with open(path, "br") as f:
+        lines = split_with_ts_bytes(f.read())
+
+    url = None
+    revision = None
+    object_id = None
+    subtree_applied_index = None
+    subtree_checksum = None
+
+    metadata_lines = config_parse2(lines)
+    for metadata_line in metadata_lines:
+        # TODO only use url and revision in upstream section!
+        if metadata_line.line_type == LineType.KEY_VALUE:
+            line_data = metadata_line.line_data
+            assert isinstance(line_data, LineDataKeyValue)
+            if line_data.key == b"url":
+                url = line_data.value
+            elif line_data.key == b"revision":
+                revision = line_data.value
+            elif line_data.key == b"objectId":
+                object_id = line_data.value
+            elif line_data.key == b"appliedIndex":
+                subtree_applied_index = line_data.value
+            elif line_data.key == b"checksum":
+                subtree_checksum = line_data.value
+
+    return Metadata(url, revision, object_id, subtree_applied_index, subtree_checksum)
+
+
+# Data class that contains most of the information that is in the subtree
+# dimension of a subproject. The actuall files in the subtree are left out!
+@dataclass(frozen=True)
+class SubtreeDim:
+    # Range: -1 <= applied_index < len(patches)
+    # - -1 := no applied patch
+    # -  0 := first patch applied,
+    # -  1 := second patch applied,
+    #   ...
+    # The default value is "-1"
+    applied_index: int
+    # TODO Use SHA1 Checksum type instead of 'bytes'
+    checksum: bytes   # Default value is b"", which means that the subtree is unpopulated
+
+
+def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
+    if metadata.subtree_applied_index is not None:
+        # TODO add error when value is not an int!
+        applied_index = int(metadata.subtree_applied_index)
+    else:
+        applied_index = -1  # Default value
+
+    if metadata.subtree_checksum is None:
+        checksum = b""
+    else:
+        # TODO Check checksum that it's a valid SHA1 sum
+        checksum = metadata.subtree_checksum
+
+    return SubtreeDim(applied_index, checksum)
+
+
+# Data class that contains most of the information that is in the patches
+# dimension of a subproject.
+@dataclass(frozen=True)
+class PatchesDim:
+    patches: list[bytes]
+
+
+def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
+    try:
+        patches = os.listdir(sub_paths.patches_abspath)
+        patches = [p for p in patches if p.endswith(b".patch")]
+        patches.sort()
+    except FileNotFoundError:
+        patches = []
+
+    return PatchesDim(patches)
+
+
+def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim) -> None:
+    if not (-1 <= subtree_dim.applied_index < len(patches_dim.patches)):
+        # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
 
 
 def nocommand(args, parser) -> int:
@@ -621,39 +809,6 @@ def is_abspath(path):
     return True
 
 
-# Paths documentation and naming
-#
-#     Example              ../folder/superproject/dirA/dirB/subproject/
-#                                                 ^^^^cwd
-#
-#     super_abspath:       ../folder/superproject
-#       other name: "top level directory" TODO unify
-#     config_abspath:      ../folder/superproject/.subpatch
-#     super_to_sub_relpath:                       dirA/dirB/subproject
-#     super_to_cwd_relpath:                       dirA
-#     cwd_to_sub_relpath:                              dirB/subproject
-#     sub_name:                                             subproject
-#
-#     TODO finalized this naming
-#     Note on path/filesystem nameing
-#      - path: "dir/test", "/dir/test"
-#      - file: a file in a filesystem!
-#      - filename: can be a dir name or a regular file name
-#     reduandent words:
-#      - maybe pathname
-#      - maybe dirname
-#
-# TODO test and fix all the edge cases
-#  e.g. cwd_to_sub_relpath="../symbolic-link/../../dir"
-#  - symbolic links
-#  - ".." pointing outside of repo
-@dataclass(frozen=True)
-class SuperPaths:
-    super_abspath: bytes
-    config_abspath: bytes  # TODO Maybe just have a single abspath in super_abspath
-    super_to_cwd_relpath: bytes
-
-
 def gen_super_paths(super_abspath: bytes) -> SuperPaths:
     assert is_abspath(super_abspath)
 
@@ -682,65 +837,6 @@ def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths
         if relpath_parts[:amount_of_same_components] == super_to_cwd_relpath_parts[:amount_of_same_components]:
             return relpath
     return None
-
-
-@dataclass(frozen=True)
-class SubPaths:
-    super_to_sub_relpath: bytes
-    cwd_to_sub_relpath: bytes  # Can be ".." or "../.." if cwd is inside a subproject
-    sub_name: bytes  # Can be b"" when subproject is at the toplevel directory (but this is not supported for now)
-    subproject_abspath: bytes
-    metadata_abspath: bytes  # Path to ".subproject" file
-    patches_abspath: bytes  # Path to "patches" directory
-
-
-def gen_sub_paths_from_relpath(super_paths: SuperPaths, super_to_sub_relpath: bytes) -> SubPaths:
-    # Returns a relative paht from the current work directory
-    cwd_to_sub_relpath = os.path.relpath(join(super_paths.super_abspath, super_to_sub_relpath))
-    if cwd_to_sub_relpath == b".":
-        cwd_to_sub_relpath = b""
-
-    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
-
-
-def gen_sub_paths_from_cwd_and_relpath(super_paths: SuperPaths, cwd_to_sub_relpath: bytes) -> SubPaths:
-    # Sanitize input path
-    if cwd_to_sub_relpath != b"":
-        cwd_to_sub_relpath = os.path.relpath(cwd_to_sub_relpath)
-        if cwd_to_sub_relpath == b".":
-            cwd_to_sub_relpath = b""
-
-    super_to_sub_relpath = join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
-
-    return gen_sub_paths_internal(super_paths, super_to_sub_relpath, cwd_to_sub_relpath)
-
-
-def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes, cwd_to_sub_relpath: bytes) -> SubPaths:
-    # Remove trailing slash if there is any
-    # TODO is this correct? Does this makes sense?
-    if super_paths.super_to_cwd_relpath != b"":
-        super_to_sub_relpath = os.path.relpath(super_to_sub_relpath)
-
-    def my_join(a, b):
-        if a == b"":
-            return b
-        if b == b"":
-            return a
-        # If b contains ".." or "../..", strip path components, instead of
-        # adding ".."
-        return os.path.relpath(join(a, b))
-
-    assert super_to_sub_relpath == my_join(super_paths.super_to_cwd_relpath, cwd_to_sub_relpath)
-
-    sub_name = os.path.basename(super_to_sub_relpath)
-
-    subproject_abspath = join(super_paths.super_abspath, super_to_sub_relpath)
-
-    metadata_abspath = join(subproject_abspath, b".subproject")
-
-    patches_abspath = join(subproject_abspath, b"patches")
-
-    return SubPaths(super_to_sub_relpath, cwd_to_sub_relpath, sub_name, subproject_abspath, metadata_abspath, patches_abspath)
 
 
 # TODO currently this always uses "\t" for indention. Try to use the style
@@ -1057,19 +1153,10 @@ def cmd_sync(args, parser):
     return 0
 
 
-def cmd_pop(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
-    metadata = read_metadata(sub_paths.metadata_abspath)
-    subtree_dim = read_subtree_dim(metadata)
-    patches_dim = read_patches_dim(sub_paths, metadata)
-    ensure_dims_are_consistent(subtree_dim, patches_dim)
-
-    if subtree_dim.applied_index == -1:
-        # TODO make better error messages
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to pop!")
-
+def do_pop(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
+           patches_dim: PatchesDim, applied_index_current: int, quiet: bool) -> None:
     # index checked by ensure_dims_are_consistent()
-    patch_filename = patches_dim.patches[subtree_dim.applied_index]
+    patch_filename = patches_dim.patches[applied_index_current]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
     # TODO check whether patchs applys fully before applying
@@ -1080,10 +1167,9 @@ def cmd_pop(args, parser):
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    applied_index_new = subtree_dim.applied_index - 1
+    applied_index_new = applied_index_current - 1
 
     # TODO make naming schema for update metadata functions
-
     if applied_index_new == -1:
         # Now all patches are deapplied. Drop the information from the metadata.
         # The default value is that no patches are applied
@@ -1095,29 +1181,40 @@ def cmd_pop(args, parser):
         # TODO here is not relative path used for git. This seems also to work!
         superx.helper.add([sub_paths.metadata_abspath])
 
-    if not args.quiet:
+    if not quiet:
         print("Poped patch '%s' from subproject '%s' successfully!" %
               (patch_filename.decode("utf8"), sub_paths.super_to_sub_relpath.decode("utf8")))
-        superx.helper.print_instructions_to_commit_and_inspect()
-
-    return 0
 
 
-def cmd_push(args, parser):
+def cmd_pop(args, parser):
     superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if subtree_dim.applied_index + 1 == len(patches_dim.patches):
-        # TODO when there are not patches, make a better error messages
-        # TODO add better message: either all patches are already applied/pushed or there are no patches
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to push!")
+    if args.all:
+        for applied_index_current in range(subtree_dim.applied_index, -1, -1):
+            do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
+    else:
+        if len(patches_dim.patches) == 0:
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "subproject does not track at least one patch. Nothing to pop!")
+        else:
+            if subtree_dim.applied_index == -1:
+                # TODO make better error messages
+                raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches already poped. Nothing to pop!")
 
-    applied_index_new = subtree_dim.applied_index + 1
+        applied_index_current = subtree_dim.applied_index
+        do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
 
-    # TODO check for out of bounds
+    if not args.quiet:
+        superx.helper.print_instructions_to_commit_and_inspect()
+
+    return 0
+
+
+def do_push(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
+            patches_dim: PatchesDim, applied_index_new: int, quiet: bool) -> None:
     patch_filename = patches_dim.patches[applied_index_new]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
 
@@ -1133,108 +1230,34 @@ def cmd_push(args, parser):
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
-    if not args.quiet:
+    if not quiet:
         print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
                                                                       sub_paths.super_to_sub_relpath.decode("utf8")))
+
+
+def cmd_push(args, parser):
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
+    metadata = read_metadata(sub_paths.metadata_abspath)
+    subtree_dim = read_subtree_dim(metadata)
+    patches_dim = read_patches_dim(sub_paths, metadata)
+    ensure_dims_are_consistent(subtree_dim, patches_dim)
+
+    if subtree_dim.applied_index + 1 == len(patches_dim.patches):
+        # TODO when there are not patches, make a better error messages
+        # TODO add better message: either all patches are already applied/pushed or there are no patches
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no patch to push!")
+
+    if args.all:
+        for applied_index_new in range(subtree_dim.applied_index + 1, len(patches_dim.patches)):
+            do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
+    else:
+        applied_index_new = subtree_dim.applied_index + 1
+        do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
+
+    if not args.quiet:
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
-
-
-@dataclass(frozen=True)
-class Metadata:
-    # TODO introduce seperation between sections (worktree, upstream, patches)
-    # TODO introduce boolean values whether header/sections exists. This can be
-    # a different case then the value exists.
-    url: bytes | None
-    revision: bytes | None
-    object_id: bytes | None
-    subtree_applied_index: bytes | None
-    subtree_checksum: bytes | None
-
-
-def read_metadata(path: bytes) -> Metadata:
-    with open(path, "br") as f:
-        lines = split_with_ts_bytes(f.read())
-
-    url = None
-    revision = None
-    object_id = None
-    subtree_applied_index = None
-    subtree_checksum = None
-
-    metadata_lines = config_parse2(lines)
-    for metadata_line in metadata_lines:
-        # TODO only use url and revision in upstream section!
-        if metadata_line.line_type == LineType.KEY_VALUE:
-            line_data = metadata_line.line_data
-            assert isinstance(line_data, LineDataKeyValue)
-            if line_data.key == b"url":
-                url = line_data.value
-            elif line_data.key == b"revision":
-                revision = line_data.value
-            elif line_data.key == b"objectId":
-                object_id = line_data.value
-            elif line_data.key == b"appliedIndex":
-                subtree_applied_index = line_data.value
-            elif line_data.key == b"checksum":
-                subtree_checksum = line_data.value
-
-    return Metadata(url, revision, object_id, subtree_applied_index, subtree_checksum)
-
-
-# Data class that contains most of the information that is in the subtree
-# dimension of a subproject. The actuall files in the subtree are left out!
-@dataclass(frozen=True)
-class SubtreeDim:
-    # Range: -1 <= applied_index < len(patches)
-    # - -1 := no applied patch
-    # -  0 := first patch applied,
-    # -  1 := second patch applied,
-    #   ...
-    # The default value is "-1"
-    applied_index: int
-    checksum: bytes   # Default value is b"", which means that the subtree is unpopulated
-
-
-def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
-    if metadata.subtree_applied_index is not None:
-        # TODO add error when value is not an int!
-        applied_index = int(metadata.subtree_applied_index)
-    else:
-        applied_index = -1  # Default value
-
-    if metadata.subtree_checksum is None:
-        checksum = b""
-    else:
-        # TODO Check subtree checksum for format
-        checksum = metadata.subtree_checksum
-
-    return SubtreeDim(applied_index, checksum)
-
-
-# Data class that contains most of the information that is in the patches
-# dimension of a subproject.
-@dataclass(frozen=True)
-class PatchesDim:
-    patches: list[bytes]
-
-
-def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
-    try:
-        patches = os.listdir(sub_paths.patches_abspath)
-        patches = [p for p in patches if p.endswith(b".patch")]
-        patches.sort()
-    except FileNotFoundError:
-        patches = []
-
-    return PatchesDim(patches)
-
-
-def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim) -> None:
-    if not (-1 <= subtree_dim.applied_index < len(patches_dim.patches)):
-        # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
 
 
 def do_init(super_paths: SuperPaths, sub_paths: SubPaths, superx: Superproject) -> None:
@@ -1604,18 +1627,21 @@ def main_wrapped() -> int:
     parser_apply.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                               help="Suppress output to stdout")
 
-    # TODO add argument "-a" and think about exit code!
+    # TODO think about exit code!
     parser_pop = subparsers.add_parser("pop",
                                        help="Remove current patch from the subtree")
     parser_pop.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                             help="Suppress output to stdout")
+    parser_pop.add_argument("-a", "--all", action=argparse.BooleanOptionalAction,
+                            help="Remove all patches")
     parser_pop.set_defaults(func=cmd_pop)
 
-    # TODO add argument "-a"
     parser_push = subparsers.add_parser("push",
-                                        help="Add the next patch to the subtree")
+                                        help="Apply the next patch to the subtree")
     parser_push.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                              help="Suppress output to stdout")
+    parser_push.add_argument("-a", "--all", action=argparse.BooleanOptionalAction,
+                             help="Apply all patches")
     parser_push.set_defaults(func=cmd_push)
 
     parser_add = subparsers.add_parser("add",

@@ -312,12 +312,20 @@ The following changes are recorded in the git index:
             self.run_subpatch_ok(["push", "-q"])
             self.assertFileContent("hello", b"new-new-content")
 
+        # Testing "-a"
+        with chdir("superproject/subproject"):
+            self.assertFileContent("hello", b"new-new-content")
+            self.run_subpatch_ok(["pop", "-q", "-a"])
+            self.assertFileContent("hello", b"content")
+            self.run_subpatch_ok(["push", "-q", "-a"])
+            self.assertFileContent("hello", b"new-new-content")
+
     def test_push_pop_no_patches(self):
         self.create_super_and_subproject_for_class()
         with chdir("superproject/subproject"):
             p = self.run_subpatch(["pop"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
-            self.assertEqual(p.stderr, b"Error: Invalid argument: There is no patch to pop!\n")
+            self.assertEqual(p.stderr, b"Error: Invalid argument: subproject does not track at least one patch. Nothing to pop!\n")
 
             p = self.run_subpatch(["push"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
