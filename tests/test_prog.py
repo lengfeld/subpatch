@@ -254,7 +254,7 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
                               b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertEqual(p.stdout, b"""\
-Applied patch '../../subproject/0001-changing-hello.patch' to subproject 'subproject' successfully!
+Applied patch '../../subproject/0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  3 files changed, 23 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -321,8 +321,8 @@ The following changes are recorded in the git index:
 
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
             self.assertEqual(p.stdout, b"""\
-Poped patch '0002-changing-hello.patch' from subproject 'subproject' successfully!
-Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
+Poped patch '0002-changing-hello.patch' successfully!
+Poped patch '0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  2 files changed, 42 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -338,8 +338,8 @@ The following changes are recorded in the git index:
             p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
             self.assertFileContent("hello", b"new-new-content")
             self.assertEqual(p.stdout, b"""\
-Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
-Pushed patch '0002-changing-hello.patch' to subproject 'subproject' successfully!
+Pushed patch '0001-changing-hello.patch' successfully!
+Pushed patch '0002-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  4 files changed, 44 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -437,7 +437,7 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
 \turl = ../subproject
 """)
             self.assertEqual(p.stdout, b"""\
-Poped patch '0001-changing-hello.patch' from subproject 'subproject' successfully!
+Poped patch '0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  1 file changed, 21 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
@@ -461,7 +461,7 @@ The following changes are recorded in the git index:
 \turl = ../subproject
 """)
             self.assertEqual(p.stdout, b"""\
-Pushed patch '0001-changing-hello.patch' to subproject 'subproject' successfully!
+Pushed patch '0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
  3 files changed, 23 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.

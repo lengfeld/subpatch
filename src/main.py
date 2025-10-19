@@ -1073,10 +1073,7 @@ def cmd_apply(args, parser):
     if not args.quiet:
         # TODO The output convetion is wrong here. It should be relative and
         # the path to the subproject is not relative to the cwd here!
-        # TODO Having the subproject name is kind of reduntant, because the cwd
-        # is already inside the subproject
-        print("Applied patch '%s' to subproject '%s' successfully!" %
-              (args.path, sub_paths.super_to_sub_relpath.decode("utf8")))
+        print("Applied patch '%s' successfully!" % (args.path,))
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
@@ -1182,8 +1179,7 @@ def do_pop(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
         superx.helper.add([sub_paths.metadata_abspath])
 
     if not quiet:
-        print("Poped patch '%s' from subproject '%s' successfully!" %
-              (patch_filename.decode("utf8"), sub_paths.super_to_sub_relpath.decode("utf8")))
+        print("Poped patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
 
 def cmd_pop(args, parser):
@@ -1240,8 +1236,7 @@ def do_push(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
         superx.helper.add([sub_paths.metadata_abspath])
 
     if not quiet:
-        print("Pushed patch '%s' to subproject '%s' successfully!" % (patch_filename.decode("utf8"),
-                                                                      sub_paths.super_to_sub_relpath.decode("utf8")))
+        print("Pushed patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
 
 def cmd_push(args, parser):
