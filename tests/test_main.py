@@ -5,6 +5,7 @@
 import os
 import sys
 import unittest
+from contextlib import chdir
 from os.path import dirname, join, realpath
 
 from helpers import (TestCaseHelper, TestCaseTempFolder, create_and_chdir,
@@ -13,9 +14,10 @@ from helpers import (TestCaseHelper, TestCaseTempFolder, create_and_chdir,
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
+from util import AppException, ErrorCode
 from main import (config_add_subproject, gen_sub_paths_from_cwd_and_relpath,
                   gen_sub_paths_from_relpath, gen_super_paths, read_metadata,
-                  Metadata)
+                  Metadata, checks_for_cmds_with_single_subproject)
 
 
 class TestReadMetadata(TestCaseTempFolder, TestCaseHelper):
@@ -97,6 +99,49 @@ class TestGenSuperPaths(TestCaseTempFolder):
             paths = gen_super_paths(super_abspath)
             self.assertEqual(paths.super_abspath, super_abspath)
             self.assertEqual(paths.super_to_cwd_relpath, b"sub1/sub2/sub3/sub4")
+
+
+class TestChecksForCmdsWithSingleSubproject(TestCaseTempFolder):
+    def test_two_subprojects_with_same_prefix(self):
+        # TODO This test sets up the config and metadata files manually. There
+        # are maybe errors or inconsistencies here. Add a subpatch check
+        # command to verfiy that they are correct and consistent.
+        touch(".subpatch", b"""\
+[subprojects]
+\tpath = subproject
+\tpath = subproject-second
+""")
+        os.mkdir(".git")
+        os.mkdir("subproject")
+        os.mkdir("subproject/subdir")
+        touch("subproject/.subproject", b"")
+        os.mkdir("subproject-second")
+        os.mkdir("subproject-second/subdir")
+        touch("subproject-second/.subproject", b"")
+
+        with chdir("subproject"):
+            superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
+            self.assertEqual(super_paths.super_to_cwd_relpath, b"subproject")
+            self.assertEqual(sub_paths.super_to_sub_relpath, b"subproject")
+        with chdir("subproject/subdir"):
+            with self.assertRaises(AppException) as context:
+                checks_for_cmds_with_single_subproject(enforce_cwd_is_subproject=True)
+            self.assertEqual(context.exception.get_code(), ErrorCode.INVALID_ARGUMENT)
+            self.assertEqual(str(context.exception), "Current work directory must be the toplevel directory of the subproject for now!")
+
+        with chdir("subproject/subdir"):
+            superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(enforce_cwd_is_subproject=False)
+            self.assertEqual(super_paths.super_to_cwd_relpath, b"subproject/subdir")
+            self.assertEqual(sub_paths.super_to_sub_relpath, b"subproject")
+
+        with chdir("subproject-second"):
+            superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
+            self.assertEqual(super_paths.super_to_cwd_relpath, b"subproject-second")
+            self.assertEqual(sub_paths.super_to_sub_relpath, b"subproject-second")
+        with chdir("subproject-second/subdir"):
+            superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(enforce_cwd_is_subproject=False)
+            self.assertEqual(super_paths.super_to_cwd_relpath, b"subproject-second/subdir")
+            self.assertEqual(sub_paths.super_to_sub_relpath, b"subproject-second")
 
 
 class TestGenSubPaths(TestCaseTempFolder):

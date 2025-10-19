@@ -667,8 +667,19 @@ def gen_super_paths(super_abspath: bytes) -> SuperPaths:
 
 
 def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths) -> bytes | None:
+    # This algorithm was too simple. E.g the paths
+    #   ["subproject", "subproject-second"]
+    # with cwd "subproject/subdir", was not recognized correctly.
+    # Now the algorithm does not make a string compare, it converts the paths
+    # to list and compare the list entries.
+    super_to_cwd_relpath_parts = super_paths.super_to_cwd_relpath.split(b"/")
     for relpath in config.subprojects:
-        if super_paths.super_to_cwd_relpath.startswith(relpath):
+        # TODO assert that relpath is sane!
+        # TODO introduce naming convention. How are the parts of a path called?
+        # "parts", "path components" or "filenames"?
+        relpath_parts = relpath.split(b"/")
+        amount_of_same_components = min(len(relpath_parts), len(super_to_cwd_relpath_parts))
+        if relpath_parts[:amount_of_same_components] == super_to_cwd_relpath_parts[:amount_of_same_components]:
             return relpath
     return None
 
@@ -849,7 +860,7 @@ def cmd_list(args, parser) -> int:
     return 0
 
 
-def checks_for_cmds_with_single_subproject(args) -> tuple[Superproject, SuperPaths, SubPaths]:
+def checks_for_cmds_with_single_subproject(enforce_cwd_is_subproject=True) -> tuple[Superproject, SuperPaths, SubPaths]:
     data = find_superproject()
     checked_data = check_superproject_data(data)
     superx = check_and_get_superproject_from_checked_data(checked_data)
@@ -867,22 +878,26 @@ def checks_for_cmds_with_single_subproject(args) -> tuple[Superproject, SuperPat
         # TODO decided whether a wrong work directory is a invalid argument or a runtime error!
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Current work directory must be inside a subproject!")
 
-    if len(super_to_sub_relpath) == len(super_paths.super_to_cwd_relpath):
-        assert super_to_sub_relpath == super_paths.super_to_cwd_relpath
-        pass  # It's the same directory
-    else:
-        assert len(super_to_sub_relpath) < len(super_paths.super_to_cwd_relpath)
-        assert super_paths.super_to_cwd_relpath.startswith(super_to_sub_relpath)
-        #  l = len(super_to_sub_relpath)
-        #  p = super_paths.super_to_cwd_relpath
-        #  assert p[l] == ord("/")
-        #  sub_to_cwd_relpath = p[l + 1:]
-        #  # NOTE: above code is just for later refactoring!
+    if enforce_cwd_is_subproject:
+        # NOTE: There is a nicer way to get get this information.
+        # is_inside_subproject_and_return_path() already knows whether cwd is
+        # at the subproject or not!
+        if len(super_to_sub_relpath) == len(super_paths.super_to_cwd_relpath):
+            assert super_to_sub_relpath == super_paths.super_to_cwd_relpath
+            pass  # It's the same directory
+        else:
+            assert len(super_to_sub_relpath) < len(super_paths.super_to_cwd_relpath)
+            assert super_paths.super_to_cwd_relpath.startswith(super_to_sub_relpath)
+            #  l = len(super_to_sub_relpath)
+            #  p = super_paths.super_to_cwd_relpath
+            #  assert p[l] == ord("/")
+            #  sub_to_cwd_relpath = p[l + 1:]
+            #  # NOTE: above code is just for later refactoring!
 
-        raise AppException(ErrorCode.INVALID_ARGUMENT,
-                           "Current work directory must be the toplevel directory of the subproject for now!")
+            raise AppException(ErrorCode.INVALID_ARGUMENT,
+                               "Current work directory must be the toplevel directory of the subproject for now!")
 
-    sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, b"")
+    sub_paths = gen_sub_paths_from_relpath(super_paths, super_to_sub_relpath)
 
     return superx, super_paths, sub_paths
 
@@ -896,7 +911,7 @@ def cmd_apply(args, parser):
     if not os.path.isfile(args.path):
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Path '%s' must point to a file!" % (args.path,))
 
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -972,7 +987,7 @@ def cmd_apply(args, parser):
 
 
 def cmd_sync(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1043,7 +1058,7 @@ def cmd_sync(args, parser):
 
 
 def cmd_pop(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1089,7 +1104,7 @@ def cmd_pop(args, parser):
 
 
 def cmd_push(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
     metadata = read_metadata(sub_paths.metadata_abspath)
     subtree_dim = read_subtree_dim(metadata)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1284,7 +1299,7 @@ def cmd_init(args, parser) -> int:
 
 
 def cmd_patches_list(args, parser):
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
 
     metadata = read_metadata(sub_paths.metadata_abspath)
     patches_dim = read_patches_dim(sub_paths, metadata)
@@ -1304,7 +1319,7 @@ def cmd_subtree_checksum(args, parser):
     if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
 
-    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject(args)
+    superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
 
     if args.calc:
         checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
