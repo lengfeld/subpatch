@@ -117,7 +117,7 @@ subproject.
 
 ## subpatch pop|push
 
-    subpatch pop|push [-q | --quiet]
+    subpatch pop|push [-q | --quiet] [-a | --all]
 
 Pop the current applied or push the next patch of a subproject. The code
 changes are reverted (for `pop`) or applied (for `push`) to the working tree of
@@ -126,6 +126,9 @@ patches in the metadata.
 
 You select the subproject by changing the current work directory into the
 subproject.
+
+If you provide the `-a` or `--all` argument, subpatch pushes or pops all
+remaining applied patches.
 
 
 ## subpatch subtree checksum
