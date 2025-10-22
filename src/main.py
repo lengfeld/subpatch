@@ -1150,36 +1150,55 @@ def cmd_sync(args, parser):
     return 0
 
 
-def do_pop(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
-           patches_dim: PatchesDim, applied_index_current: int, quiet: bool) -> None:
+# TODO Parts of this function must be moved to super.py
+def do_patch_applys(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
+                    patches_dim: PatchesDim, from_applied_index: int, to_applied_index: int, quiet: bool) -> None:
+    assert to_applied_index < len(patches_dim.patches)
+    assert from_applied_index < len(patches_dim.patches)
+    assert from_applied_index != to_applied_index
+    assert from_applied_index >= -1
+    assert to_applied_index >= -1
+
+    args = ["git", "apply", "--allow-empty", "--index",
+            "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),)]
+
     # index checked by ensure_dims_are_consistent()
-    patch_filename = patches_dim.patches[applied_index_current]
-    patch_abspath = join(sub_paths.patches_abspath, patch_filename)
+    if from_applied_index > to_applied_index:
+        # Popping patches
+        indexes = range(from_applied_index, to_applied_index, - 1)
+        reverse = True
+    else:
+        # Pushing patches
+        indexes = range(from_applied_index + 1, to_applied_index + 1)
+        reverse = False
+
+    if reverse:
+        args.append("--reverse")
+
+    for i in indexes:
+        patch_filename = patches_dim.patches[i]
+        patch_abspath = join(sub_paths.patches_abspath, patch_filename)
+        # TODO avoid abspath dance in the future. Code should be rel-path safe
+        args.append(patch_abspath)
 
     # TODO check whether patchs applys fully before applying
-    p = Popen(["git", "apply", "--allow-empty", "--reverse", "--index",
-               "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
+    p = Popen(args)
     p.communicate()
     if p.returncode != 0:
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    applied_index_new = applied_index_current - 1
-
     # TODO make naming schema for update metadata functions
-    if applied_index_new == -1:
+    if to_applied_index == -1:
         # Now all patches are deapplied. Drop the information from the metadata.
         # The default value is that no patches are applied
         do_pop_update_metadata_drop(sub_paths)
     else:
-        do_pop_push_update_metadata(sub_paths, applied_index_new)
+        do_pop_push_update_metadata(sub_paths, to_applied_index)
 
     with chdir(super_paths.super_abspath):
         # TODO here is not relative path used for git. This seems also to work!
         superx.helper.add([sub_paths.metadata_abspath])
-
-    if not quiet:
-        print("Poped patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
 
 def cmd_pop(args, parser):
@@ -1198,8 +1217,12 @@ def cmd_pop(args, parser):
             if subtree_dim.applied_index == -1:
                 print("No patches are applied. Nothing to pop!")
                 return 0
-        for applied_index_current in range(subtree_dim.applied_index, -1, -1):
-            do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
+
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, subtree_dim.applied_index, -1, args.quiet)
+
+        if not args.quiet:
+            count_of_patches = subtree_dim.applied_index + 1
+            print("Poped %d patches successfully!" % (count_of_patches,))
     else:
         if len(patches_dim.patches) == 0:
             raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to pop!")
@@ -1208,35 +1231,16 @@ def cmd_pop(args, parser):
                 raise AppException(ErrorCode.INVALID_ARGUMENT, "No patches are applied. Nothing to pop!")
 
         applied_index_current = subtree_dim.applied_index
-        do_pop(superx, super_paths, sub_paths, patches_dim, applied_index_current, args.quiet)
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, applied_index_current - 1, args.quiet)
+
+        if not args.quiet:
+            patch_filename = patches_dim.patches[applied_index_current]
+            print("Poped patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
     if not args.quiet:
         superx.helper.print_instructions_to_commit_and_inspect()
 
     return 0
-
-
-# TODO Maybe parts of this can be combined with "do_pop"
-# TODO And this must be moved to "super.py" anyway!
-def do_push(superx: Superproject, super_paths: SuperPaths, sub_paths: SubPaths,
-            patches_dim: PatchesDim, applied_index_new: int, quiet: bool) -> None:
-    patch_filename = patches_dim.patches[applied_index_new]
-    patch_abspath = join(sub_paths.patches_abspath, patch_filename)
-
-    # TODO check whether patchs applys fully before applying
-    p = Popen(["git", "apply", "--allow-empty", "--index",
-               "--directory=%s" % (sub_paths.super_to_sub_relpath.decode("utf8"),), patch_abspath])
-    p.communicate()
-    if p.returncode != 0:
-        # TODO explain how to recover!
-        raise Exception("git failure")
-
-    do_pop_push_update_metadata(sub_paths, applied_index_new)
-    with chdir(super_paths.super_abspath):
-        superx.helper.add([sub_paths.metadata_abspath])
-
-    if not quiet:
-        print("Pushed patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
 
 def cmd_push(args, parser):
@@ -1256,16 +1260,25 @@ def cmd_push(args, parser):
                 print("All patches are applied. Nothing to push!")
                 return 0
 
-        for applied_index_new in range(subtree_dim.applied_index + 1, len(patches_dim.patches)):
-            do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
+        applied_index_current = subtree_dim.applied_index
+
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, len(patches_dim.patches) - 1, args.quiet)
+        if not args.quiet:
+            count_of_patches = len(patches_dim.patches) - applied_index_current - 1
+            print("Pushed %d patches successfully!" % (count_of_patches,))
     else:
         if len(patches_dim.patches) == 0:
             raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to push!")
         else:
             if subtree_dim.applied_index == len(patches_dim.patches) - 1:
                 raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches are applied. Nothing to push!")
-        applied_index_new = subtree_dim.applied_index + 1
-        do_push(superx, super_paths, sub_paths, patches_dim, applied_index_new, args.quiet)
+
+        applied_index_current = subtree_dim.applied_index
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, applied_index_current + 1, args.quiet)
+
+        if not args.quiet:
+            patch_filename = patches_dim.patches[applied_index_current]
+            print("Pushed patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
     if not args.quiet:
         superx.helper.print_instructions_to_commit_and_inspect()

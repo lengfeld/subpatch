@@ -315,21 +315,25 @@ The following changes are recorded in the git index:
     def test_argument_all(self):
         self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):
+            git = Git()
             self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
             self.run_subpatch_ok(["apply", "-q", "../../upstream/0002-changing-hello.patch"])
             self.assertFileContent("hello", b"new-new-content")
+            git.commit("after apply")
+            self.assertEqual(git.diff_staged_files(), [])  # Staging area is clean
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), "1")
 
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
+            self.assertFileContent("hello", b"content")
             self.assertEqual(p.stdout, b"""\
-Poped patch '0002-changing-hello.patch' successfully!
-Poped patch '0001-changing-hello.patch' successfully!
+Poped 2 patches successfully!
 The following changes are recorded in the git index:
- 2 files changed, 42 insertions(+)
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
 """)
-            self.assertFileContent("hello", b"content")
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), None)  # == -1
 
             # Executing it again will just do nothing.
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
@@ -338,16 +342,13 @@ The following changes are recorded in the git index:
             p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
             self.assertFileContent("hello", b"new-new-content")
             self.assertEqual(p.stdout, b"""\
-Pushed patch '0001-changing-hello.patch' successfully!
-Pushed patch '0002-changing-hello.patch' successfully!
-The following changes are recorded in the git index:
- 4 files changed, 44 insertions(+), 1 deletion(-)
-- To inspect the changes, use `git status` and `git diff --staged`.
-- If you want to keep the changes, commit them with `git commit`.
-- If you want to revert the changes, execute `git reset --merge`.
+Pushed 2 patches successfully!
+Note: There are no changes in the subproject. Nothing to commit!
 """)
-
             self.assertFileContent("hello", b"new-new-content")
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), "1")
+            self.assertEqual(git.diff_staged_files(), [])  # Staging area is clean (again)
+
             p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
             self.assertEqual(p.stdout, b"All patches are applied. Nothing to push!\n")
 
