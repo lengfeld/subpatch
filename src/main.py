@@ -180,7 +180,7 @@ def gen_sub_paths_internal(super_paths: SuperPaths, super_to_sub_relpath: bytes,
 
 @dataclass(frozen=True)
 class Metadata:
-    # TODO introduce seperation between sections (worktree, upstream, patches)
+    # TODO introduce seperation between sections (subtree, upstream, patches)
     # TODO introduce boolean values whether header/sections exists. This can be
     # a different case then the value exists.
     url: bytes | None
