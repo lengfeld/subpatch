@@ -36,7 +36,6 @@ def get_url_type(url):
 #  * permission denied
 #  * NotImplemented/Does not exists
 class ErrorCode(Enum):
-    UNKNOWN = 1
     # TODO distinguish between "not implemented" and "not implemented __yet__"!
     # Not implemented should mostly be a invalid argument then
     NOT_IMPLEMENTED_YET = 2

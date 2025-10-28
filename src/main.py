@@ -1790,13 +1790,7 @@ def main() -> int:
         elif e._code == ErrorCode.CUSTOM:
             print("Error: %s" % (e,), file=sys.stderr)
         else:
-            assert e._code == ErrorCode.UNKNOWN
-            # TODO find a better name for UNKNOWN
-            # Don't print a message here. The caller has already written the
-            # message.
-            # TODO maybe it still better that the error is printed here and not
-            # printed by the caller!
-            pass
+            assert False
         return 4
     except KeyboardInterrupt:
         print("Interrupted!", file=sys.stderr)
