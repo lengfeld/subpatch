@@ -650,7 +650,7 @@ def cmd_add(args, parser):
 
     super_paths = gen_super_paths(superx.path)
 
-    # TODO remove additional encode() here. Argument should be bytes object!
+    # TODO remove additional encode() here.
     sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, cwd_to_sub_relpath.encode("utf8"))
 
     if url_type == URLTypes.LOCAL_RELATIVE:
