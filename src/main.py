@@ -606,6 +606,17 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
         superx.helper.add([sub_paths.metadata_abspath])
 
 
+# Consolide into plumping commands
+#   subpatch configure (--auto)
+#   subpatch init <subproject path>
+#   subpatch subtree clean --check # tricky, cannot be really done before or must he handcoded!
+#   subpatch download
+#     - subpatch cache init --type=git   # --autoremove'
+#     - subpatch fetch <url> -r <rev>
+#   subpatch unpack   # honors "--autoremove"
+#     - does cp/mv
+#     - subpatch subtree checksum write"
+#     - subpatch upstream add url -r <rev> -o <id>
 def cmd_add(args, parser):
     if args.url is None:
         # TODO make error message nicer
@@ -1652,6 +1663,13 @@ def main_wrapped() -> int:
     parser_init.add_argument("-q", "--quiet", action=argparse.BooleanOptionalAction,
                              help="Suppress output to stdout")
 
+    # TODO add argument to track a patch, but do not push/apply it.
+    # -> would be the a command like "subpatch patch add <filename>", since it
+    #    only uses the patch dimension.
+    # The comamnd "subpatch apply" is a combination of
+    #    "subpatch patch add <filename>" and
+    #    "git apply <filename> == subpatch subtree apply <filename>"
+    # TODO maybe the term apply is wrong here ... no it's not. git also uses apply!
     parser_apply = subparsers.add_parser("apply",
                                          help="Apply a patch to the subtree and add to patch list")
     parser_apply.set_defaults(func=cmd_apply)
@@ -1730,6 +1748,7 @@ def main_wrapped() -> int:
     subparsers_subtree = parser_subtree.add_subparsers()
     parser_subtree_checksum = subparsers_subtree.add_parser("checksum",
                                                             help="Commands to modify/query the checksum of the subtree")
+    # TODO these options are actually commands. It's only allowed to give on option! refactor!
     parser_subtree_checksum.add_argument("--calc", dest="calc", action=argparse.BooleanOptionalAction,
                                          help="tbd")
     parser_subtree_checksum.add_argument("--check", dest="check", action=argparse.BooleanOptionalAction,

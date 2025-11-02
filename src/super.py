@@ -7,13 +7,11 @@ from os.path import abspath, join
 # ----8<----
 from libgit import (git_add, git_diff_staged_shortstat, git_cat_file_pretty,
                     git_hash_object_tree)
-# TODO decide wether also CacheHelper can use the AppException or should use a
-# own exception
 from util import AppException, ErrorCode
 # ----8<----
 
 # TODO For me it's not clear yet if this file should only contain the
-# SuperHelper implementations or more super stuff! Decided it
+# SuperHelper implementations or more super stuff! Find a good seperation.
 
 
 class SCMType(Enum):
