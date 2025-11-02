@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TypeAlias
 
+# TODO find better name for this library. It's a parser for the git config
+# styled ini files. But the name "config" conflicts with the "subpatch config".
+
 
 # Split with terminator semantics
 def split_with_ts(s):
