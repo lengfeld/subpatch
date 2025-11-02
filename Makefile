@@ -37,8 +37,14 @@ lint: check-index-md
 lint:                 ### Runs linters (ruff, self-made) on the source code
 	ruff check src/*.py tests/*.py scripts/*.py
 	@# Running pycodestyle again, because ruff does not check everything
-	@# TODO also enable for tests
 	pycodestyle src/*.py scripts/*.py --max-line-length=140
+	@# In the tests exclude the rule
+	@#    E402 module level import not at top of file
+	@#    W291 trailing whitespace
+	@#    W293 blank line contains whitespace
+	@# because the code needs it for the relative imports
+	pycodestyle --ignore=E402,W291,W293 tests/*.py  --max-line-length=140
+
 
 .PHONY: reformat
 reformat:
