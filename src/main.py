@@ -15,11 +15,11 @@ from subprocess import DEVNULL, Popen
 
 # ----8<----
 from cache import CacheHelperGit, DownloadConfig
-from config import (LineDataHeader, LineDataKeyValue, LineType,
-                    config_add_section2, config_drop_key2,
-                    config_drop_section_if_empty, config_parse2,
-                    config_set_key_value2, config_unparse2, empty_config_lines,
-                    split_with_ts_bytes)
+from libconfig import (LineDataHeader, LineDataKeyValue, LineType,
+                       config_add_section2, config_drop_key2,
+                       config_drop_section_if_empty, config_parse2,
+                       config_set_key_value2, config_unparse2, empty_config_lines,
+                       split_with_ts_bytes)
 # TODO main.py should not depend on any git command. They all should be in cache.py
 # or in a new super.py module
 from libgit import (get_name_from_repository_url, git_diff_in_dir,

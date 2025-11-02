@@ -9,11 +9,11 @@ from os.path import dirname, join, realpath
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from src.config import (ConfigLine, LineDataEmpty, LineDataHeader,
-                        LineDataKeyValue, LineType, config_add_section2,
-                        config_drop_key2, config_drop_section_if_empty,
-                        config_parse2, config_set_key_value2, config_unparse2,
-                        split_with_ts, split_with_ts_bytes)
+from src.libconfig import (ConfigLine, LineDataEmpty, LineDataHeader,
+                           LineDataKeyValue, LineType, config_add_section2,
+                           config_drop_key2, config_drop_section_if_empty,
+                           config_parse2, config_set_key_value2, config_unparse2,
+                           split_with_ts, split_with_ts_bytes)
 
 
 class TestSplitWithTs(unittest.TestCase):
