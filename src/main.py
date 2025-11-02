@@ -191,8 +191,15 @@ class Metadata:
 
 
 def read_metadata(path: bytes) -> Metadata:
-    with open(path, "br") as f:
-        lines = split_with_ts_bytes(f.read())
+    try:
+        with open(path, "br") as f:
+            lines = split_with_ts_bytes(f.read())
+    except FileNotFoundError:
+        # TODO add note about which subproject is wrong!
+        # TODO write commands to fix this issue.
+        # NOTE This state cannot/should not arise when subpatch commands are used.
+        raise AppException(ErrorCode.INVALID_STATE, "Metadata file for subproject not found."
+                           " Drop subproject path from the subpatch config or add a subproject metadata file manually!.")
 
     url = None
     revision = None
@@ -1787,6 +1794,10 @@ def main() -> int:
             # TODO change structure of errors. It contains two colons now.
             # Looks ugly.
             print("Error: Invalid argument: %s" % (e,), file=sys.stderr)
+        elif e._code == ErrorCode.INVALID_STATE:
+            # TODO change structure of errors. It contains two colons now.
+            # Looks ugly.
+            print("Error: Invalid state: %s" % (e,), file=sys.stderr)
         elif e._code == ErrorCode.CUSTOM:
             print("Error: %s" % (e,), file=sys.stderr)
         else:

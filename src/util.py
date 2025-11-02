@@ -43,6 +43,8 @@ class ErrorCode(Enum):
     SUPERPROJECT_NOT_CONFIGURED = 4
     # The user has given an invalid argument on the command line
     INVALID_ARGUMENT = 5
+    # TODO For now this is named INVALID_STATE. Maybe find better name.
+    INVALID_STATE = 7
     # TODO remove this type. Every ErrorCode should support a message.
     CUSTOM = 6
 

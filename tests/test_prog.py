@@ -736,6 +736,20 @@ NOTE: The format is markdown currently. Will mostly change in the future.
 """,
                              p.stdout)
 
+    def test_subproject_file_is_missing(self):
+        create_super_and_upstream()
+        with chdir("superproject"):
+            git = Git()
+            self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
+            # Make the internal state inconsistent on purpose.
+            git.call(["rm", "-f", "subproject/.subproject", "-q"])
+            git.commit("add broken subproject")
+            p = self.run_subpatch(["status"], stderr=PIPE, stdout=DEVNULL)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr,
+                             b"Error: Invalid state: Metadata file for subproject not found. Drop subproject path "
+                             b"from the subpatch config or add a subproject metadata file manually!.\n")
+
     def test_path_argument(self):
         create_super_and_upstream()
         with chdir("superproject"):
