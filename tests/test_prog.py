@@ -19,7 +19,7 @@ from localwebserver import FileRequestHandler, LocalWebserver
 path = realpath(__file__)
 
 sys.path.append(join(dirname(path), "../"))
-from src.git import ObjectType, git_get_object_type, git_ls_files_untracked
+from src.libgit import ObjectType, git_get_object_type, git_ls_files_untracked
 
 # TODO make this more generic and an API for also testing subpatch in the PATH
 SUBPATCH_PATH = os.environ.get("TEST_BIN_PATH", join(dirname(path), "../src/main.py"))

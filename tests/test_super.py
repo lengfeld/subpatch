@@ -13,8 +13,7 @@ from helpers import TestCaseTempFolder, Git, touch, create_and_chdir, mkdir
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../src"))
 
-# TODO rename "test_lib.py" to "test_main.py"
-from git import git_cat_file_pretty
+from libgit import git_cat_file_pretty
 from super import (AppException, ErrorCode, FindSuperprojectData, SCMType,
                    check_superproject_data, find_superproject, SuperHelperGit)
 

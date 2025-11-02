@@ -5,8 +5,8 @@ from enum import Enum
 from os.path import abspath, join
 
 # ----8<----
-from git import (git_add, git_diff_staged_shortstat, git_cat_file_pretty,
-                 git_hash_object_tree)
+from libgit import (git_add, git_diff_staged_shortstat, git_cat_file_pretty,
+                    git_hash_object_tree)
 # TODO decide wether also CacheHelper can use the AppException or should use a
 # own exception
 from util import AppException, ErrorCode
@@ -228,7 +228,7 @@ class SuperHelperGit(SuperHelper):
             else:
                 tree_data_pretty_stripped.append(line)
 
-        # TODO git git specifc stuff should be in the "git.py" file
+        # TODO git specifc stuff should be in the "git.py" file
         # The binary format looks like
         #    <mode in octal> <one space> <filename> <NULL byte> <SHA1 as bytes>
 

@@ -6,9 +6,9 @@ from os.path import join
 from typing import Any
 
 # ----8<----
-from git import (ObjectType, git_clone, git_get_object_type, git_get_sha1,
-                 git_init_and_fetch, git_ls_remote_guess_ref, git_reset_hard,
-                 git_verify, is_sha1)
+from libgit import (ObjectType, git_clone, git_get_object_type, git_get_sha1,
+                    git_init_and_fetch, git_ls_remote_guess_ref, git_reset_hard,
+                    git_verify, is_sha1)
 # TODO decide wether also CacheHelper can use the AppException or should use a
 # own exception
 from util import AppException, ErrorCode, URLTypes, get_url_type

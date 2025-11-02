@@ -22,9 +22,9 @@ from config import (LineDataHeader, LineDataKeyValue, LineType,
                     split_with_ts_bytes)
 # TODO main.py should not depend on any git command. They all should be in cache.py
 # or in a new super.py module
-from git import (get_name_from_repository_url, git_diff_in_dir,
-                 git_diff_name_only, git_ls_files_untracked, is_valid_revision,
-                 git_ls_files)
+from libgit import (get_name_from_repository_url, git_diff_in_dir,
+                    git_diff_name_only, git_ls_files_untracked, is_valid_revision,
+                    git_ls_files)
 from util import AppException, ErrorCode, URLTypes, get_url_type
 from super import (find_superproject, SCMType, check_superproject_data,
                    check_and_get_superproject_from_checked_data, SuperprojectType,

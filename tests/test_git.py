@@ -14,14 +14,14 @@ from helpers import (Git, TestCaseHelper, TestCaseTempFolder, create_and_chdir,
 path = realpath(__file__)
 sys.path.append(join(dirname(path), "../"))
 
-from src.git import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
-                     git_diff_name_only, git_get_object_type, git_get_sha1,
-                     git_get_toplevel, git_init_and_fetch,
-                     git_ls_files_untracked, git_ls_remote,
-                     git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
-                     is_sha1, is_valid_revision, parse_sha1_names, parse_z,
-                     git_hash_object_tree, git_cat_file_pretty, git_ls_files,
-                     git_diff_relative, git_diff_staged_shortstat)
+from src.libgit import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
+                        git_diff_name_only, git_get_object_type, git_get_sha1,
+                        git_get_toplevel, git_init_and_fetch,
+                        git_ls_files_untracked, git_ls_remote,
+                        git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
+                        is_sha1, is_valid_revision, parse_sha1_names, parse_z,
+                        git_hash_object_tree, git_cat_file_pretty, git_ls_files,
+                        git_diff_relative, git_diff_staged_shortstat)
 
 
 class TestGit(TestCaseTempFolder):
