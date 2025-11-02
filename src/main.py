@@ -247,10 +247,10 @@ def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
         # TODO add error when value is not an int!
         applied_index = int(metadata.subtree_applied_index)
     else:
-        applied_index = -1  # Default value
+        applied_index = -1  # Use default value
 
     if metadata.subtree_checksum is None:
-        checksum = b""
+        checksum = b""  # Use default value
     else:
         # TODO Check checksum that it's a valid SHA1 sum
         checksum = metadata.subtree_checksum
@@ -279,7 +279,7 @@ def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
 def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim) -> None:
     if not (-1 <= subtree_dim.applied_index < len(patches_dim.patches)):
         # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "Metadata is inconsistent!")
+        raise AppException(ErrorCode.INVALID_STATE, "Value of appliedIndex is bigger than the count of patches. Metadata is inconsistent!")
 
 
 def nocommand(args, parser) -> int:
