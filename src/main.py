@@ -236,8 +236,8 @@ class SubtreeDim:
     # -  0 := first patch applied,
     # -  1 := second patch applied,
     #   ...
-    # The default value is "-1"
-    applied_index: int
+    # The default value is None for "all tracked patches are applied"
+    applied_index: int | None
     # TODO Use SHA1 Checksum type instead of 'bytes'
     checksum: bytes   # Default value is b"", which means that the subtree is unpopulated
 
@@ -248,7 +248,7 @@ def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
         # TODO add error when value is not an int!
         applied_index = int(metadata.subtree_applied_index)
     else:
-        applied_index = -1  # Use default value
+        applied_index = None
 
     if metadata.subtree_checksum is None:
         checksum = b""  # Use default value
@@ -278,9 +278,13 @@ def read_patches_dim(sub_paths: SubPaths, metadata: Metadata) -> PatchesDim:
 
 
 def ensure_dims_are_consistent(subtree_dim: SubtreeDim, patches_dim: PatchesDim) -> None:
-    if not (-1 <= subtree_dim.applied_index < len(patches_dim.patches)):
-        # TODO This is a internal inconsitency error. Maybe use another error code than INVALID_ARGUMENT!
-        raise AppException(ErrorCode.INVALID_STATE, "Value of appliedIndex is bigger than the count of patches. Metadata is inconsistent!")
+    if subtree_dim.applied_index is not None:
+        if subtree_dim.applied_index < -1:
+            raise AppException(ErrorCode.INVALID_STATE,
+                               "Value of appliedIndex is smaller than -1. Metadata is inconsistent!")
+        if subtree_dim.applied_index >= len(patches_dim.patches):
+            raise AppException(ErrorCode.INVALID_STATE,
+                               "Value of appliedIndex is bigger than the count of patches. Metadata is inconsistent!")
 
 
 def nocommand(args, parser) -> int:
@@ -486,7 +490,13 @@ def cmd_update(args, parser):
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
     if len(patches_dim.patches) > 0:
-        if subtree_dim.applied_index != -1:
+        # TODO refactor common code with cmd_pop,push
+        if subtree_dim.applied_index is None:
+            applied_index = len(patches_dim.patches) - 1
+        else:
+            applied_index = subtree_dim.applied_index
+        if applied_index != -1:
+            # TODO also check for linting issue, when default value is used!
             raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subproject has patches applied. Please pop first!")
 
     # TODO deapply all patches
@@ -1004,6 +1014,7 @@ def checks_for_cmds_with_single_subproject(enforce_cwd_is_subproject=True) -> tu
 
 # NOTE: Must be executed in the subprojects work tree
 # TODO look at quilt. Mabye "apply" is the wrong term. But it would match "git apply"
+# TODO Support applying multiple patches at once. Git also supports this.
 def cmd_apply(args, parser):
     if args.path is None:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Must give a path to a patch file")
@@ -1017,7 +1028,8 @@ def cmd_apply(args, parser):
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if len(patches_dim.patches) != subtree_dim.applied_index + 1:
+    if subtree_dim.applied_index is not None:
+        # TODO Maybe check for linting error when default value is used!
         # TODO add message how to resolve it
         raise AppException(ErrorCode.INVALID_ARGUMENT, "Cannot apply new patch. Not all tracked patches are applied!")
 
@@ -1070,9 +1082,11 @@ def cmd_apply(args, parser):
     with chdir(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
-    metadata_set_applied_index(sub_paths, subtree_dim.applied_index + 1)
-    with chdir(super_paths.super_abspath):
-        superx.helper.add([sub_paths.metadata_abspath])
+    # For now cmd_apply only works when all tracked patches are applied. So the
+    # code here does not need to update the 'appliedIndex' in the metadata.
+    # Before "cmd_apply" all tracked patches are applied and after "cmd_apply"
+    # all tracked patches are applied. The only differences is that there is
+    # one additional patch now.
 
     if not args.quiet:
         # TODO The output convetion is wrong here. It should be relative and
@@ -1090,13 +1104,22 @@ def cmd_sync(args, parser):
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
-    if subtree_dim.applied_index == -1:
-        # TODO this is an invalid state or argument
-        # TODO add explanation how to fix it!
+    if len(patches_dim.patches) == 0:
         raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no current patch.")
+    else:
+        if subtree_dim.applied_index is None:
+            # Ok case! There is at least one tracked patch and all patches are
+            # applied! So there is a current patch!
+            applied_index = len(patches_dim.patches) - 1
+        elif subtree_dim.applied_index == -1:
+            # TODO this is an invalid state or argument
+            # TODO add explanation how to fix it!
+            raise AppException(ErrorCode.INVALID_ARGUMENT, "There is no current patch.")
+        else:
+            applied_index = subtree_dim.applied_index
 
     # index checked by ensure_dims_are_consistent()
-    patch_filename = patches_dim.patches[subtree_dim.applied_index]
+    patch_filename = patches_dim.patches[applied_index]
     patch_abspath = join(sub_paths.patches_abspath, patch_filename)
     patch_tmp_abspath = patch_abspath + b".tmp"
 
@@ -1192,9 +1215,9 @@ def do_patch_applys(superx: Superproject, super_paths: SuperPaths, sub_paths: Su
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    if to_applied_index == -1:
-        # Now all patches are deapplied. Drop the information from the metadata.
-        # The default value is that no patches are applied
+    if to_applied_index == len(patches_dim.patches) - 1:
+        # Now all patches are applied. Drop the information from the metadata.
+        # The default value is that all (tracked) patches are applied!
         metadata_drop_applied_index(sub_paths)
     else:
         metadata_set_applied_index(sub_paths, to_applied_index)
@@ -1211,33 +1234,38 @@ def cmd_pop(args, parser):
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
+    # TODO same code in cmd_push. Maybe combine!
+    if subtree_dim.applied_index is None:
+        applied_index = len(patches_dim.patches) - 1
+    else:
+        applied_index = subtree_dim.applied_index
+
     if args.all:
         # NOTE: If there are no patches, "-a" exists successfully!
         if len(patches_dim.patches) == 0:
             print("The subproject does not track at least one patch. Nothing to pop!")
             return 0
         else:
-            if subtree_dim.applied_index == -1:
+            if applied_index == -1:
                 print("No patches are applied. Nothing to pop!")
                 return 0
 
-        do_patch_applys(superx, super_paths, sub_paths, patches_dim, subtree_dim.applied_index, -1, args.quiet)
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index, -1, args.quiet)
 
         if not args.quiet:
-            count_of_patches = subtree_dim.applied_index + 1
+            count_of_patches = applied_index + 1
             print("Poped %d patches successfully!" % (count_of_patches,))
     else:
         if len(patches_dim.patches) == 0:
             raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to pop!")
         else:
-            if subtree_dim.applied_index == -1:
+            if applied_index == -1:
                 raise AppException(ErrorCode.INVALID_ARGUMENT, "No patches are applied. Nothing to pop!")
 
-        applied_index_current = subtree_dim.applied_index
-        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, applied_index_current - 1, args.quiet)
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index, applied_index - 1, args.quiet)
 
         if not args.quiet:
-            patch_filename = patches_dim.patches[applied_index_current]
+            patch_filename = patches_dim.patches[applied_index]
             print("Poped patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
     if not args.quiet:
@@ -1253,21 +1281,24 @@ def cmd_push(args, parser):
     patches_dim = read_patches_dim(sub_paths, metadata)
     ensure_dims_are_consistent(subtree_dim, patches_dim)
 
+    if subtree_dim.applied_index is None:
+        applied_index = len(patches_dim.patches) - 1
+    else:
+        applied_index = subtree_dim.applied_index
+
     if args.all:
         if len(patches_dim.patches) == 0:
             # TODO should this be printed to stderr?
             print("The subproject does not track at least one patch. Nothing to push!")
             return 0
         else:
-            if subtree_dim.applied_index == len(patches_dim.patches) - 1:
+            if applied_index == len(patches_dim.patches) - 1:
                 print("All patches are applied. Nothing to push!")
                 return 0
 
-        applied_index_current = subtree_dim.applied_index
-
-        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, len(patches_dim.patches) - 1, args.quiet)
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index, len(patches_dim.patches) - 1, args.quiet)
         if not args.quiet:
-            count_of_patches = len(patches_dim.patches) - applied_index_current - 1
+            count_of_patches = len(patches_dim.patches) - applied_index - 1
             print("Pushed %d patches successfully!" % (count_of_patches,))
     else:
         if len(patches_dim.patches) == 0:
@@ -1276,11 +1307,10 @@ def cmd_push(args, parser):
             if subtree_dim.applied_index == len(patches_dim.patches) - 1:
                 raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches are applied. Nothing to push!")
 
-        applied_index_current = subtree_dim.applied_index
-        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index_current, applied_index_current + 1, args.quiet)
+        do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index, applied_index + 1, args.quiet)
 
         if not args.quiet:
-            patch_filename = patches_dim.patches[applied_index_current]
+            patch_filename = patches_dim.patches[applied_index]
             print("Pushed patch '%s' successfully!" % (patch_filename.decode("utf8"),))
 
     if not args.quiet:
@@ -1504,13 +1534,15 @@ def do_status_subproject(super_paths: SuperPaths, subproject: bytes, changes) ->
     patches_count = len(patches_dim.patches)
     if patches_count != 0:
         print("* There are n=%d patches." % (patches_count,))
-        # TODO rework this. the default value of the config -1, so here
-        # also applied patches are shown!
-        if subtree_dim.applied_index + 1 != patches_count:
+        # TODO Maybe call this a "rebase" operation if not all patches are applied.
+        if subtree_dim.applied_index is None:
+            pass
+        else:
+            if subtree_dim.applied_index + 1 != patches_count:
+                pass  # TODO May make this a linting error, because default value is used!
             print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
             print("    - Use `subpatch push` to apply the next tracked patch to the subtree")
 
-        # TODO Maybe add commands to push/pop patches, if not everything is applied
         # TODO implement subpatch patch list
         # print("    - Use `subpatch patches list` to list them")
 

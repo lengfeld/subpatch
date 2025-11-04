@@ -250,13 +250,12 @@ class TestCmdApply(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileExists("subproject/patches/0001-changing-hello.patch")
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/.subproject",
-                              b"M\tsubproject/hello",
+                             [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertEqual(p.stdout, b"""\
 Applied patch '../../upstream/0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
- 3 files changed, 23 insertions(+), 1 deletion(-)
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -264,7 +263,6 @@ The following changes are recorded in the git index:
 
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
-\tappliedIndex = 0
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
@@ -299,6 +297,7 @@ The following changes are recorded in the git index:
             # value for the metadata is that no patches are applied.
             self.assertFileContent(".subproject", b"""\
 [subtree]
+\tappliedIndex = -1
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
@@ -321,19 +320,19 @@ The following changes are recorded in the git index:
             self.assertFileContent("hello", b"new-new-content")
             git.commit("after apply")
             self.assertEqual(git.diff_staged_files(), [])  # Staging area is clean
-            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), "1")
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), None)  # == "1"
 
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
             self.assertFileContent("hello", b"content")
             self.assertEqual(p.stdout, b"""\
 Poped 2 patches successfully!
 The following changes are recorded in the git index:
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
 """)
-            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), None)  # == -1
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), "-1")
 
             # Executing it again will just do nothing.
             p = self.run_subpatch_ok(["pop", "-a"], stdout=PIPE)
@@ -346,7 +345,7 @@ Pushed 2 patches successfully!
 Note: There are no changes in the subproject. Nothing to commit!
 """)
             self.assertFileContent("hello", b"new-new-content")
-            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), "1")
+            self.assertEqual(get_prop_from_ini(".subproject", "subtree", "appliedIndex"), None)  # == "1"
             self.assertEqual(git.diff_staged_files(), [])  # Staging area is clean (again)
 
             p = self.run_subpatch_ok(["push", "-a"], stdout=PIPE)
@@ -420,18 +419,19 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/.subproject",
-                              b"M\tsubproject/hello",
+                             [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
 
             with chdir("subproject"):
                 p = self.run_subpatch_ok(["pop"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
-                             [b'A\tsubproject/patches/0001-changing-hello.patch'])
+                             [b"M\tsubproject/.subproject",
+                              b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"content")
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
+\tappliedIndex = -1
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
@@ -440,7 +440,7 @@ Error: Invalid argument: The patch '0001-changing-hello.patch' does not apply to
             self.assertEqual(p.stdout, b"""\
 Poped patch '0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
- 1 file changed, 21 insertions(+)
+ 2 files changed, 22 insertions(+)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -449,13 +449,11 @@ The following changes are recorded in the git index:
             with chdir("subproject"):
                 p = self.run_subpatch_ok(["push"], stdout=PIPE)
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/.subproject",
-                              b"M\tsubproject/hello",
+                             [b"M\tsubproject/hello",
                               b'A\tsubproject/patches/0001-changing-hello.patch'])
             self.assertFileContent("subproject/hello", b"new-content")
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
-\tappliedIndex = 0
 \tchecksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
 [upstream]
 \tobjectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
@@ -464,7 +462,7 @@ The following changes are recorded in the git index:
             self.assertEqual(p.stdout, b"""\
 Pushed patch '0001-changing-hello.patch' successfully!
 The following changes are recorded in the git index:
- 3 files changed, 23 insertions(+), 1 deletion(-)
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 - To inspect the changes, use `git status` and `git diff --staged`.
 - If you want to keep the changes, commit them with `git commit`.
 - If you want to revert the changes, execute `git reset --merge`.
@@ -515,12 +513,10 @@ NOTE: The format is markdown currently. Will mostly change in the future.
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-empty-commit.patch"])
             self.assertEqual(git.diff_staged_files(),
-                             [b"M\tsubproject/.subproject",
-                              b'A\tsubproject/patches/0001-empty-commit.patch'])
+                             [b'A\tsubproject/patches/0001-empty-commit.patch'])
             git.commit("add subproject")
             self.assertFileContent("subproject/.subproject", b"""\
 [subtree]
-\tappliedIndex = 0
 \tchecksum = c325b55a587c41fcbad76aa7bf5c0be65ed4dd89
 [upstream]
 \tobjectId = e615fbe0232e484c5c36ea420c270f681da4faf2
@@ -1826,23 +1822,110 @@ Error: Feature not implemented yet: subproject has patches applied. Please pop f
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-add-extra-file.patch"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "0")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
 
             with chdir("subproject"):
                 self.run_subpatch_ok(["pop", "-q"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "-1")
 
             self.run_subpatch_ok(["update", "-q", "-r", "v2", "subproject"])
 
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "-1")
 
             self.assertFileDoesNotExist("subproject/extra-file")
             with chdir("subproject"):
                 self.run_subpatch_ok(["push", "-q"])
-            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), "0")
+            self.assertEqual(get_prop_from_ini("subproject/.subproject", "subtree", "appliedIndex"), None)
 
             # Ensure that the changes of the patch are still there
             self.assertFileContent("subproject/extra-file", b"extra-content\n")
+
+
+class TestMerges(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
+    def test_independent_patches(self):
+        # This is testing a requirement! Two independent patches can be merged
+        # together and the result is clean/consistent.
+        git = Git()
+        git.init()
+        # NOTE: Adding a subproject without a upstream here! Easier and maybe faster for testing!
+        self.run_subpatch_ok(["configure", "-q"])
+        self.run_subpatch_ok(["init", "subproject", "-q"])
+        with chdir("subproject"):
+            touch(b"file_a", b"content")
+            touch(b"file_b", b"content")
+            git.add("file_a")
+            git.add("file_b")
+            self.run_subpatch_ok(["subtree", "checksum", "--write"])
+            # TODO I was confused that "subtree checksum --write" does _not_ staged the modified file.
+            # Find a common pattern, whether subpatch stages all changes or no changes or ...!
+            git.add(".subproject")
+            git.commit("add subproject")
+        p = git.call(["ls-tree", "-r", "HEAD"], capture_stdout=True)
+        self.assertEqual(p.stdout, b"""\
+100644 blob 38286c18d194fa5173f19bf53751ce4e8eaa5ef9\t.subpatch
+100644 blob 5c98f89d9adfc8351d3ed901569ea7cb8fb617ac\tsubproject/.subproject
+100644 blob 6b584e8ece562ebffc15d38808cd6b98fc3d97ea\tsubproject/file_a
+100644 blob 6b584e8ece562ebffc15d38808cd6b98fc3d97ea\tsubproject/file_b
+""")
+
+        touch(b"0001-dummy.patch", b"""\
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OTHER other <other@example.com>
+Date: Sat, 1 Oct 2016 14:00:00 +0800
+Subject: [PATCH] changing X
+---
+""")
+
+        with chdir("subproject"):
+            touch(b"file_a", b"new-content")
+            git.add(b"file_a")
+            os.mkdir("patches")
+            # TODO Use subpatch command to create a new patch file and not using a dummy patch!
+            self.run_subpatch_ok(["apply", "../0001-dummy.patch", "-q"])
+            with chdir("patches"):
+                git.call(["mv", "0001-dummy.patch", "0001-change-a.patch"])
+            self.run_subpatch_ok(["sync", "-q"])
+            git.add(b"patches")
+            git.commit("add change to file_a")
+
+            git.call(["branch", "change-in-a"])
+            git.call(["reset", "--hard", "HEAD^", "-q"])
+
+            touch(b"file_b", b"new-content")
+            git.add(b"file_b")
+            os.mkdir("patches")
+            self.run_subpatch_ok(["apply", "../0001-dummy.patch", "-q"])
+            with chdir("patches"):
+                git.call(["mv", "0001-dummy.patch", "0001-change-b.patch"])
+            self.run_subpatch_ok(["sync", "-q"])
+            git.add(b"patches")
+            git.commit("add change to file_b")
+
+        git.call(["merge", "change-in-a", "-q", "-m", "merging"])
+        p = git.call(["ls-tree", "-r", "HEAD"], capture_stdout=True)
+        # NOTE: The file numbers in the patches are wrong. But this is _ok_.
+        # The order is deterministic, because of the file sorting. If a project
+        # wants to ensure that the patches are number correctly, the have to
+        # enable the linter!
+        self.assertEqual(p.stdout, b"""\
+100644 blob 38286c18d194fa5173f19bf53751ce4e8eaa5ef9\t.subpatch
+100644 blob 5c98f89d9adfc8351d3ed901569ea7cb8fb617ac\tsubproject/.subproject
+100644 blob 72278a7f1bdfbe0d9fa5ea4320a26dcd48ce8111\tsubproject/file_a
+100644 blob 72278a7f1bdfbe0d9fa5ea4320a26dcd48ce8111\tsubproject/file_b
+100644 blob 6176fa6e406741449db8a3d3c4c026cc981394ad\tsubproject/patches/0001-change-a.patch
+100644 blob d553444c21700a9433a00a086a6d0c1e86391fa4\tsubproject/patches/0001-change-b.patch
+""")
+        self.assertFileContent(b"subproject/file_a", b"new-content")
+        self.assertFileContent(b"subproject/file_b", b"new-content")
+        self.assertFileContent(b"subproject/.subproject", b"""\
+[subtree]
+\tchecksum = 5f190da7ef6bd549e651250af578e82bb34bff33
+""")
+
+        # TODO Use real "lint" command in the future!
+        with chdir("subproject"):
+            self.run_subpatch_ok(["pop", "-a", "-q"])
+            self.run_subpatch_ok(["subtree", "checksum", "--check", "-q"])
 
 
 class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
