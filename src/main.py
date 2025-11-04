@@ -242,6 +242,7 @@ class SubtreeDim:
     checksum: bytes   # Default value is b"", which means that the subtree is unpopulated
 
 
+# TODO prefix "read" is wrong. It's correct for "read_metadata", but here nothing is read from disk!
 def read_subtree_dim(metadata: Metadata) -> SubtreeDim:
     if metadata.subtree_applied_index is not None:
         # TODO add error when value is not an int!
@@ -409,7 +410,7 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
     with chdir(super_paths.super_abspath):
         subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
-    do_unpack_update_metadata(sub_paths, url, revision, object_id, subtree_checksum)
+    metadata_set_for_unpack(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
@@ -600,7 +601,7 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
     with chdir(super_paths.super_abspath):
         subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
-    do_unpack_update_metadata(sub_paths, url, revision, object_id, subtree_checksum)
+    metadata_set_for_unpack(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
@@ -864,8 +865,8 @@ def is_inside_subproject_and_return_path(config: Config, super_paths: SuperPaths
 # of the argument. If there is a trailing slash in the argument, then the
 # trailing slash is also in the config file. It's not sanitized. It's the
 # same behavior as 'git submodule' does.
-def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | None, object_id: bytes,
-                              subtree_checksum: bytes | None = None) -> None:
+def metadata_set_for_unpack(sub_paths: SubPaths, url: str, revision: str | None, object_id: bytes,
+                            subtree_checksum: bytes | None = None) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -887,8 +888,8 @@ def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | Non
 
 
 # TODO maybe use metadata_abspath instead of SubPaths
-# TODO Mabye this "metadata_*" is the new naming convention
-def metadata_update_applied_index(sub_paths: SubPaths, applied_index: int) -> None:
+# TODO Mabye this "metadata_*" is the new naming convention with verbs "set", "drop"
+def metadata_set_applied_index(sub_paths: SubPaths, applied_index: int) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -905,7 +906,7 @@ def metadata_update_applied_index(sub_paths: SubPaths, applied_index: int) -> No
 
 # TODO maybe use metadata_abspath instead of SubPaths
 # TODO refactor with other update commands
-def do_update_metadata_for_subtree_checksum(sub_paths: SubPaths, subtree_checksum: bytes) -> None:
+def metadata_set_subtree_checksum(sub_paths: SubPaths, subtree_checksum: bytes) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -921,7 +922,7 @@ def do_update_metadata_for_subtree_checksum(sub_paths: SubPaths, subtree_checksu
 
 
 # TODO maybe use metadata_abspath instead of SubPaths
-def do_pop_update_metadata_drop(sub_paths: SubPaths) -> None:
+def metadata_drop_applied_index(sub_paths: SubPaths) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -1069,7 +1070,7 @@ def cmd_apply(args, parser):
     with chdir(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
-    metadata_update_applied_index(sub_paths, subtree_dim.applied_index + 1)
+    metadata_set_applied_index(sub_paths, subtree_dim.applied_index + 1)
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
@@ -1191,13 +1192,12 @@ def do_patch_applys(superx: Superproject, super_paths: SuperPaths, sub_paths: Su
         # TODO explain how to recover!
         raise Exception("git failure")
 
-    # TODO make naming schema for update metadata functions
     if to_applied_index == -1:
         # Now all patches are deapplied. Drop the information from the metadata.
         # The default value is that no patches are applied
-        do_pop_update_metadata_drop(sub_paths)
+        metadata_drop_applied_index(sub_paths)
     else:
-        metadata_update_applied_index(sub_paths, to_applied_index)
+        metadata_set_applied_index(sub_paths, to_applied_index)
 
     with chdir(super_paths.super_abspath):
         # TODO here is not relative path used for git. This seems also to work!
@@ -1412,7 +1412,7 @@ def cmd_subtree_checksum(args, parser):
         checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
         # TODO mabye this should also have an output to stdout?
-        do_update_metadata_for_subtree_checksum(sub_paths, checksum)
+        metadata_set_subtree_checksum(sub_paths, checksum)
 
         return 0
     else:
