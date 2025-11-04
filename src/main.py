@@ -887,7 +887,8 @@ def do_unpack_update_metadata(sub_paths: SubPaths, url: str, revision: str | Non
 
 
 # TODO maybe use metadata_abspath instead of SubPaths
-def do_pop_push_update_metadata(sub_paths: SubPaths, applied_index: int) -> None:
+# TODO Mabye this "metadata_*" is the new naming convention
+def metadata_update_applied_index(sub_paths: SubPaths, applied_index: int) -> None:
     try:
         with open(sub_paths.metadata_abspath, "br") as f:
             metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
@@ -929,22 +930,6 @@ def do_pop_update_metadata_drop(sub_paths: SubPaths) -> None:
 
     metadata_lines = config_drop_key2(metadata_lines, b"subtree", b"appliedIndex")
     metadata_lines = config_drop_section_if_empty(metadata_lines, b"subtree")
-
-    metadata_config = config_unparse2(metadata_lines)
-    with open(sub_paths.metadata_abspath, "bw") as f:
-        f.write(metadata_config)
-
-
-# TODO refactor this function!
-def do_apply_update_metadata(sub_paths: SubPaths, applied_index: int) -> None:
-    try:
-        with open(sub_paths.metadata_abspath, "br") as f:
-            metadata_lines = config_parse2(split_with_ts_bytes(f.read()))
-    except FileNotFoundError:
-        metadata_lines = empty_config_lines()
-
-    metadata_lines = config_add_section2(metadata_lines, b"subtree")
-    metadata_lines = config_set_key_value2(metadata_lines, b"subtree", b"appliedIndex", b"%d" % (applied_index,))
 
     metadata_config = config_unparse2(metadata_lines)
     with open(sub_paths.metadata_abspath, "bw") as f:
@@ -1084,7 +1069,7 @@ def cmd_apply(args, parser):
     with chdir(super_paths.super_abspath):
         superx.helper.add([super_to_patch_relpath])
 
-    do_apply_update_metadata(sub_paths, subtree_dim.applied_index + 1)
+    metadata_update_applied_index(sub_paths, subtree_dim.applied_index + 1)
     with chdir(super_paths.super_abspath):
         superx.helper.add([sub_paths.metadata_abspath])
 
@@ -1212,7 +1197,7 @@ def do_patch_applys(superx: Superproject, super_paths: SuperPaths, sub_paths: Su
         # The default value is that no patches are applied
         do_pop_update_metadata_drop(sub_paths)
     else:
-        do_pop_push_update_metadata(sub_paths, to_applied_index)
+        metadata_update_applied_index(sub_paths, to_applied_index)
 
     with chdir(super_paths.super_abspath):
         # TODO here is not relative path used for git. This seems also to work!
