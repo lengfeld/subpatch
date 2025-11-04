@@ -90,7 +90,7 @@
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../command-line/">Command line arguments</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Format</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Format</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a>
     </li>
@@ -136,7 +136,7 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="configuration-and-metadata-format">Configuration and metadata format</h1>
-<p>The subpatch configuration file and the metdata files use the git config file
+<p>The subpatch configuration file and the metadata files use the git config file
 format.</p>
 <h2 id="configuration">Configuration</h2>
 <p>A superproject contains a subpatch configuration file. It's call <code>.subpatch</code>
@@ -144,14 +144,15 @@ and place at the toplevel directory of the superproject. In the case of git
 it's placed next to the <code>.git</code> folder.</p>
 <p>Example configuration file:</p>
 <pre><code>[subprojects]
-    path = dirA
-    path = dirB
+        path = sources/meta-openembedded
+        path = sources/meta-raspberrypi
+        path = sources/poky
 </code></pre>
 <p>For now there is only one section:</p>
 <ul>
 <li><code>[subprojects]</code><ul>
 <li><code>path</code>: Path to the subproject from the toplevel directory of the superproject.
-   For every subproject there is a seperate <code>path</code> value.</li>
+   For every subproject there is a separate <code>path</code> value.</li>
 </ul>
 </li>
 </ul>
@@ -159,29 +160,30 @@ it's placed next to the <code>.git</code> folder.</p>
 <p>Every subproject as a metadata file. It's called <code>.subproject</code> and place at the
 top level directory of the subproject.</p>
 <p>Example metadata file:</p>
-<pre><code>[patches]
-    appliedIndex = -1
-[subtree]
-     checksum = 202864b6621f6ed6b9e81e558a05e02264b665f3
+<pre><code>[subtree]
+        appliedIndex = 0
+        checksum = d35979e585e180a212a2eb1eedb71cb0ea53542b
 [upstream]
-    objectId = c4bcf3c2597415b0d6db56dbdd4fc03b685f0f4c
-    rev = refs/heads/master
-    url = ../subproject TODO add real url
+        objectId = af3049cec7c916d96cf8214c6f9ae77710f667db
+        revision = refs/heads/master
+        url = https://github.com/lengfeld/live555-unofficial-git-archive.git
 </code></pre>
 <p>There are different sections and every section as different keys:</p>
 <ul>
 <li><code>[upstream]</code><ul>
 <li><code>url</code>: URL of remote git repository</li>
-<li><code>rev</code>: git revision that is integrated, e.g. <code>HEAD</code>, <code>refs/heads/master</code> or <code>v1.0</code></li>
+<li><code>revision</code>: git revision that is integrated, e.g. <code>HEAD</code>, <code>refs/heads/master</code> or <code>v1.0</code></li>
 <li><code>objectId</code>: The SHA1 of the git object that is integrated.</li>
 </ul>
 </li>
 <li><code>[patches]</code><ul>
-<li><code>appliedIndex</code>: Integer from -1 to count of patches minus 1</li>
+<li>This section contains no value yet</li>
 </ul>
 </li>
 <li><code>[subtree]</code><ul>
-<li><code>checksum</code>: A checksum over the subproject's files after integration (and before patches are applied).</li>
+<li><code>checksum</code>: A checksum over the subproject's files after integration (and before patches are applied).
+   If the subtree is unpopulated, no value is present.</li>
+<li><code>appliedIndex</code>: Integer from -1 to count of patches minus 1 (default value is -1)</li>
 </ul>
 </li>
 </ul>

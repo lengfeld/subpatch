@@ -88,7 +88,7 @@
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Command line arguments</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Command line arguments</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#common-arguments">Common arguments</a>
     </li>
@@ -105,6 +105,10 @@
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-apply">subpatch apply</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#subpatch-poppush">subpatch pop|push</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-subtree-checksum">subpatch subtree checksum</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subpatch-patches-list">subpatch patches list</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#commands-not-implemented-yet">Commands, not implemented yet</a>
     </li>
@@ -175,7 +179,7 @@ subpatch add &lt;url&gt; --revision &lt;revision&gt;
 <h2 id="subpatch-status">subpatch status</h2>
 <pre><code>subpatch status
 </code></pre>
-<p>Show the current state of all subprojects in the superproject. It prints the
+<p>Show the state of all subprojects in the superproject. It prints the
 URL, integrated revision and whether the files of the subproject are changed.
 E.g. if there are untracked files, unstaged changes or staged, but uncommitted
 changes.</p>
@@ -184,8 +188,8 @@ subprojects.</p>
 <h2 id="subpatch-add">subpatch add</h2>
 <pre><code>subpatch add &lt;url&gt; [&lt;path&gt;] [-r | --revision &lt;revision&gt;] [-q | --quiet]
 </code></pre>
-<p>Add the remote project specified by <code>url</code> as a subproject at the optional
-<code>path</code> in the current repository.  Currently <code>url</code> can only point to a git
+<p>Add the upstream project specified by <code>url</code> as a subproject at the optional
+<code>path</code> in the superproject.  Currently <code>url</code> can only point to a git
 repository. Other subproject types are not supported yet.</p>
 <p>The <code>path</code> is optional. If it's omitted the canonical subproject name is used.
 It's mostly the last folder name in the <code>url</code>. If <code>path</code> is provided it can
@@ -215,7 +219,7 @@ value in the config.</p>
 <h2 id="subpatch-configure">subpatch configure</h2>
 <pre><code>subpatch configure [-q | --quiet]
 </code></pre>
-<p>Configure the current superproject to use subpatch. The command adds the
+<p>Configure a superproject to use subpatch. The command adds the
 <code>.subpatch</code> config file at toplevel directory of the superproject. subpatch
 uses the existens of this file as a marker that the project is using subpatch.</p>
 <p>This command works only for git repositories as superprojects currently.
@@ -223,20 +227,33 @@ subpatch does not support other SCM tools or plain directories for now.</p>
 <p>Normally you do not have to execute this command. <code>subpatch add</code> automatically
 configures the superproject if necessary.</p>
 <h2 id="subpatch-apply">subpatch apply</h2>
-<pre><code>subpatch configure [-q | --quiet] &lt;patch file&gt;
+<pre><code>subpatch apply [-q | --quiet] &lt;patch file&gt;
 </code></pre>
-<p>Apply the patch in the <code>patch file</code> to the current subproject. The code changes
+<p>Apply the patch in the <code>patch file</code> to a subproject. The code changes
 in the patch are applied onto the source code in the directory
-and the patch file is stored in the <code>patches</code> subdirectory.</p>
+and the patch file is tracked in the <code>patches</code> subdirectory.</p>
 <p>You select the subproject by changing the current work directory into the
 subproject.</p>
 <h2 id="subpatch-poppush">subpatch pop|push</h2>
-<pre><code>subpatch pop|push [-q | --quiet]
+<pre><code>subpatch pop|push [-q | --quiet] [-a | --all]
 </code></pre>
-<p>Pop or push the top most applied patch of the current subproject. The code
+<p>Pop the current applied or push the next patch of a subproject. The code
 changes are reverted (for <code>pop</code>) or applied (for <code>push</code>) to the working tree of
 the subproject. subpatch records the current state of applied or not applied
 patches in the metadata.</p>
+<p>You select the subproject by changing the current work directory into the
+subproject.</p>
+<p>If you provide the <code>-a</code> or <code>--all</code> argument, subpatch pushes or pops all
+remaining applied patches.</p>
+<h2 id="subpatch-subtree-checksum">subpatch subtree checksum</h2>
+<pre><code>subpatch subtree checksum [--calc] [--check] [--write] [--get]
+</code></pre>
+<p>Calculate, check, write to the metadata or get from the metadata the checksum
+of the subproject's subtree.</p>
+<p>You select the subproject by changing the current work directory into the
+subproject.</p>
+<h2 id="subpatch-patches-list">subpatch patches list</h2>
+<p>List all tracked patches of the subproject.</p>
 <p>You select the subproject by changing the current work directory into the
 subproject.</p>
 <h2 id="commands-not-implemented-yet">Commands, not implemented yet</h2>
