@@ -176,7 +176,7 @@ The following changes are recorded in the git index:
 
         p = self.run_subpatch(["init", "subproject"], stderr=PIPE)
         self.assertEqual(p.returncode, 4)
-        self.assertEqual(p.stderr, b"Error: Invalid argument: Directory 'subproject' alreay exists. Cannot add subproject!\n")
+        self.assertEqual(p.stderr, b"Error: Invalid argument: Directory 'subproject' already exists. Cannot add subproject!\n")
 
 
 def create_super_and_upstream():
@@ -971,7 +971,7 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             touch("subproject")
 
             p = self.run_subpatch(["add", "../upstream", "subproject"], stderr=PIPE)
-            self.assertEqual(b"Error: Invalid argument: Directory 'subproject' alreay exists. Cannot add subproject!\n", p.stderr)
+            self.assertEqual(b"Error: Invalid argument: Directory 'subproject' already exists. Cannot add subproject!\n", p.stderr)
             self.assertEqual(4, p.returncode)
 
     def test_add_with_empty_tree_in_upstream(self):

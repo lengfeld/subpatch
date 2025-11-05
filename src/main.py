@@ -329,9 +329,20 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
-# TODO consolidate with unpack from cmd_add
+def do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: str,
+                           revision: str | None, object_id: bytes) -> None:
+    try:
+        do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
+    finally:
+        assert (os.path.isdir(join(cwd_to_cache_relpath, b".git")))
+        assert (os.path.isdir(cwd_to_cache_relpath))
+        # Need to use rmtree and not rmdir, because there are maybe more left
+        # over files and directories.
+        shutil.rmtree(cwd_to_cache_relpath)
+
+
 # TODO consolide function arguments
-def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
+def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
@@ -368,6 +379,8 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
             # NOTE: git_ls_tree_in_dir() also lists files non-subtree files E.g.
             # the folder "patches" and the file ".subproject". These must be
             # skipped.
+            # TODO Move these special paths into a central location!
+            #   if filename in (b".git", b".subproject", b"cache", b"patches"):
             for path in subtree_files_relpaths:
                 if path.startswith(b"patches/"):
                     continue
@@ -376,16 +389,25 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
                 git_rm.add_and_maybe_exec(path)
             git_rm.exec_force()
 
-    # and copy
+    # and move
 
     # TODO This code is "subpatch unpack" but even bit lower
     # TODO convert this code to "superhelper" implementation
-    os.makedirs(sub_paths.cwd_to_sub_relpath, exist_ok=True)
+    assert (os.path.isdir(sub_paths.cwd_to_sub_relpath))
+    assert (not os.path.isdir(join(sub_paths.cwd_to_sub_relpath, b".git")))
+    cache_abspath = os.path.abspath(join(os.getcwdb(), cwd_to_cache_relpath))
     with chdir(cache_abspath):
         git_add = GitCommandBachter(["git", "add", "-f"])
 
         for root, dirnames, files in os.walk(b"."):
+            # TODO Hack for now to fix issue!
+            # TODO use "git ls-tree -r -z -d"!!!
+            if root == b"./.git" or root.startswith(b"./.git/"):
+                continue
             for dirname in dirnames:
+                # TODO Hack for now to fix issue!
+                if dirname == b".git":
+                    continue
                 super_to_dest_relpath = join(sub_paths.super_to_sub_relpath, root, dirname)
                 dest_path = join(super_paths.super_abspath, super_to_dest_relpath)
                 os.makedirs(dest_path, exist_ok=True)
@@ -402,15 +424,16 @@ def do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath: bytes, u
         with chdir(super_paths.super_abspath):
             git_add.exec_force()
 
-    # Remove empty directories in download/cache dir
-    for root, dirnames, files in os.walk(cache_abspath, topdown=False):
-        assert len(files) == 0
-        for dirname in dirnames:
-            os.rmdir(join(root, dirname))
+    assert (not os.path.isdir(join(sub_paths.cwd_to_sub_relpath, b".git")))
 
-    assert len(os.listdir(cache_abspath)) == 0
-    os.rmdir(cache_abspath)
-
+    # Hack for now:
+    # The funciton get_sha1_for_subtree does not work if the subtree is empty
+    # (=no files tracked by git in it). So just create and add a file for the moment.
+    # This case only happens, when the upstream projet has a empty file tree. This is
+    # also a rare case. Someone would say this would be even a error case and should
+    # be reported to the user (with an option to override the error).
+    # TODO add argument to allow empty subtrees in the upstream repo.
+    # TODO fix get_sha1_for_subtree()!
     with chdir(super_paths.super_abspath):
         subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
@@ -520,31 +543,21 @@ def cmd_update(args, parser):
     # - use a bare repository! And ad-hoc checkouts
     # - And at best do not checkout, just import the git objects into the
     # current git and let git of the superproject check it out.
-    cache_relpath = sub_paths.cwd_to_sub_relpath + b"-tmp"
+    # subpatch cache init
+    cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
+    assert (not os.path.isdir(cwd_to_cache_relpath))
+    os.mkdir(cwd_to_cache_relpath)
 
     # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
     # download!
 
-    download_config = DownloadConfig(url=url, revision=revision)
-    # Fetch remote repository/tarball into local folder and checkout the
-    # requested revision.
-    # NOTE: The ".git" folder is already removed! Just the plain tree
     # TODO: Fix the old download interpretation. Now download should not checkout and remove the git folder
-    object_id = cache_helper.download(download_config, cache_relpath)
-
-    cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
+    # subpatch cache fetch url -r version
+    object_id = do_cache_fetch(cache_helper, cwd_to_cache_relpath, url, revision)
 
     # subpatch unpack
-    try:
-        do_unpack_for_update(superx, super_paths, sub_paths, cache_abspath, url, revision, object_id)
-    except Exception:
-        # TODO maybe some other layer of subpatch should be responsible for the
-        # cleanup.
-        if os.path.exists(cache_abspath):
-            print("Warning: Cache directory '{cache_relpath}' still exists. Removing it!", file=sys.stderr)
-            # TODO rmtree is always a bit risky. subpatch should not remove
-            # random files from the user.
-            shutil.rmtree(cache_abspath)
+    # TODO in case of an error, maybe cleanup also staging area
+    do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
 
     # TODO reapply patches: subpatch push --all
     # TODO only apply to the same index as before, not just all patches!
@@ -584,39 +597,20 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
         f.write(config_unparse2(config_lines))
 
 
-def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
-    # HACK for now
-    # Check assumptions: We have just created the files ourselves
-    assert os.path.exists(sub_paths.cwd_to_sub_relpath)
-    assert os.path.exists(sub_paths.metadata_abspath)
-    # TODO always check that for subprojects
-    assert not os.path.exists(join(cache_relpath, b".subproject"))
-    os.remove(sub_paths.metadata_abspath)
-    os.rmdir(sub_paths.cwd_to_sub_relpath)
-    os.rename(cache_relpath, sub_paths.cwd_to_sub_relpath)
+# TODO use CacheHelper instead of CacheHelperGit
+def do_cache_fetch(cache_helper: CacheHelperGit, cwd_to_cache_relpath: bytes, url: str, revision: str) -> bytes:
+    download_config = DownloadConfig(url=url, revision=revision)
 
-    superx.helper.add([sub_paths.cwd_to_sub_relpath])
-
-    # Hack for now:
-    # The funciton get_sha1_for_subtree does not work if the subtree is empty
-    # (=no files tracked by git in it). So just create and add a file for the moment.
-    # This case only happens, when the upstream projet has a empty file tree. This is
-    # also a rare case. Someone would say this would be even a error case and should
-    # be reported to the user (with an option to override the error).
-    # TODO add argument to allow empty subtrees in the upstream repo.
-    with open(sub_paths.metadata_abspath, "bw"):
-        pass
-    with chdir(super_paths.super_abspath):
-        superx.helper.add([sub_paths.metadata_abspath])
-
-    # TODO in case of failure, remove download git dir!
-    with chdir(super_paths.super_abspath):
-        subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
-
-    metadata_set_for_unpack(sub_paths, url, revision, object_id, subtree_checksum)
-
-    with chdir(super_paths.super_abspath):
-        superx.helper.add([sub_paths.metadata_abspath])
+    # Fetch remote repository/tarball into local folder and checkout the
+    # requested revision.
+    try:
+        return cache_helper.download(download_config, cwd_to_cache_relpath)
+    except Exception as e:
+        assert (os.path.isdir(cwd_to_cache_relpath))
+        # Need to use rmtree and not rmdir, because there are maybe more left
+        # over files and directories.
+        shutil.rmtree(cwd_to_cache_relpath)
+        raise e
 
 
 # Consolide into plumping commands
@@ -625,7 +619,7 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
 #   subpatch subtree clean --verify # tricky, cannot be really done before or must he handcoded!
 #   subpatch download
 #     - subpatch cache init --type=git   # --autoremove'
-#     - subpatch fetch <url> -r <rev>
+#     - subpatch cache fetch <url> -r <rev>
 #   subpatch unpack   # honors "--autoremove"
 #     - does cp/mv
 #     - subpatch subtree checksum write"
@@ -711,11 +705,14 @@ def cmd_add(args, parser):
 
     # subpatch init <path>
     do_init(super_paths, sub_paths, superx)
+    # TODO in case of a later failure. Also revert this!
 
     # subpatch cache init --git
     cache_helper = CacheHelperGit()
-    # TODO split into directory and cache_name
-    cache_relpath = sub_paths.cwd_to_sub_relpath + b"-tmp"
+    # TODO add cwd_to_sub_relpath to SubPaths object
+    cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
+    os.mkdir(cwd_to_cache_relpath)
+    # TODO in case of a later failure. Also revert this!
 
     # NOTE: Design decision: The output is relative to the current working dir.
     # The content of '%s' is the remote git name or the path relative to the
@@ -729,14 +726,10 @@ def cmd_add(args, parser):
 
     try:
         # subpatch cache fetch url -r version
-        download_config = DownloadConfig(url=url, revision=revision)
+        object_id = do_cache_fetch(cache_helper, cwd_to_cache_relpath, url, revision)
 
-        # Fetch remote repository/tarball into local folder and checkout the
-        # requested revision.
-        object_id = cache_helper.download(download_config, cache_relpath)
-
-        # subpatch unpack # from cache into woktree
-        do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath, url, revision, object_id)
+        # subpatch unpack
+        do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the
@@ -1335,7 +1328,7 @@ def do_init(super_paths: SuperPaths, sub_paths: SubPaths, superx: Superproject) 
         # TODO add message how to solve the problem
         # TODO just a empty dir should be ok!
         raise AppException(ErrorCode.INVALID_ARGUMENT,
-                           "Directory '%s' alreay exists. Cannot add subproject!" % (sub_paths.cwd_to_sub_relpath.decode("utf8"),))
+                           "Directory '%s' already exists. Cannot add subproject!" % (sub_paths.cwd_to_sub_relpath.decode("utf8"),))
 
     if os.path.exists(sub_paths.metadata_abspath):
         # There is already a subproject at this place
@@ -1346,7 +1339,7 @@ def do_init(super_paths: SuperPaths, sub_paths: SubPaths, superx: Superproject) 
         # TODO add tests for this!
         # TODO Add ErrorCode for invalid state of superproject.
         raise AppException(ErrorCode.INVALID_ARGUMENT,
-                           "File '%s' alreay exists. Cannot add subproject!" % (sub_paths.metadata_abspath.decode("utf8"),))
+                           "File '%s' already exists. Cannot add subproject!" % (sub_paths.metadata_abspath.decode("utf8"),))
 
     os.makedirs(sub_paths.cwd_to_sub_relpath)
     with open(join(sub_paths.cwd_to_sub_relpath, b".subproject"), "bw"):

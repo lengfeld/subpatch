@@ -1,8 +1,6 @@
 import os
-import shutil
 from contextlib import chdir
 from dataclasses import dataclass
-from os.path import join
 from typing import Any
 
 # ----8<----
@@ -66,12 +64,13 @@ class CacheHelperGit:
     # Download remote repository, checkout the request revision, remove
     # repository metadata and leave the plan files in the dir 'cache_relpath'.
     # NOTE: return value is either a object_id of a tag or of a commit!
-    def download(self, download_config: DownloadConfig, folder) -> bytes:
+    def download(self, download_config: DownloadConfig, folder: bytes) -> bytes:
+        # TODO use better term than "folder"
         # NOTE "git submodule init" creates a bare repository in ".git/modules"
-        # TODO maybe also use that folder as a scrat pad.
         # TODO clone only a single branch and maybe use --depth 1
         #  - that is already partially implemented
         # TODO handle potential submodules in the subproject correctly
+        assert (os.path.isdir(folder))
 
         url = download_config.url
         revision = download_config.revision  # Can be None
@@ -90,15 +89,11 @@ class CacheHelperGit:
             if clone_config.object_id is not None:
                 with chdir(folder):
                     if not git_verify(clone_config.object_id):
-                        # TODO use context wrapper for cleanup!
-                        shutil.rmtree(b"../" + folder)
                         raise AppException(ErrorCode.INVALID_ARGUMENT,
                                            "Object id '%s' does not point to a valid object!" % (clone_config.object_id,))
 
                     object_type = git_get_object_type(clone_config.object_id)
                     if object_type not in (ObjectType.COMMIT, ObjectType.TAG):
-                        # TODO use context wrapper for cleanup!
-                        shutil.rmtree(b"../" + folder)
                         raise AppException(ErrorCode.INVALID_ARGUMENT,
                                            "Object id '%s' does not point to a commit or tag object!" % (clone_config.object_id,))
 
@@ -113,7 +108,6 @@ class CacheHelperGit:
             assert b"//" not in folder  # sanitze path
             folder_count = folder.rstrip(b"/").count(b"/") + 1
 
-            os.makedirs(folder)
             with chdir(folder):
                 # TODO Not work with relative paths, because a subdir is used!
                 if get_url_type(url) == URLTypes.LOCAL_RELATIVE:
@@ -126,12 +120,5 @@ class CacheHelperGit:
                 assert clone_config.ref is not None
                 object_id = git_init_and_fetch(url_tmp, clone_config.ref)
                 git_reset_hard(object_id)
-
-        # Remove ".git" folder in this repo
-        # TODO this must be moved outside of the download function. It should
-        # be persistent.
-        local_repo_git_dir = join(folder, b".git")
-        assert os.path.isdir(local_repo_git_dir)
-        shutil.rmtree(local_repo_git_dir)
 
         return object_id
