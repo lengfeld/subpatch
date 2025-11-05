@@ -1,7 +1,6 @@
 # Comparison to other tools
 
-The previous page [requirements](requirements.md) lists the features that subpatch supports.
-But subpatch is not the first tool that tries to solve the multi repository
+subpatch is not the first tool that tries to solve the multi repository
 problem. Other tools are
 
 * [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
@@ -10,9 +9,7 @@ problem. Other tools are
 * [west](https://docs.zephyrproject.org/latest/develop/west/index.html)
 * [git-subtree](https://git.kernel.org/cgit/git/git.git/tree/contrib/subtree/git-subtree.adoc)
 
-This page will compare these tools with subpatch, describe there design and
-shortcomings and explain why they not fulfill all requirements that I have
-defined for subpatch based on my learnings.
+This page will compare these tools with subpatch.
 
 
 ## Technical comparison
