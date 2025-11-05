@@ -529,6 +529,7 @@ def cmd_update(args, parser):
     # Fetch remote repository/tarball into local folder and checkout the
     # requested revision.
     # NOTE: The ".git" folder is already removed! Just the plain tree
+    # TODO: Fix the old download interpretation. Now download should not checkout and remove the git folder
     object_id = cache_helper.download(download_config, cache_relpath)
 
     cache_abspath = os.path.abspath(join(os.getcwdb(), cache_relpath))
@@ -600,7 +601,8 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
     # The funciton get_sha1_for_subtree does not work if the subtree is empty
     # (=no files tracked by git in it). So just create and add a file for the moment.
     # This case only happens, when the upstream projet has a empty file tree. This is
-    # also a rare case. Someone would say this would be even a error case ;-)
+    # also a rare case. Someone would say this would be even a error case and should
+    # be reported to the user (with an option to override the error).
     # TODO add argument to allow empty subtrees in the upstream repo.
     with open(sub_paths.metadata_abspath, "bw"):
         pass
