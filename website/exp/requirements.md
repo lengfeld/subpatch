@@ -51,11 +51,19 @@ python, like Linux, unixes, Windows and MacOS.
 
 (**R12**) should scale to the size of the AOSP (Android Open Source Project).
 
+(**R13**) should allow conflict free merging of subproject changes when
+the changes are independent.
+
+TODO: The text above uses the term *source dependencies*. Maybe use the terms
+*subproject* and *upstream* to make the text clearer.  These terms are the
+common terms in the subpatch nomenclature.
+
 
 ## Change history
 
-Update to *R2* on 2025-01-12: subpatch only supports git as a superproject with
-all features.
+### Update to R2 on 2025-01-12
+
+Change: subpatch only supports git as a superproject with all features.
 
 Background: The requirement R2 was modified. Not all scm tools are supported
 fully anymore.  The full functionality will only be available if the
@@ -71,11 +79,32 @@ This learning I had already in the past. See learning L1 on
 try or need to reimplementing existing functionality.
 
 
+### Adding R13 on 2025-11-05
+
+After a discussion with a friend and potential user of subpatch I added this
+requirement. No other requirement specifies this and I even made a design
+decision in the code that violates this feature.
+
+But I think it's an important property and is needed. If two developers are
+adding patches to the subproject _and_ these patches are independent, the merge
+of these two development branches should be conflict free and afterwards the
+subproject should be in a clean/valid state. The term *independent* for patches
+means that the patches modify different source code parts and the changes are
+in itself conflict free. In that case there should be also no conflict in the
+subprojects metadata. The simple and common case should work automagically.
+
+If the patches are _not_ conflict free (= not independent), the merge of the
+code changes is a conflict already and must be resolved by the developers
+manually. That's o.k. and expected. That is the same case if the source
+code is maintained as a normal git repository and not as a subproject.
+
+
 ## Conclusion
 
 The list of requirements is the design goal of subpatch. It describes the
 properties and capabilities an implementation should fulfil and provide for its
 users.
 
-If you want to find more about the development and implementation, you can
-continue reading on the page [design decisions](design.md).
+If you want to find out more about the difference to other tools, see
+[comparison to other tools](comparison.md). The page gives on overview about
+the other existing tools and compares them with subpatch.

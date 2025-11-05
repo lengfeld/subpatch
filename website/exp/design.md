@@ -66,6 +66,39 @@ TODO
 **DD10**: Using the term *subtree* instead of *worktree*
 
 TODO explain
-TODO Maybe also add more terms here!
+
+**D11**: License as GPLv2-only
+
+TODO explain
+
+**D12**: The patches of a subproject are in the folder `patches`.
+
+* [+]: quilt is using the same folder name.
+* [+]: Debian/Ubuntu source packages use the same folder name.
+* [+]: The Linux kernel source code even contains a default ignore rule for the
+       `patches` folder.
+
+**D13**: The default value of `subtree.appliedIndex` in the subproject's
+metadata is *all patches are applied*.
+
+This decision follows indirectly from requirement R13. I add the requirement
+and this decision to make it explicit and to note it down. At first I chose
+another default value and then later noticed that it violates R13, the conflict
+free merging of two changes in a subproject that are independent.
+
+* [+]: In the clean state of the subproject, namely all tracked patches are applied,
+       there is no value for `appliedIndex` in the metadata file. That fits the
+       general decision principle, that the default, sane and common value is
+       the default value _and_ is not recorded and shown to the user.
+* [+]: Merging two histories in the superproject with changes in the subproject
+       is conflict free and results in a clean state of the subproject metadata,
+       when the changes (e.g. adding two independent patches in the two
+       histories) are in itself conflict free. See R13.
+
+If there would be a `appliedIndex` value in the metadata, there could be a
+merge conflict for this or the value would be wrong after the merge. This is
+only a very short description of the problem, but that's what I have
+experienced.
+
 
 *Note*: This list is not completed yet and should grow while supbatch is developed.

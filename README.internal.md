@@ -479,16 +479,19 @@ See rustdoc (https://doc.rust-lang.org/rustdoc/write-documentation/documentation
 as an example.
 
 Document minimum python requirements. E.g. look at the latest debian stable release:
+- https://devguide.python.org/versions/
 - https://www.debian.org/releases/
 - https://www.debian.org/releases/stable/
 - Pacakge file is here https://packages.debian.org/trixie/python3
 -> current its python3 version 3.13  for "trixie"
--> This  version is even nether than on my Ubuntu 24.04 system (Python 3.12.3)
+-> This version is even nether than on my Ubuntu 24.04 system (Python 3.12.3)
 -> So mybe use oldstable as a reference!
 - NOTE: maybe also look at the python version in Yocto LTS
+   recipe: https://layers.openembedded.org/layerindex/recipe/23823/
+   https://www.yoctoproject.org/development/releases/
 - NOTE: also document the minimum git requirement
 
-Error when "adding" a subproject instead another subproject
+Error when "adding" a subproject inside another subproject
 
 Add learning: Reviewing the diff of a patch file is ugly/not nice
 - And subpatch uses patch files and there will be cause where there are diffs
@@ -498,6 +501,7 @@ And add the section
 
 Add docker/podman/debbootstrap contains to test different python3 versions,
 different git versions and different distros.
+- Also test the latest release of git or even development versions!
 
 The "version" argument/command should also print the version of the use
 superproject and subproject tooling, e.g. git, svn, tar
@@ -506,11 +510,12 @@ Add documentation how to update subpatch to a new version
 
 Recheck that ".gitignore" is not used on "subpatch add/update"
 
-Add plumbing command for scripting
+Add plumbing command (not procelain commands (https://stackoverflow.com/a/6976506) for scripting
 - get toplevel of superproject
 - get type of superproject
 - get current path of subproject if any!
 - get state of subproject, e.g. populated, all-paches-appleyed (yes-no)
+  like `status` but for plumbing
 
 Add "build-system" agnostic to learnings or requirements (not like kas or west)
 
@@ -552,7 +557,9 @@ Clearifiy wording
 Add to table
 * whether a command uses the superproject data or not!
 * whether a command uses the CacheHelper code
+  Answer: Actualc that's quite clear
 * whether a command uses the SuperHelper Code
+  Answer: Every command uses the superhelper code, e.g. to add a print the what next information!
 
 Fix mkdocs deploy error. burger menu on remote did not work!
 
@@ -622,13 +629,13 @@ without a line "persistent=yes" if it's there. In a "persistent=no" case and
 every goes right, it's delted anyways.  and no "subpatch status" can be exected
 in between.
 
-Note: about concurrency. Supatch is no thread-safe. But maybe we can make
-subpatch per subproject thread-safe/concurrent.  E.g. unpack,download patch
-multi subprojects at once.
+Note: about concurrency. Supatch is no thread-safe/multi execution safe. But
+maybe we can make subpatch per subproject thread-safe/concurrent.  E.g.
+unpack,download patch multi subprojects at once.
 
 Feedback from the unconference session at OSSE 2025:
 * work on git-submodules on upstream has stalled
-* can it be integrated into git
+* Question: can subpatch be integrated into git?
 * Idea of sem-ver for git-submodules or subpatch.
 * disk usage of superproject is an issue. E.g. when you have a upstream project
   that is integrated into multiple superprojects of your own.
@@ -637,7 +644,7 @@ Feedback from the unconference session at OSSE 2025:
   My thoughts: make decision diagram (and only care if the upstream project is bigger)
   My thoughts: Make a distinction between your own projects and external/non-controlled projects
        -> make the distinctin between good stable API and not.
-* Answer the question: Why do not integrated the subprojects pages
+* Answer the question: Why do not integrated the subprojects history?
 * Note: Why I don't use the terms "parent" and "child" for super and subprojcets
   -> it's already overloaded by git commits. But htere it's also anchestor
   -> Just stick to one convetion. And I already decided.
@@ -645,13 +652,11 @@ Feedback from the unconference session at OSSE 2025:
   Also raised on FrOSCon.
 * Have you looked at jj as a version control system
 * Looking at umpf from pengutronix
-   using a octo-merge, but just with the tree-ids from kkk
+   using a octo-merge, but just with the tree-ids from the first-parent
 * Question from the audience, why don't use separate commits and a merge commit for
   maintaining the patch files of a subprojects.
-* My thoughts:
-
-Looking at west talk:
-   https://osseu2025.sched.com/event/25VrA/demystifying-west-carles-cufi-nordic-semiconductor
+  My toughts: Every commit should be atomic and perfect. From one valid state to the next.
+    This would not be the case for the seperate paths in the graph.
 
 For the "format" reference: Be more formal for the description of the sections,
 keys and values:
@@ -664,18 +669,130 @@ and the record_android_trace.py script by Google
 
 Add mkdocs build to linting and make warnings/errors a failure of the linting.
 
+Looking at west talk:   https://osseu2025.sched.com/event/25VrA/demystifying-west-carles-cufi-nordic-semiconductor
+   -> "west does two things". And that is on purpose. Me: :-/
+   -> "mental model". Just having a single command "west" is good (according to the talk)
+   -> overwrite feature. You can overwrite a subproject in the manifest file from another manifest file.
+      This feature is also available in repo `<remove-project path=...>`.
+      Q: Does subpatch support this?
+      A: Not really :-/
+   -> group feature to exclude some repos from the upstream manifest, also --allow list
+   -> -keep-descendants option on "west update" to keep local branches/patches
+   -> term confusion "projects" vs "modules"
+   -> a lot of features of git reimplemented by est
+
+
+Read https://tylercipriani.com/blog/2025/08/15/git-lfs/ and integrated the
+findings in subpatch/documentation.
+
+Describe the different kinds of subprojects/dependencies
+* external/remote/far-way deps (no control over it)
+* internal/near/own deps (maintined by the same team, or in the same org!)
+E.g. also explain the common problem
+* Two or more products using a shared library.
+   And development is a pain,  beacuse the library cannot be dev independently, but
+   only in the context of the two products.
+
+Suggestion by some attending FrOSCon after my talk: Add conversion tool from
+git-submodules, repo and others to subpatch. This would give a huge adaption
+win, e.g. from large organizations currently using git-submodules and others.
+
+add note about comparing git commands to subpatch
+  xxxxx      -> subpatch configure  # no git command
+  git init   -> subpatch init
+  git rebase -> subpatch update
+  git fetch  -> supbatch download
+  git merge  -> no command!
+  git pull   -> no command
+  subpatch pop -> git reset --hard(or something) HEAD^
+  subpatch push -> git reset --hard(or something) <commit from reflog> or git cherry-pick <reflog>
+
+Fix issue when "git add" fails. It should rollback the changes automatically!
+
+Rename config code and functions to another name. The name conflicts with the
+"subpatch config"
+
+Add RSS feed with news, releases and post to the website.
+
+How does the patch workflow look like?
+    # work on the code
+    subpatch patch new <name>  # creates a new, but empty patch file. But It's already applied!
+      # Naming: It's the current patch
+    # work on the code
+    git add subproject/ #files
+    subpatch sync  # add changes from the subtree to the patch file
+      # goal: the invariant is statistfied again!
+      # Idea: just use the stuff that is in the index! And then also do "git add"
+      #  --from-commit
+      #  --from-staging
+    # write commit message
+    git commit -m "add patch"
+    # Note "subpatch add-changes" only works when git is "clean", all patches are applied!
+
+Format of a patch file: https://stackoverflow.com/questions/987372/what-is-the-format-of-a-patch-file
+
+Design decision: wehther to have
+* "configure" and "configure" as commands or
+* "configure" and "configure --deconfigure".
+The first one is cleaner
+The second one duplicates code and bloats up the documentation (with a lot of small commands)
+
+cache git helper: Should implement a "old..new" history listing support for the commit messages.
+The commit messages hould contain all the commits that are in the new version
+* additional feature: fast-forward and connected history check.
+
+cache git helper: Add options for checkout. Cache could be with checkout or
+without! It can have a checkout when you want to use "git rebase -i" or "git
+push" for the subproject/upstream.
+
+Add license header to all files in src/
+
+Document invariant of subpatch on the website
+- subtree checksum == upstream tree SHA1 (after unpack, without prefix and excludes)
+- subtree checksum == subtree pop -a
+
+feature: subproject at toplevel of the repo
+* should subpatch support this?
+* should subpatch supports multiple subprojects interleaved inside a single directory
+  -> possible with globs in subproject metadata
+  (e.g. needed to assemble poky)
+* Both would require a new convertion for "subpatch list". E.g. a extra name
+  attribute.
+
+Add example to assemble "poky" from the original repos with subpatch. See
+https://wiki.yoctoproject.org/wiki/Combo-layer#Notes_on_how_Richard_manages_the_Poky_repository
+-> This does not work (yet). subdirectory feature and interleaving is missing.
+-> More updates on combo-layers. Discontinued by openembedded people
+   https://discussion.openembedded.org/t/bitbake-setup-and-the-future-of-poky-and-combo-layer/55
+   another note: https://github.com/balister/sdr-build
+
+Look at "umpf": https://pengutronix.de/de/blog/2023-08-29.html
+It's a patch management tool
+- "quilt"
+- patchwork?
+
+Add check that cache directory is removed, when unpack fails.
+
+General note: Usage of git repos, e.g. git tags differ. E.g. how they should be
+used in a git repo. Example here: ciflow from pytorch:
+https://github.com/pytorch/pytorch/issues/163309
+For my it's not nice to create hundreds of CI tags and overwrite them from time
+to time. For other devs that how they use their repo and git.
+
 Document `subpatch subtree checksum` command on the website.
 
 naming conventions and states/data for patches:
-- tracked patch
-- applied patch
-- current patch  patch with "appiledIndex"
-- skipped patch
+- a tracked patch
+- a applied patch (every applied patch is also tracked)
+- the current patch patch with "appiledIndex" (It's possible to have no current patch in a subproject)
+- the next and previous patch
+- a skipped patch (every skipped patch is also tracked, but can never be applied)
 
 Fix inconsistency "subpatch update" uses a path argument "pop/push/apply" uses cwd!
 
 Make a DDX: commands that use cwd and operation only on one subproject should
 not print out the subproject name!
+-> Already implemented for pop,push,apply
 
 Add `subtree subtree ls` command
 
@@ -683,5 +800,253 @@ Currently the `subpatch add/update` commands print only a single line. Maybe
 print the outputs of the  level-1/2 commands like subtree, init, cache and unpack, ...
 
 Try out new type checker: pyrefly check src/*.py
+* https://pyrefly.org/
 
 Describe/define the term "populated" and unpopulated for subtrees.
+-> the unpopluated state is different than a empty subtree
+
+make better error message
+   Error: Invalid argument: There is no patch to pop!
+should be "all patches are poped" if there are patches!
+
+Maybe have a supatch command like cherry-pick to get a patch from a upstream
+repo and integrated it.
+
+There are different patch file formats. See `git am`
+
+      --patch-format
+           By default the command will try to detect the patch format automatically. This option allows the user to
+           bypass the automatic detection and specify the patch format that the patch(es) should be interpreted as.
+           Valid formats are mbox, mboxrd, stgit, stgit-series, and hg.
+
+Move all command ideas to website
+
+Add limitations/known-issues/todo to website (is this a explenation or a reference?)
+
+List errors of repo
+- Tag was not pushed https://groups.google.com/g/android-building/c/c4_W34xH55I/m/eZrfDRlDAQAJ
+- wrong commits was tagged and pushed
+   https://issuetracker.google.com/issues/427013231
+   https://github.com/lengfeld/google-issuetracker-427013231?tab=readme-ov-file
+
+At some point "subpatch pop/push" plus list of patches may behave like "git rebase -i"
+
+Notes from the Git Contributor's Summit, 2025
+https://lwn.net/ml/all/aOQVeVYY6zadPjln@nand.local/
+https://docs.google.com/document/d/1arvvXP8DrF3F8PCKQOmGvYh5jUg8P9Clx9m-FgDD4EI/edit?tab=t.0#heading=h.5ow1yrj6w1qg
+-> look at parts off Change-ID
+
+Add commands
+
+     supatch subtree diff [--commit]
+     supatch subtree get-tree-object [--rev] [--staging]   # works also in non-git superprojects ... eh this is checksum --calc
+
+There are a lot of error cases
+
+     subpatch pop -a
+     subpatch push
+     subpatch push
+     subpatch sync
+     # will corrupt the current patch. It now includes the changes from the first and second patch!
+     # This is better in git rebase!
+     # Update: Yes, 'sync' is really more like a plumbing command!. You can easily corrupt your patches.
+
+Missing feature
+
+     subpatch apply <files of patches>
+     subpatch patches reformat --filenames
+      - adjust filenames based on subject
+      - adjust patch numbers based on order. and e.g. removed patches
+     subpatch reformat  # also uses the subtree and superproject to reformat the diff in the patch files!
+     subpatch pop --to <index>/<filename>/...
+      - "git rebase -i" to a selected patch file
+      - also usefule to then "subpatch drop/skip" a patchfile
+     subpatch show  ## show the contents of the current patch file
+     subpatch new   ## Create a empty patch file and make it current, but with preset autor and date
+                       and maybe change-di
+
+Missing feature
+
+   subpatch patches list
+   - with --stat or --shortstat information
+     NOTE: This would requred patch reading support which results in a need for a patch toolkit/cmd
+       -> this sounds like subpatch reimplements git ...
+
+Missing feature:
+
+   tooling ecosystem to share patch files between multiple projects
+    - compare two superprojects whether
+
+Document: The terms 'push' and 'pop' are coming from quilt
+
+Look into library: https://pypi.org/project/patch-ng/
+Maybe subpatch can use it.
+
+Good thing about new appliedIndex in subtree dimension
+    git format-patch  219d54332a09e8d8741c1e1982f5eae56099de85..2019-01--i2c-atomic_xfer--with-upstream-watchdog-patch  -o ~/git/subpatch/linux-test/superproject/linux-i2c-atomic/patches/
+You can just dump a list of patches in the patches folder and it works!
+
+Every path, also from push/pop should be relative. So you can easily "vim
+<path>" copy and paste the patch file
+
+"subpatch new" is needed implemented it
+
+Add tools to modify commit message. E.g. "git commit -s" for sign off.
+- or --reset-date
+- or --reset-author
+BUT subpatch should not reimplemented git features!
+
+subpatch reformat-patch is needed. e.g. to update filenames based on subject changes
+
+Define a common/static patch format. E.g. the sha1sum in the first line is wired. Maybe replace with the zero-SHA1 sum
+- or a special crafted SHA1 that contains the term subpatch
+
+Learning: "appliedIndex != patches count" is a git rebase operation"
+So it needs all features:
+- squash
+- reword
+- fixup  - with automatic reordering
+- reorder
+- drop
+-> This would again be reimplemeting git features.
+
+Fix differences in patch files for
+    -index e149e66a6ea9..06e4c0510873 100644
+    +index e149e66a6..06e4c0510 100644
+
+Maybe make output nicer
+    Poped patch '0007-fix-gitignore.patch' successfully!
+    Poped patch '0006-watchdog-da9062-make-restart-handler-atomic-safe.patch' successfully!
+The quotes are not necesasry, since it's are sane patch files. No special
+characters and spaces. Maybe only add them if the path is special!
+
+Git Merge 2025: https://www.youtube.com/playlist?list=PLNXkW_le40U6Ms1XlsYKi_yUh5J2FOSlf
+* "The Long Road Towards Native Large Object Support in Git - Patrick Steinhardt" https://www.youtube.com/watch?v=ItvGVENGet0&list=PLNXkW_le40U6Ms1XlsYKi_yUh5J2FOSlf&index=4
+* "Evergreen Git, Evolving UX: 20 Years of Lessons from Subversion to Jujutsu - Fedor Sheremetyev" https://www.youtube.com/watch?v=96jQrNlPJu0&list=PLNXkW_le40U6Ms1XlsYKi_yUh5J2FOSlf&index=17
+
+Backporting and forwardporting guides:
+* https://chromium.googlesource.com/chromiumos/docs/+/refs/heads/stabilize-12441.B/kernel_faq.md#UPSTREAM_BACKPORT_FROMLIST_and-you
+* https://android.googlesource.com/kernel/common/
+
+Needed feature for projects in the size of linux kernel
+* "--reference" for "subpatch add"
+
+rust reimplementation of git: https://github.com/GitoxideLabs/gitoxide?tab=readme-ov-file
+
+"subpatch push" is the same command as "git push". Can this be confusing?
+
+Maybe add a "subpatch pop/push -n <number>" argument
+
+Note: git is and has a very good plumping layer. For every feature I needed in
+subpatch, git has already a command and commandline option. Newest thing:
+`git apply` takes multiple patch files at once. This makes applying multiple patches
+~20x faster!
+
+Another project that uses patch files and a script to manage aosp:
+See https://github.com/waydroid/android_vendor_waydroid/blob/lineage-20/waydroid-patches/base-patches-29/lineage-sdk/0004-WaydroidUserMonitor-Get-service-on-demand.patch
+See also my talk at FOSDEM.
+
+Found one pitfall.
+using "subpatch add ... && git --restore --staged folder && git add folder"
+does not work correctly, if the subproject contains a ".gitignore" file to
+ignore all hidden files. E.g. the linux kernel has such a rule.
+- A normal "subpatch status" works in the project itself, but it does not work after
+  the project was cloned. the ".subproject" file is missing, but still
+  reference in the ".subpatch" file.
+- TODO add a "clean/check" command that also verifies that the Commit/stagin
+  are is clean. Not only the files on disk!
+
+Document plumbing layer in API.md file.
+- E.g. document exit codes and make them stable!
+
+Switch Yocto subpatch how-to new way. Poky repo is split up.
+https://github.com/mendersoftware/meta-mender-community/commit/f82d2d4a9ebc79ac3e88e6388609e4ec8e49a7e6
+
+"revision" term is confusing. Not clear for a "normal" git user.
+Also not correct, because subpatch only works with refs, not revsion.
+-> but also git is not very confistent
+E.g. submodules uses the term "branch"
+    [submodule "sources/openembedded-core"]
+    	path = sources/openembedded-core
+    	url = https://github.com/YoeDistro/openembedded-core
+    	branch = master
+TODO does it also use "branch" for tags?
+
+Make url to git repo more visible on the website
+
+Other software project that uses the term/name "subpatch":
+https://github.com/red-hat-storage/subpatch
+
+Again: having the patch file commited and seeing the changes in the subporject
+two times is confusing for the user. He/she must first understand the
+(internal) details how subpatch is managing the patches. Also having patch
+files is not common for developers anymore. It's a old concept, but not used
+nowadays.
+
+"subpatch lint" is needed!
+
+Document the property that having two independent patches in a subproject in
+two merge requests, merges fine without a conflict!
+It's also a selling point of subpatch compared to git submodules.
+Make make it even a requirement! Not something that works by chance.
+
+Document that "subpatch status" does *not* lint/check the subproject. It's not
+obivous why "status" cannot do that. reason: it's computational more expensive
+to deapply all patches first.
+
+Make the state of non-applied patches for a error/non-default state!
+
+Brainfuck example (sub modules):
+two features (one pr in super, one pr in sub) -> 4x PRs
+-> what is the correct merge order and when references to the submodules
+   in the superproject must be updated.
+
+Document naming of git and git submodules (include in reference)
+
+Document invariants.
+
+Fix and test for networking errors. Currently subpatch prints a big python
+exception!
+
+Make Linux also a unix variant.
+
+Implement "subpatch new"
+
+Make plumbing commands and proclain commands more clear!
+
+Make a design decision based on a learning: Never show negative diffs/patches.
+(Except for the case when someone does a revert)!
+-> rebase works on creating a new commit that rollbacks everything. Then the staging area
+   can show the positive diffs!
+
+Looking at "appliedIndex" is wired, because "status" shows the number of patches. And it's
+not the same number.
+
+Define the "clean" state of the "subproject"
+- "subtree" has nothing in the index and no changes in the working tree
+- metadata file and patches dim also as nothing in the index and a clean working tree
+- Mabye have a check that verfies that all files in the patch directory are added to the index.
+
+colorzied output!
+
+catch all git execptions, dont print stack trace by default.
+
+Make graphic drawings about location of files, patches and subprojects. How git
+submodules and subpatch differs.
+
+Add help command to list all subpatch help commands that are not plumbing!
+
+Use the concept of cmd error message driven user guidance. Every error message
+should direkt the user to the next commands!
+
+The Status command should
+- not tell about push and pop. This are plumbing commands
+- Use the term "unclean" and "rebase" operation. It's not the default state und
+  should be fixed for committing!
+- Should hide the checksum and the git object id from the user. It's not needed for the proclain commands!
+
+
+Document the design principle:
+     That fits the general decision principle, that the default, sane and
+     common value is the default value _and_ is not recorded and shown to the
+     user.
