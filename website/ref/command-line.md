@@ -133,9 +133,9 @@ remaining applied patches.
 
 ## subpatch subtree checksum
 
-    subpatch subtree checksum [--calc] [--check] [--write] [--get]
+    subpatch subtree checksum [--calc] [--verify] [--write] [--get]
 
-Calculate, check, write to the metadata or get from the metadata the checksum
+Calculate, verify, write to the metadata or get from the metadata the checksum
 of the subproject's subtree.
 
 You select the subproject by changing the current work directory into the

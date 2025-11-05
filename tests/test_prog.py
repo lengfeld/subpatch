@@ -1365,7 +1365,7 @@ class TestCmdSubtreeChecksum(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         git = Git()
         git.init()
 
-        message = b"Error: Invalid argument: You must exactly use one of --get, --calc, --write or --check!\n"
+        message = b"Error: Invalid argument: You must exactly use one of --get, --calc, --write or --verify!\n"
 
         p = self.run_subpatch(["subtree", "checksum"], stderr=PIPE)
         self.assertEqual(p.returncode, 4)
@@ -1384,26 +1384,26 @@ class TestCmdSubtreeChecksum(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
         with chdir("subproject"):
             self.run_subpatch_ok(["subtree", "checksum", "--write", "-q"])
 
-            p = self.run_subpatch_ok(["subtree", "checksum", "--check"], stdout=PIPE)
+            p = self.run_subpatch_ok(["subtree", "checksum", "--verify"], stdout=PIPE)
             self.assertEqual(p.stdout,
                              b"Subtree's checksum 4b825dc642cb6eb9a060e54bf8d69288fbee4904 matches the metdata!\n")
-            p = self.run_subpatch_ok(["subtree", "checksum", "--check", "-q"], stdout=PIPE)
+            p = self.run_subpatch_ok(["subtree", "checksum", "--verify", "-q"], stdout=PIPE)
             self.assertEqual(p.stdout, b"")
 
             touch("file", b"xxxx")
             git.add("file")
-            p = self.run_subpatch(["subtree", "checksum", "--check"], stdout=PIPE)
+            p = self.run_subpatch(["subtree", "checksum", "--verify"], stdout=PIPE)
             self.assertEqual(p.returncode, 1)
             self.assertEqual(p.stdout,
                              b"Subtree's checksum 3958b4b8e6a26fab03ceb1e9a93098ae07658c69 does not match "
                              b"checksum 4b825dc642cb6eb9a060e54bf8d69288fbee4904 in the metadata.\n")
-            p = self.run_subpatch(["subtree", "checksum", "--check", "-q"], stdout=PIPE)
+            p = self.run_subpatch(["subtree", "checksum", "--verify", "-q"], stdout=PIPE)
             self.assertEqual(p.returncode, 1)
             self.assertEqual(p.stdout, b"")
 
             # Quick hack to check failure case. Just overwrite the file!
             touch(".subproject", b"")
-            p = self.run_subpatch(["subtree", "checksum", "--check"], stderr=PIPE)
+            p = self.run_subpatch(["subtree", "checksum", "--verify"], stderr=PIPE)
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr, b"Error: Invalid argument: No checksum in metadata found!\n")
 
@@ -1925,7 +1925,7 @@ Subject: [PATCH] changing X
         # TODO Use real "lint" command in the future!
         with chdir("subproject"):
             self.run_subpatch_ok(["pop", "-a", "-q"])
-            self.run_subpatch_ok(["subtree", "checksum", "--check", "-q"])
+            self.run_subpatch_ok(["subtree", "checksum", "--verify", "-q"])
 
 
 class TestNoGit(TestCaseHelper, TestSubpatch, TestCaseTempFolder):

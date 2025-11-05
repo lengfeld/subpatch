@@ -622,7 +622,7 @@ def do_unpack_for_add(superx, super_paths, sub_paths, cache_relpath: bytes, url:
 # Consolide into plumping commands
 #   subpatch configure (--auto)
 #   subpatch init <subproject path>
-#   subpatch subtree clean --check # tricky, cannot be really done before or must he handcoded!
+#   subpatch subtree clean --verify # tricky, cannot be really done before or must he handcoded!
 #   subpatch download
 #     - subpatch cache init --type=git   # --autoremove'
 #     - subpatch fetch <url> -r <rev>
@@ -1400,8 +1400,8 @@ def cmd_patches_list(args, parser):
 
 
 def cmd_subtree_checksum(args, parser):
-    if sum(1 for x in [args.write, args.check, args.calc, args.get] if x) != 1:
-        raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --check!")
+    if sum(1 for x in [args.write, args.verify, args.calc, args.get] if x) != 1:
+        raise AppException(ErrorCode.INVALID_ARGUMENT, "You must exactly use one of --get, --calc, --write or --verify!")
 
     superx, super_paths, sub_paths = checks_for_cmds_with_single_subproject()
 
@@ -1419,7 +1419,7 @@ def cmd_subtree_checksum(args, parser):
 
         print(metadata.subtree_checksum.decode("ascii"))
         return 0
-    elif args.check:
+    elif args.verify:
         checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
         metadata = read_metadata(sub_paths.metadata_abspath)
 
@@ -1770,7 +1770,7 @@ def main_wrapped() -> int:
     # TODO these options are actually commands. It's only allowed to give on option! refactor!
     parser_subtree_checksum.add_argument("--calc", dest="calc", action=argparse.BooleanOptionalAction,
                                          help="tbd")
-    parser_subtree_checksum.add_argument("--check", dest="check", action=argparse.BooleanOptionalAction,
+    parser_subtree_checksum.add_argument("--verify", dest="verify", action=argparse.BooleanOptionalAction,
                                          help="tbd")
     parser_subtree_checksum.add_argument("--write", dest="write", action=argparse.BooleanOptionalAction,
                                          help="tbd")
