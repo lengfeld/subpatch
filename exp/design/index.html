@@ -183,11 +183,36 @@ subtree(=file tree) after unpack and before patches are applied.</p>
 <p><strong>DD9</strong>: subpatch requires python 3.11 or later</p>
 <p>TODO</p>
 <p><strong>DD10</strong>: Using the term <em>subtree</em> instead of <em>worktree</em></p>
-<p>TODO explain
-TODO Maybe also add more terms here!</p>
+<p>TODO explain</p>
 <p><strong>D11</strong>: License as GPLv2-only</p>
+<p>TODO explain</p>
 <p><strong>D12</strong>: The patches of a subproject are in the folder <code>patches</code>.</p>
-<p>It's the same folder name that quilt is using.</p>
+<ul>
+<li>[+]: quilt is using the same folder name.</li>
+<li>[+]: Debian/Ubuntu source packages use the same folder name.</li>
+<li>[+]: The Linux kernel source code even contains a default ignore rule for the
+       <code>patches</code> folder.</li>
+</ul>
+<p><strong>D13</strong>: The default value of <code>subtree.appliedIndex</code> in the subproject's
+metadata is <em>all patches are applied</em>.</p>
+<p>This decision follows indirectly from requirement R13. I add the requirement
+and this decision to make it explicit and to note it down. At first I chose
+another default value and then later noticed that it violates R13, the conflict
+free merging of two changes in a subproject that are independent.</p>
+<ul>
+<li>[+]: In the clean state of the subproject, namely all tracked patches are applied,
+       there is no value for <code>appliedIndex</code> in the metadata file. That fits the
+       general decision principle, that the default, sane and common value is
+       the default value <em>and</em> is not recorded and shown to the user.</li>
+<li>[+]: Merging two histories in the superproject with changes in the subproject
+       is conflict free and results in a clean state of the subproject metadata,
+       when the changes (e.g. adding two independent patches in the two
+       histories) are in itself conflict free. See R13.</li>
+</ul>
+<p>If there would be a <code>appliedIndex</code> value in the metadata, there could be a
+merge conflict for this or the value would be wrong after the merge. This is
+only a very short description of the problem, but that's what I have
+experienced.</p>
 <p><em>Note</em>: This list is not completed yet and should grow while supbatch is developed.</p>
               
             </div>

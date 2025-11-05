@@ -64,6 +64,12 @@
     <li class="toctree-l2"><a class="reference internal" href="#list-of-requirements">List of requirements</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#change-history">Change history</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#update-to-r2-on-2025-01-12">Update to R2 on 2025-01-12</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#adding-r13-on-2025-11-05">Adding R13 on 2025-11-05</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
     </li>
@@ -172,9 +178,14 @@ for updates or for CVEs.</p>
 <p>(<strong>R11</strong>) should support every development platform that also supports git and
 python, like Linux, unixes, Windows and MacOS.</p>
 <p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
+<p>(<strong>R13</strong>) should allow conflict free merging of subproject changes when
+the changes are independent.</p>
+<p>TODO: The text above uses the term <em>source dependencies</em>. Maybe use the terms
+<em>subproject</em> and <em>upstream</em> to make the text clearer.  These terms are the
+common terms in the subpatch nomenclature.</p>
 <h2 id="change-history">Change history</h2>
-<p>Update to <em>R2</em> on 2025-01-12: subpatch only supports git as a superproject with
-all features.</p>
+<h3 id="update-to-r2-on-2025-01-12">Update to R2 on 2025-01-12</h3>
+<p>Change: subpatch only supports git as a superproject with all features.</p>
 <p>Background: The requirement R2 was modified. Not all scm tools are supported
 fully anymore.  The full functionality will only be available if the
 superproject is a git repository.</p>
@@ -185,12 +196,28 @@ to be implemented in subpatch. Why reimplementing existing functionality?</p>
 <p>This learning I had already in the past. See learning L1 on
 <a href="../learnings/">learnings</a>: The solution is inside a scm tool. subpatch should not
 try or need to reimplementing existing functionality.</p>
+<h3 id="adding-r13-on-2025-11-05">Adding R13 on 2025-11-05</h3>
+<p>After a discussion with a friend and potential user of subpatch I added this
+requirement. No other requirement specifies this and I even made a design
+decision in the code that violates this feature.</p>
+<p>But I think it's an important property and is needed. If two developers are
+adding patches to the subproject <em>and</em> these patches are independent, the merge
+of these two development branches should be conflict free and afterwards the
+subproject should be in a clean/valid state. The term <em>independent</em> for patches
+means that the patches modify different source code parts and the changes are
+in itself conflict free. In that case there should be also no conflict in the
+subprojects metadata. The simple and common case should work automagically.</p>
+<p>If the patches are <em>not</em> conflict free (= not independent), the merge of the
+code changes is a conflict already and must be resolved by the developers
+manually. That's o.k. and expected. That is the same case if the source
+code is maintained as a normal git repository and not as a subproject.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>The list of requirements is the design goal of subpatch. It describes the
 properties and capabilities an implementation should fulfil and provide for its
 users.</p>
-<p>If you want to find more about the development and implementation, you can
-continue reading on the page <a href="../design/">design decisions</a>.</p>
+<p>If you want to find out more about the difference to other tools, see
+<a href="../comparison/">comparison to other tools</a>. The page gives on overview about
+the other existing tools and compares them with subpatch.</p>
               
             </div>
           </div><footer>
