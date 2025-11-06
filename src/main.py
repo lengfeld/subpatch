@@ -1634,15 +1634,15 @@ def cmd_status(args, parser):
         changes = subproject_changes[subproject]
 
         for path in ls_files_untrack:
-            if path.startswith(subproject):
+            if path.startswith(subproject + b"/"):
                 changes.untracked += 1
 
         for path in diff_files_staged:
-            if path.startswith(subproject):
+            if path.startswith(subproject + b"/"):
                 changes.uncommitted += 1
 
         for path in diff_files_not_staged:
-            if path.startswith(subproject):
+            if path.startswith(subproject + b"/"):
                 changes.unstaged += 1
 
     print("NOTE: The format of the output is human-readable and unstable. Do not use in scripts!")

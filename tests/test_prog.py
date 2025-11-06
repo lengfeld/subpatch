@@ -805,7 +805,7 @@ WARNING: The paths in this console output are wrong (for now)!
                     p = self.run_subpatch_ok(["status", ".."], stdout=PIPE)
                     self.assertEqual(p.stdout, expected_output)
 
-    def test_one_subproject_with_modified_files(self):
+    def test_subproject_with_modified_files(self):
         with create_and_chdir("upstream"):
             git = Git()
             git.init()
@@ -822,6 +822,10 @@ WARNING: The paths in this console output are wrong (for now)!
             git.init()
 
             self.run_subpatch_ok(["add", "-q", "../upstream", "subproject"])
+            # Add a extra subproject with the same, but shorter prefix as the
+            # other subproject. This provokes an bug that I had in the code of
+            # cmd_status.
+            self.run_subpatch_ok(["add", "-q", "../upstream", "sub"])
             git.commit("add subproject")
 
             with chdir("subproject"):
@@ -838,6 +842,11 @@ WARNING: The paths in this console output are wrong (for now)!
             self.assertEqual(b"""\
 NOTE: The format of the output is human-readable and unstable. Do not use in scripts!
 NOTE: The format is markdown currently. Will mostly change in the future.
+
+# subproject at 'sub'
+
+* was integrated from URL: ../upstream
+* has integrated object id: a094853f138e0f388d787aca36354e1c3e7d1a2a
 
 # subproject at 'subproject'
 
