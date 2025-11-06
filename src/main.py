@@ -329,11 +329,24 @@ def ensure_superproject_is_git(superx):
         raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "This feature currently works only in a git superproject!")
 
 
+# TODO add argument to specific which type of cache to init.
+# TODO For now the function returns the path to the cache, but later the path
+# should be part of the SubPaths and maybe even be configurable!
+def do_cache_init(sub_paths: SubPaths) -> bytes:
+    cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
+    assert (not os.path.isdir(cwd_to_cache_relpath))
+    os.mkdir(cwd_to_cache_relpath)
+    return cwd_to_cache_relpath
+
+
 def do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: str,
                            revision: str | None, object_id: bytes) -> None:
     try:
         do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
     finally:
+        # NOTE: The code has to cleanup in the good and in the error case.
+        # NOTE: Removing the cache directory on every unpack is ok. Currently
+        # we don't support persistent cache directories.
         assert (os.path.isdir(join(cwd_to_cache_relpath, b".git")))
         assert (os.path.isdir(cwd_to_cache_relpath))
         # Need to use rmtree and not rmdir, because there are maybe more left
@@ -437,6 +450,7 @@ def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: 
     with chdir(super_paths.super_abspath):
         subtree_checksum = superx.helper.get_sha1_for_subtree(sub_paths.super_to_sub_relpath)
 
+    # TODO subpatch subtree checksum --write does the same!
     metadata_set_for_unpack(sub_paths, url, revision, object_id, subtree_checksum)
 
     with chdir(super_paths.super_abspath):
@@ -457,9 +471,6 @@ def cmd_update(args, parser):
 
     super_paths = gen_super_paths(superx.path)
     sub_paths = gen_sub_paths_from_cwd_and_relpath(super_paths, cwd_to_sub_relpath)
-
-    # TODO Hardcoded assumption: subproject is also git
-    cache_helper = CacheHelperGit()
 
     config = read_config(super_paths.config_abspath)
 
@@ -522,6 +533,9 @@ def cmd_update(args, parser):
             # TODO also check for linting issue, when default value is used!
             raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subproject has patches applied. Please pop first!")
 
+    # TODO Move futher below to cache_init()
+    cache_helper = CacheHelperGit()
+
     # TODO deapply all patches
 
     if not args.quiet:
@@ -534,22 +548,20 @@ def cmd_update(args, parser):
 
     # subpatch download
 
+    # Optimizations:
     # TODO if git, and revision is a commit or tag id, check that the new sha1/id
     # is the same as the already integrated (not yet saved to config). If they are
     # the same, no need to reintegrated!
+    # So do a pre-check with "git ls-remote"
     # - Note: if there are subtree or exclude changes, update must still be done!
+    # TODO implement direct import into superproject optimization
+    #   And at best do not checkout, just import the git objects into the
+    #   current git and let git of the superproject/git check it out. git
+    #   should be super efficient about that.
 
-    # TODO implement git dir optimization
-    # - use a bare repository! And ad-hoc checkouts
-    # - And at best do not checkout, just import the git objects into the
-    # current git and let git of the superproject check it out.
-    # subpatch cache init
-    cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
-    assert (not os.path.isdir(cwd_to_cache_relpath))
-    os.mkdir(cwd_to_cache_relpath)
-
-    # TODO optimize with ls-remote, If the commit/tag hash are equal, don't
-    # download!
+    # TODO Hardcoded assumption: The upstream is a git repo. So the cache is
+    # also a git repo.
+    cwd_to_cache_relpath = do_cache_init(sub_paths)
 
     # TODO: Fix the old download interpretation. Now download should not checkout and remove the git folder
     # subpatch cache fetch url -r version
@@ -708,10 +720,9 @@ def cmd_add(args, parser):
     # TODO in case of a later failure. Also revert this!
 
     # subpatch cache init --git
+    cwd_to_cache_relpath = do_cache_init(sub_paths)
     cache_helper = CacheHelperGit()
-    # TODO add cwd_to_sub_relpath to SubPaths object
-    cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
-    os.mkdir(cwd_to_cache_relpath)
+
     # TODO in case of a later failure. Also revert this!
 
     # NOTE: Design decision: The output is relative to the current working dir.
@@ -1438,6 +1449,9 @@ def cmd_subtree_checksum(args, parser):
 
         # TODO mabye this should also have an output to stdout?
         metadata_set_subtree_checksum(sub_paths, checksum)
+
+        # TODO Other commands like add and update, add the file to the staging
+        # area. Maybe do the same here to be consistent.
 
         return 0
     else:
