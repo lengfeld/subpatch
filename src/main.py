@@ -1545,14 +1545,15 @@ def do_status_subproject(super_paths: SuperPaths, subproject: bytes, changes) ->
     patches_count = len(patches_dim.patches)
     if patches_count != 0:
         print("* There are n=%d patches." % (patches_count,))
-        # TODO Maybe call this a "rebase" operation if not all patches are applied.
         if subtree_dim.applied_index is None:
             pass
         else:
-            if subtree_dim.applied_index + 1 != patches_count:
+            if subtree_dim.applied_index + 1 == patches_count:
                 pass  # TODO May make this a linting error, because default value is used!
-            print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
-            print("    - Use `subpatch push` to apply the next tracked patch to the subtree")
+            else:
+                # TODO Maybe call this a "rebase" operation if not all patches are applied.
+                print("* There are only n=%d patches applied." % (subtree_dim.applied_index + 1,))
+                print("    - Use `subpatch push` to apply the next tracked patch to the subtree")
 
         # TODO implement subpatch patch list
         # print("    - Use `subpatch patches list` to list them")
