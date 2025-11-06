@@ -362,6 +362,23 @@ Note: There are no changes in the subproject. Nothing to commit!
             self.assertEqual(p.returncode, 4)
             self.assertEqual(p.stderr, b"Error: Invalid argument: The subproject does not track at least one patch. Nothing to push!\n")
 
+    def test_all_patches_are_pushed_or_poped(self):
+        self.create_super_and_upstream_for_class()
+        with chdir("superproject/subproject"):
+            git = Git()
+            self.run_subpatch_ok(["apply", "-q", "../../upstream/0001-changing-hello.patch"])
+            git.commit("add patch")
+
+            p = self.run_subpatch(["push"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: All patches are applied. Nothing to push!\n")
+
+            self.run_subpatch_ok(["pop", "-q"])
+
+            p = self.run_subpatch(["pop"], stderr=PIPE)
+            self.assertEqual(p.returncode, 4)
+            self.assertEqual(p.stderr, b"Error: Invalid argument: No patches are applied. Nothing to pop!\n")
+
     def test_error_not_all_applied(self):
         self.create_super_and_upstream_for_class()
         with chdir("superproject/subproject"):

@@ -1264,6 +1264,7 @@ def cmd_pop(args, parser):
             print("Poped %d patches successfully!" % (count_of_patches,))
     else:
         if len(patches_dim.patches) == 0:
+            # TODO Is this a INVALID_ARGUMENT or not a INVALID_STATE error!?!
             raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to pop!")
         else:
             if applied_index == -1:
@@ -1311,7 +1312,7 @@ def cmd_push(args, parser):
         if len(patches_dim.patches) == 0:
             raise AppException(ErrorCode.INVALID_ARGUMENT, "The subproject does not track at least one patch. Nothing to push!")
         else:
-            if subtree_dim.applied_index == len(patches_dim.patches) - 1:
+            if applied_index == len(patches_dim.patches) - 1:
                 raise AppException(ErrorCode.INVALID_ARGUMENT, "All patches are applied. Nothing to push!")
 
         do_patch_applys(superx, super_paths, sub_paths, patches_dim, applied_index, applied_index + 1, args.quiet)
