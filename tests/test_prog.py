@@ -1013,20 +1013,21 @@ class TestCmdAdd(TestCaseHelper, TestSubpatch, TestCaseTempFolder):
             with create_and_chdir("subdir"):
                 # NOTE: This also tests that "/.git/" is not used as the local
                 # directory name.
-                p = self.run_subpatch_ok(["add", "http://localhost:7000/upstream/.git/"], stdout=PIPE)
-                self.assertIn(b"Adding subproject 'upstream' from URL 'http://localhost:7000/upstream/.git/' "
+                p = self.run_subpatch(["add", "http://localhost:7000/upstream/.git/", "subproject"], stdout=PIPE, hack=True)
+                self.assertEqual(p.returncode, 0)
+                self.assertIn(b"Adding subproject 'subproject' from URL 'http://localhost:7000/upstream/.git/' "
                               b"at revision 'HEAD'... Done",
                               p.stdout)
-                self.assertTrue(os.path.isdir("upstream"))
+                self.assertTrue(os.path.isdir("subproject"))
 
             self.assertEqual(git.diff_staged_files(),
                              [b"A\t.subpatch",
-                              b"A\tsubdir/upstream/.subproject",
-                              b"A\tsubdir/upstream/hello"])
+                              b"A\tsubdir/subproject/.subproject",
+                              b"A\tsubdir/subproject/hello"])
 
             self.assertFileContent(".subpatch", b"""\
 [subprojects]
-\tpath = subdir/upstream
+\tpath = subdir/subproject
 """)
 
     def test_add_with_stdout_output_and_index_updates(self):

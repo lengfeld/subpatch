@@ -16,7 +16,7 @@ sys.path.append(join(dirname(path), "../"))
 
 from src.libgit import (ObjectType, get_name_from_repository_url, git_diff_in_dir,
                         git_diff_name_only, git_get_object_type, git_get_sha1,
-                        git_get_toplevel, git_init_and_fetch,
+                        git_get_toplevel, git_init_bare, git_fetch,
                         git_ls_files_untracked, git_ls_remote,
                         git_ls_remote_guess_ref, git_ls_tree_in_dir, git_verify,
                         is_sha1, is_valid_revision, parse_sha1_names, parse_z,
@@ -92,24 +92,25 @@ class TestGit(TestCaseTempFolder):
                 self.assertEqual(git_path, cur_cwd)
                 self.assertTrue(git_path.endswith(b"/subproject"))
 
-    def test_git_init_and_fetch(self):
+    def test_git_init_bar_and_fetch(self):
         with create_and_chdir("remote"):
             create_git_repo_with_branches_and_tags()
 
         with create_and_chdir("local"):
-            sha1 = git_init_and_fetch("../remote", "refs/tags/v1.1")
+            git_init_bare()
+            sha1 = git_fetch("../remote", "refs/tags/v1.1")
             self.assertEqual(b"e85c40dcd26466c0052323eb767d1a44ef0a12c1", sha1)
             self.assertEqual(ObjectType.TAG, git_get_object_type(sha1))
 
-            sha1 = git_init_and_fetch("../remote", "refs/heads/v1-stable")
+            sha1 = git_fetch("../remote", "refs/heads/v1-stable")
             self.assertEqual(b'32c32dcaa3c7f7024387640a91e98a5201e1f202', sha1)
             self.assertEqual(ObjectType.COMMIT, git_get_object_type(sha1))
 
             # TODO replace with specific git exception
-            self.assertRaises(Exception, git_init_and_fetch,
+            self.assertRaises(Exception, git_fetch,
                               "../remote", "refs/heads/does_not_exists")
 
-    def test_depth_for_git_init_and_fetch(self):
+    def test_depth_for_git_fetch(self):
         with create_and_chdir("remote"):
             git = Git()
             git.init()
@@ -129,8 +130,8 @@ class TestGit(TestCaseTempFolder):
 
         with create_and_chdir("local"):
             git = Git()
-            git.init()
-            sha1 = git_init_and_fetch("../remote", "refs/heads/master")
+            git_init_bare()
+            sha1 = git_fetch("../remote", "refs/heads/master")
             self.assertEqual(sha1, b"b8019be749b96c92c65ae2fdb99753670fd32cf9")
 
             # The top most (depth=1) objects are exist in the object store.

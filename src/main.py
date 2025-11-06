@@ -332,22 +332,25 @@ def ensure_superproject_is_git(superx):
 # TODO add argument to specific which type of cache to init.
 # TODO For now the function returns the path to the cache, but later the path
 # should be part of the SubPaths and maybe even be configurable!
-def do_cache_init(sub_paths: SubPaths) -> bytes:
+def do_cache_create(sub_paths: SubPaths, cache_helper: CacheHelperGit) -> bytes:
     cwd_to_cache_relpath = join(sub_paths.cwd_to_sub_relpath, b"cache")
     assert (not os.path.isdir(cwd_to_cache_relpath))
     os.mkdir(cwd_to_cache_relpath)
+    cache_helper.create(cwd_to_cache_relpath)
     return cwd_to_cache_relpath
 
 
-def do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: str,
-                           revision: str | None, object_id: bytes) -> None:
+def do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, cache_helper: CacheHelperGit,
+                           url: str, revision: str | None, object_id: bytes) -> None:
     try:
-        do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
+        do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath, cache_helper, url, revision, object_id)
     finally:
         # NOTE: The code has to cleanup in the good and in the error case.
         # NOTE: Removing the cache directory on every unpack is ok. Currently
         # we don't support persistent cache directories.
-        assert (os.path.isdir(join(cwd_to_cache_relpath, b".git")))
+        # NOTE Now it's a bare repo!
+        assert (os.path.isdir(join(cwd_to_cache_relpath, b"objects")))
+        assert (os.path.isfile(join(cwd_to_cache_relpath, b"config")))
         assert (os.path.isdir(cwd_to_cache_relpath))
         # Need to use rmtree and not rmdir, because there are maybe more left
         # over files and directories.
@@ -355,28 +358,29 @@ def do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath:
 
 
 # TODO consolide function arguments
-def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: str, revision: str | None, object_id: bytes) -> None:
+def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, cache_helper: CacheHelperGit,
+              url: str, revision: str | None, object_id: bytes) -> None:
     # TODO This function is very very hacky. Works for now!
 
     # Quick and dirty performance improvement. Batch multiple paths together
     class GitCommandBachter:
         BATCH_COUNT = 5000
 
-        def __init__(self, cmd):
+        def __init__(self, cmd, folder):
             self._args = []
             self._cmd = cmd
+            self._folder = folder
 
         def add_and_maybe_exec(self, arg):
             self._args.append(arg)
             if len(self._args) >= self.BATCH_COUNT:
                 self.exec_force()
 
-        # NOTE: This function is cwd aware!
         def exec_force(self):
             if len(self._args) == 0:
                 return
             cmd = self._cmd + self._args
-            subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True, cwd=self._folder)
             self._args.clear()
 
     # Just quick and try remove and copy!
@@ -385,7 +389,7 @@ def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: 
     with chdir(super_paths.super_abspath):
         # TODO ensure that there are no untracked changes. Subpatch should not
         # remove any work of the user by accident.
-        git_rm = GitCommandBachter(["git", "rm", "-q", "-f"])
+        git_rm = GitCommandBachter(["git", "rm", "-q", "-f"], sub_paths.subproject_abspath)
         # TODO Add a custom/plumping command for that "subpatch subtree list"
         with chdir(sub_paths.super_to_sub_relpath):
             subtree_files_relpaths = git_ls_files()
@@ -400,27 +404,28 @@ def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: 
                 if path == b".subproject":
                     continue
                 git_rm.add_and_maybe_exec(path)
-            git_rm.exec_force()
+
+        git_rm.exec_force()
+
+    # and extract
+    dest_relpath = b"out"
+    # NOTE: Fore now the dest_dir is clean, it does not contain, e.g. the
+    # ".git" folder! Thats the contract to the CacheHelper.
+    cache_helper.extract(cwd_to_cache_relpath, object_id, dest_relpath)
 
     # and move
+    # TODO Combine extract and move. Should, at least for git, in one go!
 
     # TODO This code is "subpatch unpack" but even bit lower
     # TODO convert this code to "superhelper" implementation
     assert (os.path.isdir(sub_paths.cwd_to_sub_relpath))
     assert (not os.path.isdir(join(sub_paths.cwd_to_sub_relpath, b".git")))
-    cache_abspath = os.path.abspath(join(os.getcwdb(), cwd_to_cache_relpath))
-    with chdir(cache_abspath):
-        git_add = GitCommandBachter(["git", "add", "-f"])
+    dest_abspath = os.path.abspath(join(os.getcwdb(), cwd_to_cache_relpath, dest_relpath))
+    with chdir(dest_abspath):
+        git_add = GitCommandBachter(["git", "add", "-f"], super_paths.super_abspath)
 
         for root, dirnames, files in os.walk(b"."):
-            # TODO Hack for now to fix issue!
-            # TODO use "git ls-tree -r -z -d"!!!
-            if root == b"./.git" or root.startswith(b"./.git/"):
-                continue
             for dirname in dirnames:
-                # TODO Hack for now to fix issue!
-                if dirname == b".git":
-                    continue
                 super_to_dest_relpath = join(sub_paths.super_to_sub_relpath, root, dirname)
                 dest_path = join(super_paths.super_abspath, super_to_dest_relpath)
                 os.makedirs(dest_path, exist_ok=True)
@@ -434,13 +439,10 @@ def do_unpack(superx, super_paths, sub_paths, cwd_to_cache_relpath: bytes, url: 
 
                 git_add.add_and_maybe_exec(super_to_dest_relpath)
 
-        with chdir(super_paths.super_abspath):
-            git_add.exec_force()
-
-    assert (not os.path.isdir(join(sub_paths.cwd_to_sub_relpath, b".git")))
+        git_add.exec_force()
 
     # Hack for now:
-    # The funciton get_sha1_for_subtree does not work if the subtree is empty
+    # The function get_sha1_for_subtree does not work if the subtree is empty
     # (=no files tracked by git in it). So just create and add a file for the moment.
     # This case only happens, when the upstream projet has a empty file tree. This is
     # also a rare case. Someone would say this would be even a error case and should
@@ -561,15 +563,14 @@ def cmd_update(args, parser):
 
     # TODO Hardcoded assumption: The upstream is a git repo. So the cache is
     # also a git repo.
-    cwd_to_cache_relpath = do_cache_init(sub_paths)
+    cwd_to_cache_relpath = do_cache_create(sub_paths, cache_helper)
 
-    # TODO: Fix the old download interpretation. Now download should not checkout and remove the git folder
     # subpatch cache fetch url -r version
     object_id = do_cache_fetch(cache_helper, cwd_to_cache_relpath, url, revision)
 
     # subpatch unpack
     # TODO in case of an error, maybe cleanup also staging area
-    do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
+    do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, cache_helper, url, revision, object_id)
 
     # TODO reapply patches: subpatch push --all
     # TODO only apply to the same index as before, not just all patches!
@@ -613,10 +614,8 @@ def config_add_subproject(config_path: bytes, super_to_sub_relpath: bytes) -> No
 def do_cache_fetch(cache_helper: CacheHelperGit, cwd_to_cache_relpath: bytes, url: str, revision: str) -> bytes:
     download_config = DownloadConfig(url=url, revision=revision)
 
-    # Fetch remote repository/tarball into local folder and checkout the
-    # requested revision.
     try:
-        return cache_helper.download(download_config, cwd_to_cache_relpath)
+        return cache_helper.fetch(cwd_to_cache_relpath, download_config)
     except Exception as e:
         assert (os.path.isdir(cwd_to_cache_relpath))
         # Need to use rmtree and not rmdir, because there are maybe more left
@@ -630,11 +629,13 @@ def do_cache_fetch(cache_helper: CacheHelperGit, cwd_to_cache_relpath: bytes, ur
 #   subpatch init <subproject path>
 #   subpatch subtree clean --verify # tricky, cannot be really done before or must he handcoded!
 #   subpatch download
-#     - subpatch cache init --type=git   # --autoremove'
+#     - subpatch cache create --type=git   # --autoremove'
 #     - subpatch cache fetch <url> -r <rev>
 #   subpatch unpack   # honors "--autoremove"
-#     - does cp/mv
-#     - subpatch subtree checksum write"
+#     - subpatch subtree drop
+#     - subpatch cache extract  # does the cp/mv
+#     - add files to staging area!
+#     - subpatch subtree checksum write
 #     - subpatch upstream add url -r <rev> -o <id>
 def cmd_add(args, parser):
     if args.url is None:
@@ -719,9 +720,9 @@ def cmd_add(args, parser):
     do_init(super_paths, sub_paths, superx)
     # TODO in case of a later failure. Also revert this!
 
-    # subpatch cache init --git
-    cwd_to_cache_relpath = do_cache_init(sub_paths)
+    # subpatch cache create --git
     cache_helper = CacheHelperGit()
+    cwd_to_cache_relpath = do_cache_create(sub_paths, cache_helper)
 
     # TODO in case of a later failure. Also revert this!
 
@@ -740,7 +741,7 @@ def cmd_add(args, parser):
         object_id = do_cache_fetch(cache_helper, cwd_to_cache_relpath, url, revision)
 
         # subpatch unpack
-        do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, url, revision, object_id)
+        do_unpack_with_cleanup(superx, super_paths, sub_paths, cwd_to_cache_relpath, cache_helper, url, revision, object_id)
     except Exception as e:
         # If there is any exception, still print the final new line character.
         # Otherwise the error message that is printed is not beginning at the

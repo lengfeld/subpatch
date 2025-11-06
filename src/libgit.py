@@ -363,14 +363,17 @@ def is_sha1(sha1: bytes) -> bool:
     return all(0x30 <= c <= 0x39 or 0x61 <= c <= 0x66 for c in sha1)
 
 
-# TODO Split this command. It seems like a ugly combination
-def git_init_and_fetch(url: str, ref: bytes) -> bytes:
-    p = Popen(["git", "init", "-q"])
+def git_init_bare() -> None:
+    p = Popen(["git", "init", "-q", "--bare"])
     p.communicate()
     if p.returncode != 0:
         raise Exception("git failure")
 
-    cmd = ["git", "fetch", "-q", url, ref]
+
+def git_fetch(url: str, ref: bytes | None = None) -> bytes:
+    cmd = ["git", "fetch", "-q", url]
+    if ref is not None:
+        cmd.append(ref)
 
     # NOTE: Http transport which is currently used in the tests! And for dump
     # the "--depth" argument does not work. So we need this hack for the tests.
@@ -384,15 +387,18 @@ def git_init_and_fetch(url: str, ref: bytes) -> bytes:
     p = Popen(cmd, stderr=DEVNULL)
     # NOTE If stderr==DEVNULL(no-tty) no progress is showing on the commandline
     # Not getting the error is bad!
+    # TODO capture fetch error and forward to caller!
     p.communicate()
     if p.returncode != 0:
         # TODO think about error handling!!
         # Maybe every subcommand should be able and allows to write to stderr
-        # directly!
-        raise Exception("git failure: %d" % (p.returncode,))
+        # directly or forward to caller!
+        raise Exception("git failure: %d, %s" % (p.returncode, cmd))
 
     # get SHA1 of fetched object
-    with open(".git/FETCH_HEAD", "br") as f:
+    # TODO Handle bare and non bare repos!
+    # If multiple refs are fetch, the first one is used!
+    with open("FETCH_HEAD", "br") as f:
         sha1 = f.read().split(b"\t", 1)[0]
 
     assert is_sha1(sha1)
