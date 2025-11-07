@@ -14,7 +14,6 @@ nav:
     - Benefits and drawbacks: 'exp/benefits.md'
     - Frequently asked questions: 'exp/faq.md'
     - Design decisions: 'exp/design.md'
-    - Implementation details: 'exp/impl.md'
   - Tutorials:
     - Installation: 'tut/installation.md'
     - Basic usage: 'tut/basic-usage.md'
