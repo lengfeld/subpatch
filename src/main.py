@@ -535,7 +535,7 @@ def cmd_update(args, parser):
             # TODO also check for linting issue, when default value is used!
             raise AppException(ErrorCode.NOT_IMPLEMENTED_YET, "subproject has patches applied. Please pop first!")
 
-    # TODO Move futher below to cache_init()
+    # TODO Move futher below to cache_create()
     cache_helper = CacheHelperGit()
 
     # TODO deapply all patches

@@ -81,3 +81,24 @@ list all the other tools I have found so far:
 If you know additional tools, please post a pull request or email me. If you
 want to see a even longer list of other tools, checkout out the
 [alternatives page from dfetch](https://dfetch.readthedocs.io/en/latest/explanation/alternatives.html).
+
+
+## Other patch management tools
+
+There are also other existing tools for *generic* patch management. *Generic*
+means that they are not integrated into a bigger project and can be used
+standalone. E.g. all embedded build systems, like Yocto or buildroot, or Linux
+Distributions, like Debian, Fedora, …, also support applying patches in the
+build process onto the source code. But I call them *non-generic* because it's
+build into a bigger tooling and process.
+
+*Generic* patch management tools I know are
+
+* [quilt](https://savannah.nongnu.org/projects/quilt)
+* [umpf](https://github.com/pengutronix/umpf/) by Pengutronix:
+  [blogpost: umpf - Git on a New Level](https://pengutronix.de/de/blog/2023-08-29.html)
+* [git](https://git-scm.com/) itself when used with branches and `git rebase`
+  to port a stack of patches to new upstream releases. A usage pattern of git
+  that I have seen and used myself in the past.
+
+If you know additional tools, please let me know.
