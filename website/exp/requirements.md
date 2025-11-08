@@ -47,7 +47,7 @@ support other tools to track source dependencies, e.g. to automatically check
 for updates or for CVEs.
 
 (**R11**) should support every development platform that also supports git and
-python, like Linux, unixes, Windows and MacOS.
+python, like unixes (Linux, BSDs, MacOS, …) and Windows.
 
 (**R12**) should scale to the size of the AOSP (Android Open Source Project).
 
