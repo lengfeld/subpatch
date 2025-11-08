@@ -46,8 +46,9 @@ There are different sections and every section as different keys:
     * `revision`: git revision that is integrated, e.g. `HEAD`, `refs/heads/master` or `v1.0`
     * `objectId`: The SHA1 of the git object that is integrated.
 * `[patches]`
-    * This section contains no value yet
+    * This section contains no key-value pair yet
 * `[subtree]`
     * `checksum`: A checksum over the subproject's files after integration (and before patches are applied).
        If the subtree is unpopulated, no value is present.
-    * `appliedIndex`: Integer from -1 to count of patches minus 1 (default value is -1)
+    * `appliedIndex`: Integer from -1 to *count of patches minus 1*
+      (default value is *count of patches -1* which means that all patches are applied)
