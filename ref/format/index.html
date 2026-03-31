@@ -69,8 +69,6 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../exp/design/">Design decisions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../exp/impl/">Implementation details</a>
-                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
               <ul>
@@ -84,6 +82,8 @@
               <p class="caption"><span class="caption-text">How-to guides</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../howto/yocto/">Project based on Yocto</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../howto/zephyr/">Project based on Zephyr</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
@@ -177,13 +177,14 @@ top level directory of the subproject.</p>
 </ul>
 </li>
 <li><code>[patches]</code><ul>
-<li>This section contains no value yet</li>
+<li>This section contains no key-value pair yet</li>
 </ul>
 </li>
 <li><code>[subtree]</code><ul>
 <li><code>checksum</code>: A checksum over the subproject's files after integration (and before patches are applied).
    If the subtree is unpopulated, no value is present.</li>
-<li><code>appliedIndex</code>: Integer from -1 to count of patches minus 1 (default value is -1)</li>
+<li><code>appliedIndex</code>: Integer from -1 to <em>count of patches minus 1</em>
+  (default value is <em>count of patches -1</em> which means that all patches are applied)</li>
 </ul>
 </li>
 </ul>

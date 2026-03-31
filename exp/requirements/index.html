@@ -83,8 +83,6 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../impl/">Implementation details</a>
-                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
               <ul>
@@ -98,6 +96,8 @@
               <p class="caption"><span class="caption-text">How-to guides</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../howto/yocto/">Project based on Yocto</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../howto/zephyr/">Project based on Zephyr</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
@@ -176,7 +176,7 @@ source dependency and there are <em>conflicts</em> with the local patches.</p>
 support other tools to track source dependencies, e.g. to automatically check
 for updates or for CVEs.</p>
 <p>(<strong>R11</strong>) should support every development platform that also supports git and
-python, like Linux, unixes, Windows and MacOS.</p>
+python, like unixes (Linux, BSDs, MacOS, …) and Windows.</p>
 <p>(<strong>R12</strong>) should scale to the size of the AOSP (Android Open Source Project).</p>
 <p>(<strong>R13</strong>) should allow conflict free merging of subproject changes when
 the changes are independent.</p>

@@ -69,6 +69,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#even-more-multi-repository-management-tools">Even more multi repository management tools</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#other-patch-management-tools">Other patch management tools</a>
+    </li>
     </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../benefits/">Benefits and drawbacks</a>
@@ -76,8 +78,6 @@
                   <li class="toctree-l1"><a class="reference internal" href="../faq/">Frequently asked questions</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../design/">Design decisions</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../impl/">Implementation details</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
@@ -92,6 +92,8 @@
               <p class="caption"><span class="caption-text">How-to guides</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../../howto/yocto/">Project based on Yocto</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../howto/zephyr/">Project based on Zephyr</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Reference</span></p>
@@ -260,7 +262,24 @@ list all the other tools I have found so far:</p>
 </ul>
 <p>If you know additional tools, please post a pull request or email me. If you
 want to see a even longer list of other tools, checkout out the
-<a href="https://dfetch.readthedocs.io/en/latest/alternatives.html">alternatives page from dfetch</a>.</p>
+<a href="https://dfetch.readthedocs.io/en/latest/explanation/alternatives.html">alternatives page from dfetch</a>.</p>
+<h2 id="other-patch-management-tools">Other patch management tools</h2>
+<p>There are also other existing tools for <em>generic</em> patch management. <em>Generic</em>
+means that they are not integrated into a bigger project and can be used
+standalone. E.g. all embedded build systems, like Yocto or buildroot, or Linux
+Distributions, like Debian, Fedora, …, also support applying patches in the
+build process onto the source code. But I call them <em>non-generic</em> because it's
+build into a bigger tooling and process.</p>
+<p><em>Generic</em> patch management tools I know are</p>
+<ul>
+<li><a href="https://savannah.nongnu.org/projects/quilt">quilt</a></li>
+<li><a href="https://github.com/pengutronix/umpf/">umpf</a> by Pengutronix:
+  <a href="https://pengutronix.de/de/blog/2023-08-29.html">blogpost: umpf - Git on a New Level</a></li>
+<li><a href="https://git-scm.com/">git</a> itself when used with branches and <code>git rebase</code>
+  to port a stack of patches to new upstream releases. A usage pattern of git
+  that I have seen and used myself in the past.</li>
+</ul>
+<p>If you know additional tools, please let me know.</p>
               
             </div>
           </div><footer>
