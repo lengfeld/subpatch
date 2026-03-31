@@ -80,4 +80,4 @@ list all the other tools I have found so far:
 
 If you know additional tools, please post a pull request or email me. If you
 want to see a even longer list of other tools, checkout out the
-[alternatives page from dfetch](https://dfetch.readthedocs.io/en/latest/alternatives.html).
+[alternatives page from dfetch](https://dfetch.readthedocs.io/en/latest/explanation/alternatives.html).
